@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Déclinaisons · Allemand</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box;
+    -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;
+    -webkit-user-select:none; user-select:none; }
+  body {
+    min-height:100vh; min-height:-webkit-fill-available;
+    display:flex; align-items:center; justify-content:center;
+    font-family:'Segoe UI',-apple-system,system-ui,sans-serif;
+    background:#121820; color:#eee;
+    overflow:hidden; position:fixed; width:100%; height:100%;
+  }
+  html { height:-webkit-fill-available; overflow:hidden; }
+  .container {
+    text-align:center; max-width:520px; width:95%;
+    padding:0.3rem 0 0.4rem;
+    display:flex; flex-direction:column; align-items:center;
+  }
+  h1 { font-size:0.9rem; margin-bottom:0.3rem; font-weight:300;
+    letter-spacing:0.05em; color:#8a9bae; }
+
+  /* Level tabs */
+  .level-row { display:flex; gap:0.3rem; margin-bottom:0.3rem; justify-content:center; width:400px; }
+  .level-btn {
+    flex:1; padding:9px 0; border:none; border-radius:14px;
+    font-size:0.75rem; font-weight:700; cursor:pointer;
+    touch-action:manipulation;
+    background:rgba(255,255,255,0.04); color:#4a5a6a;
+    transition: background 0.15s, color 0.15s;
+  }
+  .level-btn.active { background:linear-gradient(135deg,#2a6496,#3a8fc0); color:white; }
+
+  /* Row label */
+  .row-label {
+    font-size:0.55rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase;
+    color:#3a4a5a; margin-bottom:0.15rem; align-self:flex-start; margin-left:4px;
+  }
+
+  /* Selector rows */
+  .sel-row {
+    display:flex; gap:0.28rem; margin-bottom:0.22rem;
+    justify-content:center; width:400px; flex-wrap:nowrap;
+  }
+  .sel-btn {
+    flex:1; padding:9px 0; border:none; border-radius:16px;
+    font-size:0.68rem; font-weight:600; cursor:pointer;
+    touch-action:manipulation;
+    background:rgba(255,255,255,0.06); color:#6a7a8a;
+    transition: background 0.15s, color 0.15s;
+    white-space:nowrap; min-width:0;
+  }
+  .sel-btn.active { background:linear-gradient(135deg,#d4574e,#e8856a); color:white; }
+  .sel-btn.active.lvl2 { background:linear-gradient(135deg,#2a6496,#3a8fc0); }
+
+  /* Card */
+  .card-wrapper {
+    width:400px; height:260px;
+    border-radius:22px;
+    background:linear-gradient(145deg,#161e28,#1a2332);
+    box-shadow:0 10px 40px rgba(0,0,0,0.6), 0 0 0 1.5px rgba(255,255,255,0.05);
+    margin-bottom:0.35rem; flex-shrink:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    position:relative; overflow:hidden; padding:1rem 1rem;
+  }
+  .card-wrapper::before {
+    content:''; position:absolute; inset:0;
+    background: radial-gradient(ellipse at 20% 20%, rgba(212,87,78,0.08) 0%, transparent 60%);
+    pointer-events:none;
+  }
+  .card-label { display:none; }
+
+  .question-area { display:flex; flex-direction:column; align-items:center; gap:0.25rem; }
+  .q-context { font-size:1rem; color:#6a8a9a; font-style:normal; margin-bottom:0.15rem; line-height:1.4; font-weight:600; }
+  .q-sublabel { font-size:0.65rem; color:#3a5060; font-weight:600; letter-spacing:0.06em; margin-bottom:0.1rem; }
+  .q-sentence {
+    font-size:1.9rem; font-weight:700;
+    line-height:1.3; letter-spacing:0.01em;
+    text-shadow:0 2px 15px rgba(212,87,78,0.12);
+    display:flex; align-items:baseline; justify-content:center;
+    flex-wrap:wrap; gap:0.3em;
+  }
+  .q-note { font-size:0.65rem; color:#4a6070; margin-top:0.25rem; font-style:italic; height:1.1rem; }
+  .q-word { display:inline-flex; align-items:baseline; }
+  .q-word .stem { color:#8a9aaa; }
+  .q-word .ending-blank {
+    display:inline-block; min-width:0.8em;
+    border-bottom:3px solid #d4574e;
+    color:transparent; margin-left:0; text-align:left;
+  }
+  .q-word .ending-blank.revealed { color:#f0c040; border-bottom:none; text-shadow:0 2px 10px rgba(240,192,64,0.3); }
+  .q-word.noun { color:#8a9aaa; }
+  .q-word.invariable { color:#f0c040; }
+  .q-hint { font-size:0.68rem; color:#4a6070; margin-top:0.25rem; line-height:1.4; }
+  .answer-explain { display:none; }
+
+  .progress-bar-bg { position:absolute; bottom:0; left:0; right:0; height:4px; background:rgba(255,255,255,0.04); }
+  .progress-bar-fill { height:100%; background:linear-gradient(90deg,#d4574e,#f0c040); transition:width 0.4s ease; border-radius:0 2px 2px 0; }
+
+  .buttons-zone { height:3.2rem; display:flex; align-items:center; justify-content:center; margin-bottom:0.15rem; position:relative; }
+  .buttons { display:flex; gap:0.45rem; justify-content:center; flex-wrap:wrap; position:absolute; }
+  .buttons.hidden { visibility:hidden; pointer-events:none; }
+  button { padding:11px 17px; border:none; border-radius:14px; font-size:0.78rem; font-weight:700; cursor:pointer; touch-action:manipulation; position:relative; z-index:100; }
+  button:active:not(:disabled) { transform:scale(0.95); opacity:0.85; }
+  button:disabled { cursor:default; opacity:0.35; }
+  .btn-reveal  { background:linear-gradient(135deg,#d4574e,#c0392b); color:white; min-width:185px; }
+  .btn-known   { background:linear-gradient(135deg,#43e97b,#38f9d7); color:#1a1a2e; flex:1; }
+  .btn-review3 { background:linear-gradient(135deg,#fa709a,#fee140); color:#1a1a2e; flex:1; }
+  .btn-review5 { background:linear-gradient(135deg,#f7971e,#ffd200); color:#1a1a2e; flex:1; }
+  .btn-review20{ background:linear-gradient(135deg,#eb3349,#f45c43); color:white; flex:1; }
+  .btn-restart { background:linear-gradient(135deg,#d4574e,#c0392b); color:white; min-width:185px; }
+  .action-row  { display:flex; flex-direction:row; gap:0.35rem; width:400px; }
+
+  .stats { font-size:0.6rem; color:#3a4a5a; line-height:1.9; }
+  .stats strong { color:#5a7080; }
+
+  .done-screen { display:none; padding:1.5rem 1rem; }
+  .done-screen h2 { font-size:1.8rem; margin-bottom:0.8rem; font-weight:300; }
+  .done-screen p  { color:#6a8090; margin-bottom:1.6rem; line-height:1.6; }
+  .done-icon { font-size:2.6rem; margin-bottom:0.4rem; }
+
+  @media (max-width:430px) {
+    .level-row, .sel-row { width:95%; }
+    .card-wrapper { width:95%; height:240px; }
+    .q-sentence { font-size:1.3rem; }
+    button { padding:10px 11px; font-size:0.74rem; }
+    .action-row { width:95%; }
+  }
+
+  /* Persistent floating buttons (top corners) */
+  .floating-btn {
+    position: fixed;
+    top: max(14px, env(safe-area-inset-top, 0px));
+    width: 44px; height: 44px;
+    padding: 0; border: none; border-radius: 50%;
+    color: white; font-size: 1.2rem; cursor: pointer;
+    z-index: 200;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    display: flex; align-items: center; justify-content: center;
+    touch-action: manipulation;
+  }
+  .floating-btn:active:not(:disabled) { transform: scale(0.92); opacity: 0.85; }
+  .floating-btn:disabled { opacity: 0.3; cursor: default; }
+  #markBtn {
+    left: max(14px, env(safe-area-inset-left, 0px));
+    background: linear-gradient(135deg, #d4574e, #e8856a);
+  }
+  #markBtn.marked {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: #1a1a2e;
+  }
+  #listBtn {
+    right: max(14px, env(safe-area-inset-right, 0px));
+    background: rgba(212, 87, 78, 0.85);
+  }
+  #listBtn .badge {
+    position: absolute; top: -4px; right: -4px;
+    background: #f0c040; color: #1a1a2e;
+    font-size: 0.7rem; font-weight: 800;
+    min-width: 20px; height: 20px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px;
+    border: 2px solid #121820;
+  }
+  #listBtn .badge.empty { display: none; }
+
+  /* Modal overlay */
+  .modal-overlay {
+    display: none;
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 300;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal {
+    background: #1a2332;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 16px;
+    width: 100%; max-width: 460px; max-height: 85vh;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+  .modal-header {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .modal-header h3 {
+    font-size: 1.05rem; font-weight: 600;
+    color: #cce0ff; margin: 0;
+  }
+  .modal-close {
+    background: transparent; color: #aab;
+    font-size: 1.5rem; line-height: 1;
+    padding: 0 8px; min-width: auto;
+    font-weight: 300;
+  }
+  .modal-body {
+    padding: 14px 18px;
+    overflow-y: auto; flex: 1;
+    -webkit-overflow-scrolling: touch;
+  }
+  #rebelList {
+    width: 100%; min-height: 220px;
+    background: #0e0e22;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #eee;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 0.78rem;
+    padding: 10px 12px;
+    line-height: 1.5;
+    resize: vertical;
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    -webkit-touch-callout: default !important;
+    touch-action: auto;
+    white-space: pre;
+  }
+  #rebelList:focus { outline: 1px solid rgba(122,176,232,0.5); }
+  .modal-footer {
+    padding: 12px 18px 14px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+    display: flex; gap: 8px;
+    flex-wrap: wrap; justify-content: space-between;
+  }
+  .modal-footer button {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    border-radius: 10px;
+    flex: 1; min-width: 90px;
+    font-weight: 700;
+  }
+  .btn-copy {
+    background: linear-gradient(135deg, #43e97b, #38f9d7);
+    color: #1a1a2e;
+  }
+  .btn-clear {
+    background: rgba(255,255,255,0.08);
+    color: #d99;
+    border: 1px solid rgba(255,100,100,0.3);
+  }
+
+  /* Bouton aide en bas à droite */
+  #helpBtn {
+    top: auto;
+    bottom: max(14px, env(safe-area-inset-bottom, 0px));
+    right: max(14px, env(safe-area-inset-right, 0px));
+    background: linear-gradient(135deg, #2a6496, #3a8fc0);
+  }
+
+  /* Contenu de la modal d'aide */
+  #helpBody { font-size: 0.85rem; line-height: 1.5; }
+  #helpBody h4 {
+    color: #cce0ff; font-size: 1rem; font-weight: 600;
+    margin: 0 0 10px;
+  }
+  #helpBody h5 {
+    color: #f0c040; font-size: 0.85rem; font-weight: 700;
+    margin: 14px 0 6px; text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  #helpBody p { color: #aab; margin: 8px 0; }
+  #helpBody ul {
+    color: #aab; padding-left: 20px; margin: 6px 0;
+    line-height: 1.7;
+  }
+  #helpBody b { color: #f0c040; font-weight: 700; }
+  #helpBody i { color: #8a9bae; font-style: italic; }
+  #helpBody small { color: #6a7a8a; font-size: 0.75rem; }
+
+  .help-table {
+    width: 100%; border-collapse: collapse;
+    margin: 8px 0 10px; font-size: 0.82rem;
+  }
+  .help-table th, .help-table td {
+    padding: 6px 8px; text-align: left;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .help-table thead th {
+    color: #8a9bae; font-weight: 700;
+    font-size: 0.72rem; text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .help-table tbody th {
+    color: #cce0ff; font-weight: 600;
+    width: 50px;
+  }
+  .help-table td {
+    color: #f0c040;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  }
+  .help-table td.muted { color: #4a5a6a; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🇩🇪 Déclinaisons allemandes</h1>
+
+  <!-- Onglets niveau -->
+  <div class="level-row">
+    <button class="level-btn active" id="lvl1btn" onclick="setLevel(1)">Niveau 1 · Base</button>
+    <button class="level-btn"        id="lvl2btn" onclick="setLevel(2)">Niveau 2 · Intermédiaire</button>
+  </div>
+
+  <!-- Niveau 1 -->
+  <div id="lvl1groups" class="sel-row">
+    <button class="sel-btn active" id="groupSans" onclick="toggleGroup('sans')">Sans adjectifs</button>
+    <button class="sel-btn active" id="groupAvec" onclick="toggleGroup('avec')">Avec adjectifs</button>
+  </div>
+
+  <!-- Niveau 2 -->
+  <div id="lvl2groups" class="sel-row" style="display:none;">
+    <button class="sel-btn active" id="g2Sans" onclick="toggleGroup2('sans')">Sans adjectifs</button>
+    <button class="sel-btn active" id="g2Avec" onclick="toggleGroup2('avec')">Avec adjectifs</button>
+  </div>
+
+  <div id="gameScreen">
+    <div class="card-wrapper">
+      <div class="card-label" id="cardLabel">…</div>
+      <div class="question-area">
+        <div class="q-context"  id="qContext"></div>
+        <div class="q-sublabel" id="qSubLabel"></div>
+        <div class="q-sentence" id="qSentence"></div>
+        <div class="q-note"     id="qNote"></div>
+      </div>
+      <div class="answer-explain" id="answerExplain"></div>
+      <div class="progress-bar-bg"><div class="progress-bar-fill" id="progressFill" style="width:0%"></div></div>
+    </div>
+
+    <div class="buttons-zone">
+      <div class="buttons" id="revealButtons">
+        <button class="btn-reveal" id="revealBtn">Voir la réponse</button>
+      </div>
+      <div class="buttons hidden" id="actionButtons">
+        <div class="action-row">
+          <button class="btn-known"    id="knownBtn">Connu</button>
+          <button class="btn-review3"  id="reviewBtn3">+3</button>
+          <button class="btn-review5"  id="reviewBtn5">+5</button>
+          <button class="btn-review20" id="reviewBtn20">+20</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="stats"></div>
+  </div>
+
+  <div class="done-screen" id="doneScreen">
+    <div class="done-icon">🎉</div>
+    <h2>Bravo !</h2>
+    <p>Tu as révisé toutes les cartes.<br>Continue à t'entraîner pour bien mémoriser !</p>
+    <button class="btn-restart" id="restartBtn">🔄 Recommencer</button>
+  </div>
+</div>
+
+<!-- Persistent floating buttons -->
+<button id="markBtn" class="floating-btn" title="Marquer comme récalcitrant">⚑</button>
+<button id="listBtn" class="floating-btn" title="Liste des récalcitrants">📋<span class="badge empty" id="rebelBadge">0</span></button>
+<button id="helpBtn" class="floating-btn" title="Explications">📖</button>
+
+<!-- Rebel list modal -->
+<div class="modal-overlay" id="rebelModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>⚑ Déclinaisons récalcitrantes</h3>
+      <button class="modal-close" id="modalCloseBtn" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body">
+      <textarea id="rebelList" readonly placeholder="Aucune déclinaison récalcitrante pour le moment."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-copy" id="copyBtn">📋 Copier</button>
+      <button class="btn-clear" id="clearBtn">🗑 Vider</button>
+    </div>
+  </div>
+</div>
+
+<!-- Help modal -->
+<div class="modal-overlay" id="helpModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="helpTitle">📖 Explications</h3>
+      <button class="modal-close" id="helpCloseBtn" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body" id="helpBody"></div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+//  SHARED
+// ═══════════════════════════════════════════════
+var CASES = ['nom','acc','dat','gen'];
+var CASE_NAMES = {nom:'Nominatif',acc:'Accusatif',dat:'Datif',gen:'Génitif'};
+var GENDERS = ['masc','fem','neut','plur'];
+var GENDER_NAMES = {masc:'Masculin',fem:'Féminin',neut:'Neutre',plur:'Pluriel'};
+
+// ═══════════════════════════════════════════════
+//  DÉCLINAISONS (partagées)
+// ═══════════════════════════════════════════════
+var ART_DEF_ENDING = {
+  nom:{masc:'er',fem:'ie',neut:'as',plur:'ie'},
+  acc:{masc:'en',fem:'ie',neut:'as',plur:'ie'},
+  dat:{masc:'em',fem:'er',neut:'em',plur:'en'},
+  gen:{masc:'es',fem:'er',neut:'es',plur:'er'}
+};
+var ARTICLE_FULL = {
+  nom:{masc:'der',fem:'die',neut:'das',plur:'die'},
+  acc:{masc:'den',fem:'die',neut:'das',plur:'die'},
+  dat:{masc:'dem',fem:'der',neut:'dem',plur:'den'},
+  gen:{masc:'des',fem:'der',neut:'des',plur:'der'}
+};
+var ADJ_FAIBLE = {
+  nom:{masc:'e', fem:'e', neut:'e', plur:'en'},
+  acc:{masc:'en',fem:'e', neut:'e', plur:'en'},
+  dat:{masc:'en',fem:'en',neut:'en',plur:'en'},
+  gen:{masc:'en',fem:'en',neut:'en',plur:'en'}
+};
+var ART_INDEF_ENDING = {
+  nom:{masc:'', fem:'e', neut:''},
+  acc:{masc:'en',fem:'e',neut:''},
+  dat:{masc:'em',fem:'er',neut:'em'},
+  gen:{masc:'es',fem:'er',neut:'es'}
+};
+var INDEF_FULL = {
+  nom:{masc:'ein',  fem:'eine', neut:'ein'},
+  acc:{masc:'einen',fem:'eine', neut:'ein'},
+  dat:{masc:'einem',fem:'einer',neut:'einem'},
+  gen:{masc:'eines',fem:'einer',neut:'eines'}
+};
+var ADJ_MIXTE = {
+  nom:{masc:'er',fem:'e', neut:'es'},
+  acc:{masc:'en',fem:'e', neut:'es'},
+  dat:{masc:'en',fem:'en',neut:'en'},
+  gen:{masc:'en',fem:'en',neut:'en'}
+};
+var ADJ_FORTE = {
+  nom:{masc:'er',fem:'e', neut:'es',plur:'e'},
+  acc:{masc:'en',fem:'e', neut:'es',plur:'e'},
+  dat:{masc:'em',fem:'er',neut:'em',plur:'en'},
+  gen:{masc:'en',fem:'er',neut:'en',plur:'er'}
+};
+
+// ═══════════════════════════════════════════════
+//  NOMS
+// ═══════════════════════════════════════════════
+var NOUNS1 = {
+  masc:{word:'Mann', gen:'Mannes',datPlur:null},
+  fem: {word:'Frau', gen:'Frau',  datPlur:null},
+  neut:{word:'Kind', gen:'Kindes',datPlur:null},
+  plur:{word:'Leute',gen:'Leute', datPlur:'Leuten'}
+};
+var NOUNS2 = {
+  masc:{word:'Lehrer',gen:'Lehrers',datPlur:null},
+  fem: {word:'Idee',  gen:'Idee',   datPlur:null},
+  neut:{word:'Auto',  gen:'Autos',  datPlur:null},
+  plur:{word:'Männer',gen:'Männer', datPlur:'Männern'}
+};
+
+var ADJ_STEM1 = 'nett';
+var ADJ_STEM2 = 'nett';
+
+// ═══════════════════════════════════════════════
+//  DONNÉES NIVEAU 2
+// ═══════════════════════════════════════════════
+
+// Déterminatifs type DER
+var DER_TYPE_DETS = [
+  {stem:'dies',  label:'dieser'},
+  {stem:'welch', label:'welcher'},
+  {stem:'jed',   label:'jeder', singulierOnly:true},
+  {stem:'jen',   label:'jener'},
+  {stem:'solch', label:'solcher'},
+  {stem:'manch', label:'mancher'}
+];
+
+// Possessifs type KEIN
+var KEIN_POSS = [
+  {stem:'kein', label:'kein'},
+  {stem:'mein', label:'mein'},
+  {stem:'dein', label:'dein'},
+  {stem:'sein', label:'sein'},
+  {stem:'ihr',  label:'ihr'},
+  {stem:'unser',label:'unser'},
+  {stem:'euer', label:'euer'}
+];
+var KEIN_PLUR = {nom:'e',acc:'e',dat:'en',gen:'er'};
+
+// Derselbe / derjenige
+var DERSELBE_LIST = [
+  {detStem:'d',adjStem:'selb',  label:'derselbe'},
+  {detStem:'d',adjStem:'jenig', label:'derjenige'}
+];
+
+// Alle / beide → adj faible au pluriel
+var ALLE_BEIDE = [
+  {stem:'all', label:'alle',  end:{nom:'e',acc:'e',dat:'en',gen:'er'}},
+  {stem:'beid',label:'beide', end:{nom:'e',acc:'e',dat:'en',gen:'er'}}
+];
+
+// Indéfinis pluriels → déterminatif + adj = terminaisons fortes
+var VIELE_LIST = [
+  {stem:'viel',       label:'viele'},
+  {stem:'wenig',      label:'wenige'},
+  {stem:'einig',      label:'einige'},
+  {stem:'ander',      label:'andere'},
+  {stem:'mehrer',     label:'mehrere'},
+  {stem:'zahlreich',  label:'zahlreiche'},
+  {stem:'folgend',    label:'folgende'},
+  {stem:'verschieden',label:'verschiedene'},
+  {stem:'etlich',     label:'etliche'},
+  {stem:'zahllos',    label:'zahllose'}
+];
+
+// ── PARTICULARITÉS ───────────────────────────────────────
+// Chaque entrée décrit un adjectif avec comportement spécial.
+// type: 'emut'    = perd le -e- intérieur (teuer→teur, dunkel→dunkl)
+// type: 'hoch'    = hoch→hoh quand flexion
+// type: 'invariable' = adjectif en -a ou géo en -er : JAMAIS décliné (affiché tel quel)
+var PARTICU_ADJ = [
+  // -er/-el : perd le e intérieur quand terminaison
+  {baseForm:'teuer',  stem:'teur',  type:'emut',     noun:{masc:{word:'Wagen',gen:'Wagens'},fem:{word:'Uhr',gen:'Uhr'},neut:{word:'Auto',gen:'Autos'},plur:{word:'Autos',gen:'Autos',datPlur:'Autos'}}},
+  {baseForm:'dunkel', stem:'dunkl', type:'emut',     noun:{masc:{word:'Keller',gen:'Kellers'},fem:{word:'Straße',gen:'Straße'},neut:{word:'Zimmer',gen:'Zimmers'},plur:{word:'Zimmer',gen:'Zimmer',datPlur:'Zimmern'}}},
+  {baseForm:'edel',   stem:'edl',   type:'emut',     noun:{masc:{word:'Mann',gen:'Mannes'},fem:{word:'Frau',gen:'Frau'},neut:{word:'Metall',gen:'Metalls'},plur:{word:'Metalle',gen:'Metalle',datPlur:'Metallen'}}},
+  // hoch → hoh
+  {baseForm:'hoch',   stem:'hoh',   type:'hoch',     noun:{masc:{word:'Turm',gen:'Turms'},fem:{word:'Mauer',gen:'Mauer'},neut:{word:'Gebäude',gen:'Gebäudes'},plur:{word:'Türme',gen:'Türme',datPlur:'Türmen'}}},
+  // invariables en -a
+  {baseForm:'lila',   stem:'lila',  type:'invariable', inv_note:'Adjectif en -a : pas de déclinaison', noun:{masc:{word:'Stift',gen:'Stifts'},fem:{word:'Tasche',gen:'Tasche'},neut:{word:'Kleid',gen:'Kleids'},plur:{word:'Taschen',gen:'Taschen',datPlur:'Taschen'}}},
+  {baseForm:'rosa',   stem:'rosa',  type:'invariable', inv_note:'Adjectif en -a : pas de déclinaison', noun:{masc:{word:'Rock',gen:'Rocks'},fem:{word:'Bluse',gen:'Bluse'},neut:{word:'Hemd',gen:'Hemds'},plur:{word:'Hemden',gen:'Hemden',datPlur:'Hemden'}}},
+  {baseForm:'beige',  stem:'beige', type:'invariable', inv_note:'Adjectif en -e invariable', noun:{masc:{word:'Mantel',gen:'Mantels'},fem:{word:'Jacke',gen:'Jacke'},neut:{word:'Sofa',gen:'Sofas'},plur:{word:'Sofas',gen:'Sofas',datPlur:'Sofas'}}},
+  // géographiques / dates en -er invariables
+  {baseForm:'Bonner',  stem:'Bonner',  type:'invariable', inv_note:'Adjectif géographique : invariable', noun:{masc:null,fem:{word:'Altstadt',gen:'Altstadt'},neut:null,plur:null}},
+  {baseForm:'Berliner',stem:'Berliner',type:'invariable', inv_note:'Adjectif géographique : invariable', noun:{masc:{word:'Bär',gen:'Bären'},fem:{word:'Luft',gen:'Luft'},neut:null,plur:null}},
+  {baseForm:'zwanziger',stem:'zwanziger',type:'invariable', inv_note:'Adjectif de date en -er : invariable', noun:{masc:null,fem:null,neut:null,plur:{word:'Jahre',gen:'Jahre',datPlur:'Jahren'}}}
+];
+
+// ═══════════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════════
+var currentLevel=1;
+
+var activeGroups  = {sans:true, avec:true};
+var activeGroups2 = {sans:true, avec:true};
+var activeTypes   = {article:true, indef:true, faible:true, mixte:true, forte:true};
+var activeCases   = {nom:true, acc:true, dat:true, gen:true};
+
+var allCards=[],available=[],reviewQueue=[],known=[],turn=0,current=null,revealed=false;
+
+// ═══════════════════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════════════════
+function getNoun(cas,g,nouns){
+  var n=nouns[g]; if(!n) return null;
+  if(cas==='gen'&&(g==='masc'||g==='neut')) return n.gen;
+  if(cas==='dat'&&g==='plur'&&n.datPlur) return n.datPlur;
+  return n.word;
+}
+function possStem(stem,ending){ return (stem==='euer'&&ending!=='')?'eur':stem; }
+
+// ═══════════════════════════════════════════════
+//  NIVEAU 1 — BUILDERS
+// ═══════════════════════════════════════════════
+function buildArticleCards(){
+  var cards=[];
+  CASES.forEach(function(cas){if(!activeCases[cas])return;
+    GENDERS.forEach(function(g){
+      var e=ART_DEF_ENDING[cas][g], noun=getNoun(cas,g,NOUNS1);
+      cards.push({id:'art_'+cas+'_'+g, cas:cas, gender:g,
+        blanks:[{stem:'d',ending:e,isArticle:true}], noun:noun});
+    });
+  });
+  return cards;
+}
+function buildIndefCards(){
+  var cards=[];
+  ['masc','fem','neut'].forEach(function(g){CASES.forEach(function(cas){if(!activeCases[cas])return;
+    var e=ART_INDEF_ENDING[cas][g], noun=getNoun(cas,g,NOUNS1);
+    cards.push({id:'indef_'+cas+'_'+g, cas:cas, gender:g,
+      blanks:[{stem:'ein',ending:e,isArticle:true}], noun:noun});
+  });});
+  return cards;
+}
+function buildFaibleCards(){
+  var cards=[];
+  CASES.forEach(function(cas){if(!activeCases[cas])return;
+    GENDERS.forEach(function(g){
+      var ae=ART_DEF_ENDING[cas][g], je=ADJ_FAIBLE[cas][g], noun=getNoun(cas,g,NOUNS1);
+      cards.push({id:'faible_'+cas+'_'+g, cas:cas, gender:g,
+        blanks:[{stem:'d',ending:ae,isArticle:true},{stem:ADJ_STEM1,ending:je,isArticle:false}], noun:noun});
+    });
+  });
+  return cards;
+}
+function buildMixteCards(){
+  var cards=[];
+  ['masc','fem','neut'].forEach(function(g){CASES.forEach(function(cas){if(!activeCases[cas])return;
+    var ae=ART_INDEF_ENDING[cas][g], je=ADJ_MIXTE[cas][g], noun=getNoun(cas,g,NOUNS1);
+    cards.push({id:'mixte_'+cas+'_'+g, cas:cas, gender:g,
+      blanks:[{stem:'ein',ending:ae,isArticle:true},{stem:ADJ_STEM1,ending:je,isArticle:false}], noun:noun});
+  });});
+  return cards;
+}
+function buildForteCards(){
+  var cards=[];
+  CASES.forEach(function(cas){if(!activeCases[cas])return;
+    GENDERS.forEach(function(g){
+      var je=ADJ_FORTE[cas][g], noun=getNoun(cas,g,NOUNS1);
+      cards.push({id:'forte_'+cas+'_'+g, cas:cas, gender:g,
+        blanks:[{stem:ADJ_STEM1,ending:je,isArticle:false}], noun:noun});
+    });
+  });
+  return cards;
+}
+
+// ═══════════════════════════════════════════════
+//  NIVEAU 2 — BUILDERS
+// ═══════════════════════════════════════════════
+
+// 2a. dieser/welcher/jeder/jener/solcher/mancher
+//     sans adj : déterminatif seul
+//     avec adj : déterminatif + adj faible
+function buildDieserCards(avecAdj){
+  var cards=[];
+  DER_TYPE_DETS.forEach(function(det){
+    CASES.forEach(function(cas){if(!activeCases[cas])return;
+      var glist=det.singulierOnly?['masc','fem','neut']:GENDERS;
+      glist.forEach(function(g){
+        var de=ADJ_FORTE[cas][g], noun=getNoun(cas,g,NOUNS2);
+        if(avecAdj){
+          var ae=ADJ_FAIBLE[cas][g];
+          cards.push({id:'dieser_avec_'+det.label+'_'+cas+'_'+g, cas:cas, gender:g,
+            blanks:[{stem:det.stem,ending:de,isArticle:true},{stem:ADJ_STEM2,ending:ae,isArticle:false}],
+            noun:noun});
+        } else {
+          cards.push({id:'dieser_sans_'+det.label+'_'+cas+'_'+g, cas:cas, gender:g,
+            blanks:[{stem:det.stem,ending:de,isArticle:true}],
+            noun:noun});
+        }
+      });
+    });
+  });
+  return cards;
+}
+
+// 2b. Possessifs kein/mein/…
+//     sans adj : possessif seul
+//     avec adj : possessif + adj mixte (sing) ou fort (plur)
+function buildPossessifCards(avecAdj){
+  var cards=[];
+  KEIN_POSS.forEach(function(poss){
+    CASES.forEach(function(cas){if(!activeCases[cas])return;
+      ['masc','fem','neut'].forEach(function(g){
+        var e=ART_INDEF_ENDING[cas][g], st=possStem(poss.stem,e), noun=getNoun(cas,g,NOUNS2);
+        if(avecAdj){
+          var ae=ADJ_MIXTE[cas][g];
+          cards.push({id:'poss_avec_'+poss.label+'_'+cas+'_'+g, cas:cas, gender:g,
+            blanks:[{stem:st,ending:e,isArticle:true},{stem:ADJ_STEM2,ending:ae,isArticle:false}],
+            noun:noun});
+        } else {
+          cards.push({id:'poss_sans_'+poss.label+'_'+cas+'_'+g, cas:cas, gender:g,
+            blanks:[{stem:st,ending:e,isArticle:true}], noun:noun});
+        }
+      });
+      // pluriel
+      var ep=KEIN_PLUR[cas], stp=possStem(poss.stem,ep), noun=getNoun(cas,'plur',NOUNS2);
+      if(avecAdj){
+        var ape=ADJ_FAIBLE[cas]['plur'];
+        cards.push({id:'poss_avec_'+poss.label+'_'+cas+'_plur', cas:cas, gender:'plur',
+          blanks:[{stem:stp,ending:ep,isArticle:true},{stem:ADJ_STEM2,ending:ape,isArticle:false}],
+          noun:noun});
+      } else {
+        cards.push({id:'poss_sans_'+poss.label+'_'+cas+'_plur', cas:cas, gender:'plur',
+          blanks:[{stem:stp,ending:ep,isArticle:true}], noun:noun});
+      }
+    });
+  });
+  return cards;
+}
+
+// 2c. Derselbe / derjenige : d+ending+selb+ending ou d+ending+jenig+ending = UN seul mot
+//     Le flag noSpace sur le 2e blank indique qu'il colle au précédent sans espace
+function buildDerselbeCards(avecAdj){
+  var cards=[];
+  DERSELBE_LIST.forEach(function(s){
+    CASES.forEach(function(cas){if(!activeCases[cas])return;
+      GENDERS.forEach(function(g){
+        var de=ART_DEF_ENDING[cas][g], ae=ADJ_FAIBLE[cas][g], noun=getNoun(cas,g,NOUNS2);
+        // Les deux blanks forment un seul mot : d[er]selb[e] → noSpace sur le 2e
+        var blanks=[
+          {stem:s.detStem, ending:de, isArticle:true},
+          {stem:s.adjStem, ending:ae, isArticle:false, noSpace:true}
+        ];
+        if(avecAdj){
+          // Avec un adjectif supplémentaire après (nett_) — peu courant mais possible
+          cards.push({id:'derselbe_avec_'+s.label+'_'+cas+'_'+g, cas:cas, gender:g,
+            blanks:blanks, noun:noun});
+        } else {
+          cards.push({id:'derselbe_sans_'+s.label+'_'+cas+'_'+g, cas:cas, gender:g,
+            blanks:blanks, noun:noun});
+        }
+      });
+    });
+  });
+  return cards;
+}
+
+// 2d. Alle / beide au pluriel
+//     sans adj : déterminatif seul
+//     avec adj : déterminatif + adj faible
+function buildAlleBothCards(avecAdj){
+  var cards=[];
+  ALLE_BEIDE.forEach(function(det){
+    CASES.forEach(function(cas){if(!activeCases[cas])return;
+      var de=det.end[cas], noun=getNoun(cas,'plur',NOUNS2);
+      if(avecAdj){
+        var ae=ADJ_FAIBLE[cas]['plur'];
+        cards.push({id:'alle_avec_'+det.label+'_'+cas, cas:cas, gender:'plur',
+          blanks:[{stem:det.stem,ending:de,isArticle:true},{stem:ADJ_STEM2,ending:ae,isArticle:false}],
+          noun:noun});
+      } else {
+        cards.push({id:'alle_sans_'+det.label+'_'+cas, cas:cas, gender:'plur',
+          blanks:[{stem:det.stem,ending:de,isArticle:true}], noun:noun});
+      }
+    });
+  });
+  return cards;
+}
+
+// 2e. Indéfinis pluriels
+//     sans adj : déterminatif seul (terminaison forte)
+//     avec adj : déterminatif + adj fort
+function buildVieleCards(avecAdj){
+  var cards=[];
+  VIELE_LIST.forEach(function(det){
+    CASES.forEach(function(cas){if(!activeCases[cas])return;
+      var de=ADJ_FORTE[cas]['plur'], noun=getNoun(cas,'plur',NOUNS2);
+      if(avecAdj){
+        var ae=ADJ_FORTE[cas]['plur'];
+        cards.push({id:'viele_avec_'+det.label+'_'+cas, cas:cas, gender:'plur',
+          blanks:[{stem:det.stem,ending:de,isArticle:true},{stem:ADJ_STEM2,ending:ae,isArticle:false}],
+          noun:noun});
+      } else {
+        cards.push({id:'viele_sans_'+det.label+'_'+cas, cas:cas, gender:'plur',
+          blanks:[{stem:det.stem,ending:de,isArticle:true}], noun:noun});
+      }
+    });
+  });
+  return cards;
+}
+
+// 2f. Particularités
+//     sans adj : d_ + adjectif particulier seul (invariable affiché, ou stem spécial seul)
+//     avec adj : comme actuellement (d_ + adj particulier)
+function buildParticuCards(avecAdj){
+  var cards=[];
+  PARTICU_ADJ.forEach(function(adj){
+    CASES.forEach(function(cas){if(!activeCases[cas])return;
+      GENDERS.forEach(function(g){
+        var nounObj=adj.noun[g]; if(!nounObj) return;
+        var noun=getNoun(cas,g,adj.noun); if(!noun) return;
+        var de=ART_DEF_ENDING[cas][g];
+
+        if(adj.type==='invariable'){
+          // invariable : l'adjectif ne change jamais — même carte dans les deux modes
+          cards.push({id:'particu_'+(avecAdj?'avec':'sans')+'_'+adj.baseForm+'_'+cas+'_'+g,
+            cas:cas, gender:g,
+            blanks:[{stem:'d',ending:de,isArticle:true}],
+            noun:noun, invariableAdj:adj.stem, note:adj.inv_note});
+        } else {
+          // stem modifié : déclinaison faible après article défini
+          var ae=ADJ_FAIBLE[cas][g];
+          cards.push({id:'particu_'+(avecAdj?'avec':'sans')+'_'+adj.baseForm+'_'+cas+'_'+g,
+            cas:cas, gender:g,
+            blanks:[{stem:'d',ending:de,isArticle:true},{stem:adj.stem,ending:ae,isArticle:false}],
+            noun:noun, note:adj.baseForm+' → '+adj.stem+'… (modification du radical)'});
+        }
+      });
+    });
+  });
+  return cards;
+}
+
+// ═══════════════════════════════════════════════
+//  BUILD + SHUFFLE
+// ═══════════════════════════════════════════════
+function shuffle(arr){
+  for(var k=arr.length-1;k>0;k--){var r=Math.floor(Math.random()*(k+1)),t=arr[k];arr[k]=arr[r];arr[r]=t;}
+  return arr;
+}
+function buildCards(){
+  var cards=[];
+  if(currentLevel===1){
+    if(activeTypes.article) cards=cards.concat(buildArticleCards());
+    if(activeTypes.indef)   cards=cards.concat(buildIndefCards());
+    if(activeTypes.faible)  cards=cards.concat(buildFaibleCards());
+    if(activeTypes.mixte)   cards=cards.concat(buildMixteCards());
+    if(activeTypes.forte)   cards=cards.concat(buildForteCards());
+  } else {
+    var sans=activeGroups2.sans, avec=activeGroups2.avec;
+    if(sans) cards=cards.concat(buildDieserCards(false));
+    if(avec) cards=cards.concat(buildDieserCards(true));
+    if(sans) cards=cards.concat(buildPossessifCards(false));
+    if(avec) cards=cards.concat(buildPossessifCards(true));
+    if(sans) cards=cards.concat(buildDerselbeCards(false));
+    if(avec) cards=cards.concat(buildDerselbeCards(true));
+    if(sans) cards=cards.concat(buildAlleBothCards(false));
+    if(avec) cards=cards.concat(buildAlleBothCards(true));
+    if(sans) cards=cards.concat(buildVieleCards(false));
+    if(avec) cards=cards.concat(buildVieleCards(true));
+    if(avec) cards=cards.concat(buildParticuCards(avec));
+  }
+  return shuffle(cards);
+}
+
+// ═══════════════════════════════════════════════
+//  UI CONTROLS
+// ═══════════════════════════════════════════════
+function setLevel(n){
+  currentLevel=n;
+  document.getElementById('lvl1btn').classList.toggle('active',n===1);
+  document.getElementById('lvl2btn').classList.toggle('active',n===2);
+  document.getElementById('lvl1groups').style.display=(n===1)?'flex':'none';
+  document.getElementById('lvl2groups').style.display=(n===2)?'flex':'none';
+  doRestart();
+}
+
+function toggleGroup(g){
+  var next=!activeGroups[g];
+  if(!next&&!activeGroups[g==='sans'?'avec':'sans']) return;
+  activeGroups[g]=next;
+  document.getElementById('group'+g.charAt(0).toUpperCase()+g.slice(1)).classList.toggle('active',next);
+  activeTypes.article=activeGroups.sans; activeTypes.indef=activeGroups.sans;
+  activeTypes.faible=activeGroups.avec;  activeTypes.mixte=activeGroups.avec; activeTypes.forte=activeGroups.avec;
+  doRestart();
+}
+function toggleGroup2(g){
+  var next=!activeGroups2[g];
+  if(!next&&!activeGroups2[g==='sans'?'avec':'sans']) return;
+  activeGroups2[g]=next;
+  document.getElementById('g2'+g.charAt(0).toUpperCase()+g.slice(1)).classList.toggle('active',next);
+  doRestart();
+}
+
+// ═══════════════════════════════════════════════
+//  GAME LOGIC
+// ═══════════════════════════════════════════════
+function pickNext(){
+  var pick,due=[];
+  for(var i=0;i<reviewQueue.length;i++) if(reviewQueue[i].showAtTurn<=turn) due.push(reviewQueue[i]);
+  if(due.length>0){pick=due[Math.floor(Math.random()*due.length)];reviewQueue=reviewQueue.filter(function(r){return r!==pick;});return pick.card;}
+  if(available.length>0){var idx=Math.floor(Math.random()*available.length),c=available[idx];available.splice(idx,1);return c;}
+  if(reviewQueue.length>0){reviewQueue.sort(function(a,b){return a.showAtTurn-b.showAtTurn;});pick=reviewQueue[0];reviewQueue=reviewQueue.slice(1);return pick.card;}
+  return null;
+}
+
+function showCard(){
+  current=pickNext();
+  if(!current){
+    document.getElementById('gameScreen').style.display='none';
+    document.getElementById('doneScreen').style.display='block';
+    return;
+  }
+  revealed=false;
+
+  document.getElementById('qContext').textContent=CASE_NAMES[current.cas]+' · '+(current.gender==='plur'?'pluriel':'singulier');
+  document.getElementById('qSubLabel').textContent='';
+  document.getElementById('qNote').textContent='';
+
+  var sentEl=document.getElementById('qSentence');
+  sentEl.innerHTML='';
+
+  var lastWordEl=null;
+  current.blanks.forEach(function(b){
+    var stemSpan=document.createElement('span'); stemSpan.className='stem'; stemSpan.textContent=b.stem;
+    var blankSpan=document.createElement('span'); blankSpan.className='ending-blank';
+    blankSpan.textContent='_'.repeat(Math.max(b.ending.length,1));
+    blankSpan.setAttribute('data-ending',b.ending);
+    blankSpan.setAttribute('data-is-article',b.isArticle?'1':'0');
+
+    if(b.noSpace && lastWordEl){
+      // Coller au mot précédent sans espace
+      lastWordEl.appendChild(stemSpan);
+      lastWordEl.appendChild(blankSpan);
+    } else {
+      var wordEl=document.createElement('span'); wordEl.className='q-word';
+      wordEl.appendChild(stemSpan);
+      wordEl.appendChild(blankSpan);
+      sentEl.appendChild(wordEl);
+      lastWordEl=wordEl;
+    }
+  });
+
+  var nounEl=document.createElement('span'); nounEl.className='q-word noun'; nounEl.textContent=current.noun;
+  sentEl.appendChild(nounEl);
+
+  // Adjectif invariable : inséré entre l'article et le nom
+  if(current.invariableAdj){
+    var invEl=document.createElement('span'); invEl.className='q-word invariable';
+    invEl.textContent=current.invariableAdj;
+    sentEl.insertBefore(invEl, nounEl);
+  }
+
+  document.getElementById('answerExplain').innerHTML='';
+  document.getElementById('revealBtn').disabled=false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  updateStats(); updateProgress(); updateMarkBtn();
+}
+
+function doReveal(){
+  if(!current||revealed) return;
+  revealed=true; turn++;
+
+  document.querySelectorAll('#qSentence .ending-blank').forEach(function(b){
+    var ending=b.getAttribute('data-ending');
+    var isArt=b.getAttribute('data-is-article')==='1';
+    var stemEl=b.parentElement.querySelector('.stem');
+    if(ending===''){
+      b.style.display='none';
+      if(stemEl&&isArt) stemEl.style.color='#f0c040';
+    } else {
+      b.textContent=ending; b.classList.add('revealed');
+    }
+  });
+
+  // Note de particularité
+  if(current.note){
+    document.getElementById('qNote').textContent=current.note;
+  }
+
+  document.getElementById('qContext').textContent=CASE_NAMES[current.cas]+' · '+(current.gender==='plur'?'pluriel':'singulier');
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+}
+
+function doKnown()  {if(!current)return;known.push(current);showCard();}
+function doReview(n){if(!current)return;reviewQueue.push({card:current,showAtTurn:turn+n});showCard();}
+
+function updateStats(){
+  document.getElementById('stats').innerHTML=
+    '✓\u00A0Connues\u00A0:<strong>'+known.length+'</strong> · '+
+    '↺\u00A0À revoir\u00A0:<strong>'+reviewQueue.length+'</strong> · '+
+    'Restantes\u00A0:<strong>'+available.length+'</strong> · '+
+    'Tour\u00A0:<strong>'+turn+'</strong>';
+}
+function updateProgress(){
+  var t=allCards.length,pct=t>0?(known.length/t)*100:0;
+  document.getElementById('progressFill').style.width=pct+'%';
+}
+function doRestart(){
+  allCards=buildCards(); available=allCards.slice();
+  reviewQueue=[]; known=[]; turn=0;
+  document.getElementById('gameScreen').style.display='block';
+  document.getElementById('doneScreen').style.display='none';
+  showCard();
+}
+
+// ═══════════════════════════════════════════════
+//  RÉCALCITRANTS
+// ═══════════════════════════════════════════════
+var rebels = [];
+try { var _stored = localStorage.getItem('rebels_decl_v1'); if(_stored) rebels = JSON.parse(_stored) || []; } catch(e){}
+function saveRebels(){ try{ localStorage.setItem('rebels_decl_v1', JSON.stringify(rebels)); }catch(e){} }
+
+// Index maître de toutes les cartes possibles (tous niveaux, tous groupes)
+// pour pouvoir retrouver un récalcitrant quel que soit le mode courant.
+var _allPossibleCards = null;
+function getAllPossibleCards(){
+  if(_allPossibleCards) return _allPossibleCards;
+  var all = [];
+  all = all.concat(buildArticleCards());
+  all = all.concat(buildIndefCards());
+  all = all.concat(buildFaibleCards());
+  all = all.concat(buildMixteCards());
+  all = all.concat(buildForteCards());
+  all = all.concat(buildDieserCards(false));
+  all = all.concat(buildDieserCards(true));
+  all = all.concat(buildPossessifCards(false));
+  all = all.concat(buildPossessifCards(true));
+  all = all.concat(buildDerselbeCards(false));
+  all = all.concat(buildDerselbeCards(true));
+  all = all.concat(buildAlleBothCards(false));
+  all = all.concat(buildAlleBothCards(true));
+  all = all.concat(buildVieleCards(false));
+  all = all.concat(buildVieleCards(true));
+  all = all.concat(buildParticuCards(false));
+  all = all.concat(buildParticuCards(true));
+  _allPossibleCards = all;
+  return all;
+}
+function findCardById(id){
+  var all = getAllPossibleCards();
+  for(var i=0;i<all.length;i++) if(all[i].id===id) return all[i];
+  return null;
+}
+
+var GENDER_ABBR = {masc:'masc.', fem:'fém.', neut:'neut.', plur:'plur.'};
+var CASE_ABBR   = {nom:'Nom.',   acc:'Acc.',  dat:'Dat.',  gen:'Gén.'};
+
+function categoryFromId(id){
+  if(id.indexOf('art_')===0)            return 'Article déf.';
+  if(id.indexOf('indef_')===0)          return 'Article indéf.';
+  if(id.indexOf('faible_')===0)         return 'Adj. faible';
+  if(id.indexOf('mixte_')===0)          return 'Adj. mixte';
+  if(id.indexOf('forte_')===0)          return 'Adj. fort';
+  if(id.indexOf('dieser_sans_')===0)    return 'dieser-type';
+  if(id.indexOf('dieser_avec_')===0)    return 'dieser + adj';
+  if(id.indexOf('poss_sans_')===0)      return 'Possessif';
+  if(id.indexOf('poss_avec_')===0)      return 'Possessif + adj';
+  if(id.indexOf('derselbe_sans_')===0)  return 'derselbe';
+  if(id.indexOf('derselbe_avec_')===0)  return 'derselbe + adj';
+  if(id.indexOf('alle_sans_')===0)      return 'alle/beide';
+  if(id.indexOf('alle_avec_')===0)      return 'alle/beide + adj';
+  if(id.indexOf('viele_sans_')===0)     return 'viele-type';
+  if(id.indexOf('viele_avec_')===0)     return 'viele-type + adj';
+  if(id.indexOf('particu_')===0)        return 'Particularité';
+  return '?';
+}
+
+// Reconstitue la phrase complète avec terminaisons révélées
+function buildSentenceText(card){
+  var parts = [];
+  for(var i=0;i<card.blanks.length;i++){
+    var b = card.blanks[i];
+    if(b.noSpace && parts.length>0){
+      parts[parts.length-1] += b.stem + b.ending;
+    } else {
+      parts.push(b.stem + b.ending);
+    }
+  }
+  if(card.invariableAdj) parts.push(card.invariableAdj);
+  parts.push(card.noun);
+  return parts.join(' ');
+}
+
+function buildRebelText(){
+  if(rebels.length===0) return '';
+  var lines = [];
+  for(var i=0;i<rebels.length;i++){
+    var c = findCardById(rebels[i]);
+    if(!c) continue;
+    lines.push(
+      CASE_ABBR[c.cas] + ' ' + GENDER_ABBR[c.gender] + '\t' +
+      categoryFromId(c.id) + '\t' +
+      buildSentenceText(c)
+    );
+  }
+  return lines.join('\n');
+}
+
+function updateRebelBadge(){
+  var b = document.getElementById('rebelBadge');
+  b.textContent = rebels.length;
+  b.classList.toggle('empty', rebels.length===0);
+}
+function updateMarkBtn(){
+  var btn = document.getElementById('markBtn');
+  if(!current){ btn.disabled=true; btn.classList.remove('marked'); btn.textContent='⚑'; return; }
+  btn.disabled = false;
+  var isMarked = rebels.indexOf(current.id) !== -1;
+  btn.classList.toggle('marked', isMarked);
+  btn.textContent = isMarked ? '✓' : '⚑';
+  btn.title = isMarked ? 'Retirer des récalcitrants' : 'Marquer comme récalcitrant';
+}
+function doRebel(){
+  if(!current) return;
+  var idx = rebels.indexOf(current.id);
+  if(idx===-1) rebels.push(current.id);
+  else rebels.splice(idx,1);
+  saveRebels(); updateRebelBadge(); updateMarkBtn();
+}
+function openRebelModal(){
+  document.getElementById('rebelList').value = buildRebelText();
+  var clearBtn = document.getElementById('clearBtn');
+  if(clearBtn.dataset.confirming){
+    clearTimeout(clearBtn.dataset.timeoutId);
+    clearBtn.textContent = clearBtn.dataset.origText || '🗑 Vider';
+    clearBtn.style.background=''; clearBtn.style.color='';
+    delete clearBtn.dataset.confirming;
+    delete clearBtn.dataset.timeoutId;
+    delete clearBtn.dataset.origText;
+  }
+  document.getElementById('rebelModal').classList.add('show');
+}
+function closeRebelModal(){
+  document.getElementById('rebelModal').classList.remove('show');
+}
+function copyRebels(){
+  var ta = document.getElementById('rebelList');
+  if(!ta.value) return;
+  ta.removeAttribute('readonly');
+  ta.focus(); ta.select(); ta.setSelectionRange(0,99999);
+  var ok=false;
+  try { ok = document.execCommand('copy'); } catch(e){}
+  ta.setAttribute('readonly','');
+  if(navigator.clipboard && !ok) navigator.clipboard.writeText(ta.value).catch(function(){});
+  var btn = document.getElementById('copyBtn');
+  var orig = btn.textContent;
+  btn.textContent = '✓ Copié !';
+  setTimeout(function(){ btn.textContent = orig; }, 1200);
+}
+function clearRebels(){
+  if(rebels.length===0) return;
+  var btn = document.getElementById('clearBtn');
+  if(!btn.dataset.confirming){
+    btn.dataset.confirming = '1';
+    btn.dataset.origText = btn.textContent;
+    btn.textContent = '⚠ Confirmer ?';
+    btn.style.background = 'linear-gradient(135deg, #e44d26, #f02222)';
+    btn.style.color = 'white';
+    btn.dataset.timeoutId = setTimeout(function(){
+      btn.textContent = btn.dataset.origText || '🗑 Vider';
+      btn.style.background=''; btn.style.color='';
+      delete btn.dataset.confirming;
+      delete btn.dataset.timeoutId;
+      delete btn.dataset.origText;
+    }, 3000);
+    return;
+  }
+  clearTimeout(btn.dataset.timeoutId);
+  delete btn.dataset.confirming;
+  delete btn.dataset.timeoutId;
+  btn.textContent = btn.dataset.origText || '🗑 Vider';
+  btn.style.background=''; btn.style.color='';
+  delete btn.dataset.origText;
+  rebels = [];
+  saveRebels(); updateRebelBadge(); updateMarkBtn();
+  document.getElementById('rebelList').value = '';
+}
+updateRebelBadge();
+
+// ═══════════════════════════════════════════════
+//  AIDE / EXPLICATIONS
+// ═══════════════════════════════════════════════
+var GLABEL_FULL = {masc:'Masc.', fem:'Fém.', neut:'Neut.', plur:'Plur.'};
+var CLABEL_FULL = {nom:'Nom.', acc:'Acc.', dat:'Dat.', gen:'Gén.'};
+
+// Construit un tableau HTML 4×n à partir d'un objet endings[cas][gender]
+function makeHelpTable(endings, opts){
+  opts = opts || {};
+  var prefix = opts.prefix || '';
+  var genders = opts.genders || ['masc','fem','neut','plur'];
+  var html = '<table class="help-table"><thead><tr><th></th>';
+  genders.forEach(function(g){ html += '<th>' + GLABEL_FULL[g] + '</th>'; });
+  html += '</tr></thead><tbody>';
+  CASES.forEach(function(cas){
+    html += '<tr><th>' + CLABEL_FULL[cas] + '</th>';
+    genders.forEach(function(g){
+      var v = endings[cas] ? endings[cas][g] : undefined;
+      if(v === undefined || v === null){
+        html += '<td class="muted">—</td>';
+      } else {
+        html += '<td>' + prefix + (v === '' ? '<i>(ø)</i>' : v) + '</td>';
+      }
+    });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+// Pluriel uniquement
+function makeHelpPlurTable(endings, prefix){
+  prefix = prefix || '';
+  var html = '<table class="help-table"><thead><tr><th></th><th>Pluriel</th></tr></thead><tbody>';
+  CASES.forEach(function(cas){
+    var v = endings[cas];
+    html += '<tr><th>' + CLABEL_FULL[cas] + '</th><td>' + prefix + (v === '' ? '<i>(ø)</i>' : v) + '</td></tr>';
+  });
+  html += '</tbody></table>';
+  return html;
+}
+
+function buildHelpContent(card){
+  if(!card) return '<p>Choisissez une carte pour afficher l\'aide correspondante.</p>';
+  var id = card.id;
+
+  // ─ Niveau 1 ──────────────────────────────────────────────
+  if(id.indexOf('art_')===0){
+    return '<h4>Article défini · der / die / das</h4>' +
+      makeHelpTable(ARTICLE_FULL) +
+      '<p>Au génitif masc./neut., le nom prend <b>-(e)s</b> (<i>des Mannes</i>). Au datif pluriel, le nom prend <b>-n</b> si possible (<i>den Leuten</i>).</p>' +
+      '<h5>Mêmes terminaisons</h5>' +
+      '<p>Les déterminants <b>dieser, jener, welcher, jeder, solcher, mancher</b> suivent le même schéma (cf. Niveau 2).</p>';
+  }
+  if(id.indexOf('indef_')===0){
+    return '<h4>Article indéfini · ein / eine</h4>' +
+      makeHelpTable(INDEF_FULL, {genders:['masc','fem','neut']}) +
+      '<p><small>Pas de pluriel pour <b>ein</b> (un nom indéterminé pluriel n\'a pas d\'article).</small></p>' +
+      '<h5>Même schéma (radical différent)</h5>' +
+      '<ul><li><b>kein</b> (négation, qui a un pluriel)</li>' +
+      '<li>Possessifs : <b>mein, dein, sein, ihr, unser, euer</b></li></ul>';
+  }
+  if(id.indexOf('faible_')===0){
+    return '<h4>Adjectif · déclinaison faible</h4>' +
+      makeHelpTable(ADJ_FAIBLE) +
+      '<p>Seulement deux terminaisons : <b>-e</b> et <b>-en</b>. Le « -e » apparaît uniquement aux 5 cases « faciles » du nom./acc. singulier.</p>' +
+      '<h5>Quand l\'utiliser</h5>' +
+      '<p>Après un déterminant qui porte déjà la marque du genre/cas :</p>' +
+      '<ul><li>Article défini : <b>der, die, das</b></li>' +
+      '<li>Déterminants type DER : <b>dieser, jener, welcher, jeder, solcher, mancher</b></li>' +
+      '<li>Au pluriel après <b>alle, beide, sämtliche, keine</b> et possessifs</li></ul>';
+  }
+  if(id.indexOf('mixte_')===0){
+    return '<h4>Adjectif · déclinaison mixte</h4>' +
+      makeHelpTable(ADJ_MIXTE, {genders:['masc','fem','neut']}) +
+      '<p>L\'adjectif « complète » la marque manquante de l\'article (notamment <b>nom. masc.</b>, <b>nom./acc. neut.</b>) puis devient faible (<b>-en</b>) ailleurs.</p>' +
+      '<h5>Quand l\'utiliser</h5>' +
+      '<p><b>Au singulier</b>, après un déterminant qui peut être sans terminaison :</p>' +
+      '<ul><li><b>ein, kein</b></li>' +
+      '<li>Possessifs : <b>mein, dein, sein, ihr, unser, euer</b></li></ul>' +
+      '<p><small>Au pluriel, ces mêmes déterminants sont marqués → adjectif <b>faible</b>.</small></p>';
+  }
+  if(id.indexOf('forte_')===0){
+    return '<h4>Adjectif · déclinaison forte</h4>' +
+      makeHelpTable(ADJ_FORTE) +
+      '<p>L\'adjectif porte la <b>marque complète du cas et du genre</b> (≈ terminaisons de l\'article défini), sauf gén. masc./neut. en <b>-en</b> (le nom porte déjà <b>-(e)s</b>).</p>' +
+      '<h5>Quand l\'utiliser</h5>' +
+      '<ul><li>Sans aucun déterminant : <b>guter Wein</b>, <b>kaltes Wasser</b>, <b>schöne Blumen</b></li>' +
+      '<li>Après un mot non décliné : numéraux (<b>zwei alte Bücher</b>), <b>etwas, viel, wenig, mehr</b></li></ul>';
+  }
+
+  // ─ Niveau 2 ──────────────────────────────────────────────
+  if(id.indexOf('dieser_')===0){
+    var avec = id.indexOf('_avec_')!==-1;
+    var h = '<h4>Déterminants type DER</h4>' +
+      '<p><b>dieser, jener, welcher, jeder, solcher, mancher</b><br>' +
+      '<small>jeder n\'existe qu\'au singulier ; au pluriel on emploie <b>alle</b>.</small></p>' +
+      '<h5>Terminaisons (radical + …)</h5>' +
+      makeHelpTable(ART_DEF_ENDING);
+    if(avec){
+      h += '<h5>Adjectif qui suit → faible</h5>' +
+        '<p>Le déterminant étant marqué, l\'adjectif prend les terminaisons <b>faibles</b> :</p>' +
+        makeHelpTable(ADJ_FAIBLE);
+    }
+    return h;
+  }
+  if(id.indexOf('poss_')===0){
+    var avecP = id.indexOf('_avec_')!==-1;
+    // Construction d'un tableau combiné singulier (INDEF_FULL endings) + pluriel (KEIN_PLUR)
+    var combined = {};
+    CASES.forEach(function(cas){
+      combined[cas] = {
+        masc: ART_INDEF_ENDING[cas].masc,
+        fem:  ART_INDEF_ENDING[cas].fem,
+        neut: ART_INDEF_ENDING[cas].neut,
+        plur: KEIN_PLUR[cas]
+      };
+    });
+    var hp = '<h4>Possessifs (type ein / kein)</h4>' +
+      '<p><b>kein, mein, dein, sein, ihr, unser, euer</b></p>' +
+      '<h5>Terminaisons (radical + …)</h5>' +
+      makeHelpTable(combined) +
+      '<p><small><b>euer</b> perd son <i>-e-</i> intérieur quand il y a une terminaison : <b>eure, euren, eurem, eurer, eures</b>.</small></p>';
+    if(avecP){
+      hp += '<h5>Adjectif qui suit</h5>' +
+        '<p>Au <b>singulier</b> : déterminant parfois sans marque → adjectif <b>mixte</b>.<br>' +
+        'Au <b>pluriel</b> : déterminant marqué → adjectif <b>faible</b>.</p>';
+    }
+    return hp;
+  }
+  if(id.indexOf('derselbe_')===0){
+    return '<h4>derselbe / derjenige</h4>' +
+      '<p>Mots composés écrits <b>en un seul mot</b> :<br>' +
+      '<i>article défini fléchi</i> + <i>selb-</i> ou <i>jenig-</i> + <b>terminaison faible</b></p>' +
+      '<table class="help-table"><thead><tr><th></th><th>Masc.</th><th>Fém.</th><th>Neut.</th><th>Plur.</th></tr></thead><tbody>' +
+      '<tr><th>Nom.</th><td>derselbe</td><td>dieselbe</td><td>dasselbe</td><td>dieselben</td></tr>' +
+      '<tr><th>Acc.</th><td>denselben</td><td>dieselbe</td><td>dasselbe</td><td>dieselben</td></tr>' +
+      '<tr><th>Dat.</th><td>demselben</td><td>derselben</td><td>demselben</td><td>denselben</td></tr>' +
+      '<tr><th>Gén.</th><td>desselben</td><td>derselben</td><td>desselben</td><td>derselben</td></tr>' +
+      '</tbody></table>' +
+      '<p><small><b>derjenige</b> : derjenige, denjenigen, demjenigen, desjenigen… (même schéma).</small></p>';
+  }
+  if(id.indexOf('alle_')===0){
+    var avecA = id.indexOf('_avec_')!==-1;
+    var ha = '<h4>alle / beide (pluriel)</h4>' +
+      '<p>Déterminants pluriel à terminaisons <b>fortes</b> (≈ celles de l\'article défini pluriel).</p>' +
+      makeHelpPlurTable({nom:'e',acc:'e',dat:'en',gen:'er'}, '<i>all-/beid-</i>') +
+      '<p><small>Exemples : <b>alle Männer</b>, <b>beider Frauen</b>, <b>allen Kindern</b>.</small></p>';
+    if(avecA){
+      ha += '<h5>Adjectif qui suit → faible</h5>' +
+        '<p>Le déterminant porte la marque → adjectif <b>faible</b> (toujours <b>-en</b> au pluriel) :</p>' +
+        makeHelpPlurTable({nom:'en',acc:'en',dat:'en',gen:'en'});
+    }
+    return ha;
+  }
+  if(id.indexOf('viele_')===0){
+    var avecV = id.indexOf('_avec_')!==-1;
+    var hv = '<h4>Indéfinis pluriels (type viele)</h4>' +
+      '<p><b>viele, wenige, einige, andere, mehrere, zahlreiche, folgende, verschiedene, etliche, zahllose</b></p>' +
+      '<h5>Terminaisons fortes au pluriel</h5>' +
+      makeHelpPlurTable({nom:'e',acc:'e',dat:'en',gen:'er'});
+    if(avecV){
+      hv += '<h5>Adjectif qui suit → fort aussi</h5>' +
+        '<p>Contrairement aux autres déterminants, ces mots <b>ne suffisent pas</b> à marquer le pluriel : ils prennent eux-mêmes les terminaisons fortes <b>et</b> l\'adjectif aussi (parallélisme).</p>' +
+        '<p><small>Ex. <b>viele alte Bücher</b>, <b>mit vielen alten Büchern</b>.</small></p>';
+    }
+    return hv;
+  }
+  if(id.indexOf('particu_')===0){
+    return '<h4>Particularités d\'adjectifs</h4>' +
+      '<h5>Perte du -e- intérieur</h5>' +
+      '<p>Les adjectifs en <b>-er</b> ou <b>-el</b> perdent leur -e- quand une terminaison est ajoutée :</p>' +
+      '<ul><li><b>teuer</b> → teur- (<i>ein teures Buch</i>)</li>' +
+      '<li><b>dunkel</b> → dunkl- (<i>ein dunkler Keller</i>)</li>' +
+      '<li><b>edel</b> → edl- (<i>ein edler Wein</i>)</li></ul>' +
+      '<h5>hoch → hoh-</h5>' +
+      '<p><b>hoch</b> devient <b>hoh-</b> dès qu\'il est fléchi : <i>der hohe Turm</i>, <i>ein hohes Gebäude</i>.</p>' +
+      '<h5>Adjectifs invariables</h5>' +
+      '<ul><li>En <b>-a</b> : <b>lila, rosa, prima</b> (ex. <i>ein lila Kleid</i>)</li>' +
+      '<li><b>beige, orange</b></li>' +
+      '<li>Géographiques en <b>-er</b> : <b>Berliner, Bonner, Hamburger, Münchner</b>… (<i>die Berliner Luft</i>)</li>' +
+      '<li>Décennies en <b>-er</b> : <b>die zwanziger Jahre</b>, <b>die achtziger Jahre</b></li></ul>';
+  }
+  return '<p>Pas d\'aide disponible pour cette carte.</p>';
+}
+
+function openHelpModal(){
+  document.getElementById('helpBody').innerHTML = buildHelpContent(current);
+  document.getElementById('helpModal').classList.add('show');
+}
+function closeHelpModal(){
+  document.getElementById('helpModal').classList.remove('show');
+}
+
+// ═══════════════════════════════════════════════
+//  TAP HANDLERS
+// ═══════════════════════════════════════════════
+function tapHandler(id,fn){
+  var el=document.getElementById(id); if(!el)return;
+  var t=false;
+  el.addEventListener('touchstart',function(e){e.preventDefault();e.stopPropagation();t=true;fn();},{passive:false});
+  el.addEventListener('touchend',  function(e){e.preventDefault();e.stopPropagation();},{passive:false});
+  el.addEventListener('touchmove', function(e){e.preventDefault();},{passive:false});
+  el.addEventListener('click',     function(e){e.preventDefault();e.stopPropagation();if(!t)fn();t=false;});
+}
+tapHandler('revealBtn',  doReveal);
+tapHandler('knownBtn',   doKnown);
+tapHandler('reviewBtn3', function(){doReview(3);});
+tapHandler('reviewBtn5', function(){doReview(5);});
+tapHandler('reviewBtn20',function(){doReview(20);});
+tapHandler('restartBtn', doRestart);
+tapHandler('markBtn',       doRebel);
+tapHandler('listBtn',       openRebelModal);
+tapHandler('modalCloseBtn', closeRebelModal);
+tapHandler('copyBtn',       copyRebels);
+tapHandler('clearBtn',      clearRebels);
+tapHandler('helpBtn',       openHelpModal);
+tapHandler('helpCloseBtn',  closeHelpModal);
+
+// Click outside modal to close
+document.getElementById('rebelModal').addEventListener('click', function(e){
+  if(e.target === this) closeRebelModal();
+});
+document.getElementById('helpModal').addEventListener('click', function(e){
+  if(e.target === this) closeHelpModal();
+});
+
+document.addEventListener('touchmove',function(e){
+  // Autoriser scroll/sélection à l'intérieur des modals
+  if(e.target.closest && (e.target.closest('#rebelModal') || e.target.closest('#helpModal'))) return;
+  e.preventDefault();
+},{passive:false});
+
+doRestart();
+</script>
+</body>
+</html>

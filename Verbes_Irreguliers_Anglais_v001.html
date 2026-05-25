@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Verbes Irréguliers Anglais</title>
+<style>
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #121a24;
+    color: #e8e6e3;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  html { height: -webkit-fill-available; overflow: hidden; }
+
+  .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ── GROUP SELECT ── */
+  .group-select {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 2rem;
+  }
+  .group-select h1 {
+    font-size: 1.45rem;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: #8a9bb5;
+    margin-bottom: 0.25rem;
+    flex-shrink: 0;
+  }
+  .group-select .subtitle {
+    font-size: 0.82rem;
+    color: #4e5d73;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1.2rem;
+    flex-shrink: 0;
+  }
+  .mode-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #6a7f9a;
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: rgba(100,160,255,0.12);
+    border-color: rgba(100,160,255,0.3);
+    color: #8ac4ff;
+  }
+  .mode-btn:active { transform: scale(0.95); }
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    max-width: 400px;
+    width: 100%;
+    padding-bottom: 2rem;
+    flex-shrink: 0;
+  }
+  .group-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 4px;
+    font-size: 0.78rem;
+    color: #7a8ea6;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    line-height: 1.3;
+    touch-action: manipulation;
+  }
+  .group-btn:active { transform: scale(0.93); }
+  .group-btn .gnum { font-size: 1.05rem; font-weight: 700; color: #b0c4de; display: block; }
+  .group-btn .grange { font-size: 0.6rem; color: #4e5d73; display: block; margin-top: 2px; }
+  .group-btn.completed { border-color: #2a6e4e; background: rgba(42,110,78,0.15); }
+  .group-btn.completed .gnum { color: #5bbd8a; }
+  .group-btn.in-progress { border-color: #5a5030; background: rgba(90,80,48,0.15); }
+  .group-btn.in-progress .gnum { color: #d4b85a; }
+
+  /* ── CARD SCREEN ── */
+  .card-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 460px;
+    margin-bottom: 0.6rem;
+  }
+  .back-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #7a8ea6;
+    font-size: 0.82rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .back-btn:active { opacity: 0.6; }
+  .group-label { font-size: 0.8rem; color: #4e5d73; }
+  .progress-track {
+    width: 100%;
+    max-width: 460px;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin-bottom: 1.2rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3a8f6a, #5bbd8a);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0;
+  }
+
+  /* ── THE CARD ── */
+  .card {
+    width: 100%;
+    max-width: 460px;
+    min-height: 290px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.8rem 1.5rem;
+    margin-bottom: 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -30%;
+    width: 130%;
+    height: 130%;
+    background: radial-gradient(ellipse at 70% 30%, rgba(180,120,255,0.04), transparent 55%);
+    pointer-events: none;
+  }
+  .verb-rank {
+    font-size: 0.7rem;
+    color: #3d4f66;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .verb-base {
+    font-size: 2.6rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.15rem;
+    text-align: center;
+    line-height: 1.15;
+  }
+  .verb-base-ipa {
+    font-size: 1.1rem;
+    color: #6a8aaa;
+    font-weight: 300;
+    margin-bottom: 0.9rem;
+  }
+
+  /* Revealed area */
+  .verb-forms {
+    width: 100%;
+    min-height: 7rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .verb-row {
+    display: flex;
+    align-items: baseline;
+    gap: 0.6rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .verb-label {
+    font-size: 0.65rem;
+    color: #4a5a70;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    min-width: 3.2rem;
+    text-align: right;
+  }
+  .verb-val {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: #e0c864;
+  }
+  .verb-val-ipa {
+    font-size: 0.9rem;
+    font-weight: 300;
+    color: #6cb4ee;
+  }
+  .verb-fr {
+    font-size: 1.05rem;
+    color: #8aaa8a;
+    margin-top: 0.5rem;
+  }
+  .verb-example {
+    font-size: 0.78rem;
+    color: #4a5a70;
+    font-style: italic;
+    margin-top: 0.3rem;
+    text-align: center;
+    line-height: 1.4;
+    max-width: 90%;
+  }
+
+  /* ── BUTTONS ── */
+  .buttons-zone {
+    height: 3.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+    position: relative;
+    width: 100%;
+    max-width: 460px;
+  }
+  .buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    position: absolute;
+  }
+  .buttons.hidden { visibility: hidden; pointer-events: none; }
+  button {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button:active:not(:disabled) { transform: scale(0.95); opacity: 0.85; }
+  button:disabled { cursor: default; opacity: 0.35; }
+  .btn-reveal {
+    background: linear-gradient(135deg, #5a4a8a, #443a70);
+    color: white;
+    min-width: 200px;
+    box-shadow: 0 4px 20px rgba(68,58,112,0.4);
+  }
+  .btn-known {
+    background: linear-gradient(135deg, #2a8a5a, #34a06a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(42,138,90,0.3);
+  }
+  .btn-review {
+    background: linear-gradient(135deg, #c07a30, #d4943a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(192,122,48,0.3);
+  }
+  .btn-restart {
+    background: linear-gradient(135deg, #5a4a8a, #443a70);
+    color: white;
+    min-width: 200px;
+  }
+  .btn-all {
+    background: linear-gradient(135deg, #3a6a5a, #2a5a4a);
+    color: white;
+    min-width: 200px;
+    margin-top: 0.5rem;
+  }
+
+  .stats {
+    font-size: 0.74rem;
+    color: #3d4f66;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .stats strong { color: #6a7f9a; }
+
+  .done-box { text-align: center; padding: 2rem; }
+  .done-box h2 { font-size: 1.8rem; font-weight: 300; color: #5bbd8a; margin-bottom: 1rem; }
+  .done-box p { color: #5a6f88; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* ── TABLE SCREEN ── */
+  .table-screen {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 1.5rem;
+  }
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 600px;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+  .table-header h2 { font-size: 1.1rem; font-weight: 400; color: #8a9bb5; }
+  .verb-table {
+    width: 100%;
+    max-width: 600px;
+    border-collapse: collapse;
+    flex-shrink: 0;
+    margin-bottom: 2rem;
+  }
+  .verb-table th {
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #4e5d73;
+    padding: 8px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    text-align: left;
+  }
+  .verb-table td {
+    font-size: 0.82rem;
+    padding: 7px 6px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    color: #b0bec5;
+  }
+  .verb-table td:first-child { color: #e0e0e0; font-weight: 600; }
+  .verb-table td.ipa-cell { color: #6cb4ee; font-size: 0.75rem; }
+  .verb-table td.fr-cell { color: #8aaa8a; }
+  .verb-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+  @media (max-width: 370px) {
+    .verb-base { font-size: 2.1rem; }
+    .groups-grid { grid-template-columns: repeat(3, 1fr); }
+    button { padding: 12px 18px; font-size: 0.88rem; }
+    .verb-table { font-size: 0.75rem; }
+  }
+  @media (max-height: 650px) {
+    .card { min-height: 230px; padding: 1.2rem; }
+    .verb-base { font-size: 2.1rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SCREEN 1: GROUP SELECT ═══ -->
+<div class="screen group-select active" id="screenGroups">
+  <h1>📝 Verbes Irréguliers</h1>
+  <div class="subtitle">Infinitif · Prétérit · Participe passé · Prononciation API</div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="modeCards" data-mode="cards">Flashcards</div>
+    <div class="mode-btn" id="modeTable" data-mode="table">Tableau</div>
+  </div>
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
+
+<!-- ═══ SCREEN 2: FLASHCARD ═══ -->
+<div class="screen card-screen" id="screenCard">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn">← Groupes</button>
+    <span class="group-label" id="groupLabel"></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="theCard">
+    <div class="verb-rank" id="verbRank">#1</div>
+    <div class="verb-base" id="verbBase">&nbsp;</div>
+    <div class="verb-base-ipa" id="verbBaseIpa">&nbsp;</div>
+    <div class="verb-forms" id="verbForms">
+      <!-- filled by JS -->
+    </div>
+  </div>
+
+  <div class="buttons-zone">
+    <div class="buttons" id="revealButtons">
+      <button class="btn-reveal" id="revealBtn">Révéler</button>
+    </div>
+    <div class="buttons hidden" id="actionButtons">
+      <button class="btn-known" id="knownBtn">✓ Connu</button>
+      <button class="btn-review" id="reviewBtn">↻ À revoir</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="done-box" id="doneBox" style="display:none">
+    <h2>✓ Groupe terminé !</h2>
+    <p id="doneSummary"></p>
+    <button class="btn-restart" id="restartBtn">Recommencer</button>
+    <br>
+    <button class="back-btn" id="backBtn2" style="margin-top:12px">← Retour aux groupes</button>
+  </div>
+</div>
+
+<!-- ═══ SCREEN 3: TABLE ═══ -->
+<div class="screen table-screen" id="screenTable">
+  <div class="table-header">
+    <button class="back-btn" id="backBtnT">← Groupes</button>
+    <h2 id="tableTitle">Groupe 1</h2>
+  </div>
+  <table class="verb-table" id="verbTableBody">
+    <thead>
+      <tr><th>Infinitif</th><th>Prétérit</th><th>Part. passé</th><th>API</th><th>Français</th></tr>
+    </thead>
+    <tbody id="tBody"></tbody>
+  </table>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// IRREGULAR VERBS DATA
+// [base, baseIPA, past, pastIPA, pp, ppIPA, french]
+// ═══════════════════════════════════════════════════════════════
+var V = [
+// ── Group 1: Les essentiels (1–15) ──
+["be","biː","was/were","wɒz/wɜːr","been","biːn","être"],
+["have","hæv","had","hæd","had","hæd","avoir"],
+["do","duː","did","dɪd","done","dʌn","faire"],
+["say","seɪ","said","sɛd","said","sɛd","dire"],
+["go","ɡəʊ","went","wɛnt","gone","ɡɒn","aller"],
+["get","ɡɛt","got","ɡɒt","got/gotten","ɡɒt/ˈɡɒtən","obtenir"],
+["make","meɪk","made","meɪd","made","meɪd","faire, fabriquer"],
+["know","nəʊ","knew","njuː","known","nəʊn","savoir"],
+["think","θɪŋk","thought","θɔːt","thought","θɔːt","penser"],
+["take","teɪk","took","tʊk","taken","ˈteɪkən","prendre"],
+["see","siː","saw","sɔː","seen","siːn","voir"],
+["come","kʌm","came","keɪm","come","kʌm","venir"],
+["find","faɪnd","found","faʊnd","found","faʊnd","trouver"],
+["give","ɡɪv","gave","ɡeɪv","given","ˈɡɪvən","donner"],
+["tell","tɛl","told","təʊld","told","təʊld","dire, raconter"],
+// ── Group 2: Très courants (16–30) ──
+["feel","fiːl","felt","fɛlt","felt","fɛlt","ressentir"],
+["become","bɪˈkʌm","became","bɪˈkeɪm","become","bɪˈkʌm","devenir"],
+["leave","liːv","left","lɛft","left","lɛft","partir, laisser"],
+["put","pʊt","put","pʊt","put","pʊt","mettre"],
+["mean","miːn","meant","mɛnt","meant","mɛnt","signifier"],
+["keep","kiːp","kept","kɛpt","kept","kɛpt","garder"],
+["let","lɛt","let","lɛt","let","lɛt","laisser"],
+["begin","bɪˈɡɪn","began","bɪˈɡæn","begun","bɪˈɡʌn","commencer"],
+["show","ʃəʊ","showed","ʃəʊd","shown","ʃəʊn","montrer"],
+["hear","hɪər","heard","hɜːrd","heard","hɜːrd","entendre"],
+["run","rʌn","ran","ræn","run","rʌn","courir"],
+["hold","həʊld","held","hɛld","held","hɛld","tenir"],
+["write","raɪt","wrote","rəʊt","written","ˈrɪtən","écrire"],
+["stand","stænd","stood","stʊd","stood","stʊd","se tenir debout"],
+["lose","luːz","lost","lɒst","lost","lɒst","perdre"],
+// ── Group 3: Courants (31–45) ──
+["pay","peɪ","paid","peɪd","paid","peɪd","payer"],
+["meet","miːt","met","mɛt","met","mɛt","rencontrer"],
+["bring","brɪŋ","brought","brɔːt","brought","brɔːt","apporter"],
+["sit","sɪt","sat","sæt","sat","sæt","s'asseoir"],
+["lead","liːd","led","lɛd","led","lɛd","mener"],
+["read","riːd","read","rɛd","read","rɛd","lire"],
+["grow","ɡrəʊ","grew","ɡruː","grown","ɡrəʊn","grandir"],
+["win","wɪn","won","wʌn","won","wʌn","gagner"],
+["buy","baɪ","bought","bɔːt","bought","bɔːt","acheter"],
+["spend","spɛnd","spent","spɛnt","spent","spɛnt","dépenser"],
+["speak","spiːk","spoke","spəʊk","spoken","ˈspəʊkən","parler"],
+["send","sɛnd","sent","sɛnt","sent","sɛnt","envoyer"],
+["build","bɪld","built","bɪlt","built","bɪlt","construire"],
+["fall","fɔːl","fell","fɛl","fallen","ˈfɔːlən","tomber"],
+["cut","kʌt","cut","kʌt","cut","kʌt","couper"],
+// ── Group 4: Fréquents (46–60) ──
+["understand","ˌʌndərˈstænd","understood","ˌʌndərˈstʊd","understood","ˌʌndərˈstʊd","comprendre"],
+["rise","raɪz","rose","rəʊz","risen","ˈrɪzən","monter, se lever"],
+["drive","draɪv","drove","drəʊv","driven","ˈdrɪvən","conduire"],
+["break","breɪk","broke","brəʊk","broken","ˈbrəʊkən","casser"],
+["draw","drɔː","drew","druː","drawn","drɔːn","dessiner"],
+["catch","kætʃ","caught","kɔːt","caught","kɔːt","attraper"],
+["choose","tʃuːz","chose","tʃəʊz","chosen","ˈtʃəʊzən","choisir"],
+["eat","iːt","ate","eɪt","eaten","ˈiːtən","manger"],
+["wear","wɛər","wore","wɔːr","worn","wɔːrn","porter (vêtement)"],
+["throw","θrəʊ","threw","θruː","thrown","θrəʊn","lancer"],
+["sell","sɛl","sold","səʊld","sold","səʊld","vendre"],
+["set","sɛt","set","sɛt","set","sɛt","poser, régler"],
+["teach","tiːtʃ","taught","tɔːt","taught","tɔːt","enseigner"],
+["lie","laɪ","lay","leɪ","lain","leɪn","s'allonger"],
+["hang","hæŋ","hung","hʌŋ","hung","hʌŋ","accrocher"],
+// ── Group 5: Importants (61–75) ──
+["fight","faɪt","fought","fɔːt","fought","fɔːt","se battre"],
+["sing","sɪŋ","sang","sæŋ","sung","sʌŋ","chanter"],
+["fly","flaɪ","flew","fluː","flown","fləʊn","voler"],
+["shake","ʃeɪk","shook","ʃʊk","shaken","ˈʃeɪkən","secouer"],
+["hit","hɪt","hit","hɪt","hit","hɪt","frapper"],
+["sleep","sliːp","slept","slɛpt","slept","slɛpt","dormir"],
+["shoot","ʃuːt","shot","ʃɒt","shot","ʃɒt","tirer"],
+["forget","fərˈɡɛt","forgot","fərˈɡɒt","forgotten","fərˈɡɒtən","oublier"],
+["lay","leɪ","laid","leɪd","laid","leɪd","poser"],
+["shut","ʃʌt","shut","ʃʌt","shut","ʃʌt","fermer"],
+["spread","sprɛd","spread","sprɛd","spread","sprɛd","étaler, répandre"],
+["steal","stiːl","stole","stəʊl","stolen","ˈstəʊlən","voler (dérober)"],
+["blow","bləʊ","blew","bluː","blown","bləʊn","souffler"],
+["swim","swɪm","swam","swæm","swum","swʌm","nager"],
+["hide","haɪd","hid","hɪd","hidden","ˈhɪdən","cacher"],
+// ── Group 6: Utiles (76–90) ──
+["stick","stɪk","stuck","stʌk","stuck","stʌk","coller"],
+["dig","dɪɡ","dug","dʌɡ","dug","dʌɡ","creuser"],
+["strike","straɪk","struck","strʌk","struck","strʌk","frapper"],
+["wake","weɪk","woke","wəʊk","woken","ˈwəʊkən","(se) réveiller"],
+["shine","ʃaɪn","shone","ʃɒn","shone","ʃɒn","briller"],
+["bite","baɪt","bit","bɪt","bitten","ˈbɪtən","mordre"],
+["feed","fiːd","fed","fɛd","fed","fɛd","nourrir"],
+["seek","siːk","sought","sɔːt","sought","sɔːt","chercher"],
+["lend","lɛnd","lent","lɛnt","lent","lɛnt","prêter"],
+["slide","slaɪd","slid","slɪd","slid","slɪd","glisser"],
+["ring","rɪŋ","rang","ræŋ","rung","rʌŋ","sonner"],
+["bend","bɛnd","bent","bɛnt","bent","bɛnt","plier, se courber"],
+["tear","tɛər","tore","tɔːr","torn","tɔːrn","déchirer"],
+["freeze","friːz","froze","frəʊz","frozen","ˈfrəʊzən","geler"],
+["swear","swɛər","swore","swɔːr","sworn","swɔːrn","jurer"],
+// ── Group 7: Intermédiaires (91–105) ──
+["forgive","fərˈɡɪv","forgave","fərˈɡeɪv","forgiven","fərˈɡɪvən","pardonner"],
+["deal","diːl","dealt","dɛlt","dealt","dɛlt","traiter, distribuer"],
+["overcome","ˌəʊvərˈkʌm","overcame","ˌəʊvərˈkeɪm","overcome","ˌəʊvərˈkʌm","surmonter"],
+["withdraw","wɪðˈdrɔː","withdrew","wɪðˈdruː","withdrawn","wɪðˈdrɔːn","retirer"],
+["split","splɪt","split","splɪt","split","splɪt","diviser, fendre"],
+["spin","spɪn","spun","spʌn","spun","spʌn","tourner"],
+["bet","bɛt","bet","bɛt","bet","bɛt","parier"],
+["burst","bɜːrst","burst","bɜːrst","burst","bɜːrst","éclater"],
+["hurt","hɜːrt","hurt","hɜːrt","hurt","hɜːrt","blesser"],
+["quit","kwɪt","quit","kwɪt","quit","kwɪt","quitter, arrêter"],
+["rid","rɪd","rid","rɪd","rid","rɪd","débarrasser"],
+["spit","spɪt","spat","spæt","spat","spæt","cracher"],
+["cast","kɑːst","cast","kɑːst","cast","kɑːst","lancer, jeter"],
+["cost","kɒst","cost","kɒst","cost","kɒst","coûter"],
+["bind","baɪnd","bound","baʊnd","bound","baʊnd","lier, attacher"],
+// ── Group 8: Avancés (106–120) ──
+["weave","wiːv","wove","wəʊv","woven","ˈwəʊvən","tisser"],
+["grind","ɡraɪnd","ground","ɡraʊnd","ground","ɡraʊnd","moudre"],
+["swing","swɪŋ","swung","swʌŋ","swung","swʌŋ","balancer"],
+["creep","kriːp","crept","krɛpt","crept","krɛpt","ramper"],
+["leap","liːp","leapt","lɛpt","leapt","lɛpt","bondir"],
+["sweep","swiːp","swept","swɛpt","swept","swɛpt","balayer"],
+["sting","stɪŋ","stung","stʌŋ","stung","stʌŋ","piquer"],
+["cling","klɪŋ","clung","klʌŋ","clung","klʌŋ","s'accrocher"],
+["kneel","niːl","knelt","nɛlt","knelt","nɛlt","s'agenouiller"],
+["bleed","bliːd","bled","blɛd","bled","blɛd","saigner"],
+["breed","briːd","bred","brɛd","bred","brɛd","élever (animaux)"],
+["flee","fliː","fled","flɛd","fled","flɛd","fuir"],
+["sink","sɪŋk","sank","sæŋk","sunk","sʌŋk","couler"],
+["shrink","ʃrɪŋk","shrank","ʃræŋk","shrunk","ʃrʌŋk","rétrécir"],
+["stink","stɪŋk","stank","stæŋk","stunk","stʌŋk","puer"],
+// ── Group 9: Avancés+ (121–135) ──
+["arise","əˈraɪz","arose","əˈrəʊz","arisen","əˈrɪzən","survenir"],
+["bear","bɛər","bore","bɔːr","borne","bɔːrn","porter, supporter"],
+["forbid","fərˈbɪd","forbade","fərˈbæd","forbidden","fərˈbɪdən","interdire"],
+["forecast","ˈfɔːrkɑːst","forecast","ˈfɔːrkɑːst","forecast","ˈfɔːrkɑːst","prévoir"],
+["withstand","wɪðˈstænd","withstood","wɪðˈstʊd","withstood","wɪðˈstʊd","résister"],
+["undergo","ˌʌndərˈɡəʊ","underwent","ˌʌndərˈwɛnt","undergone","ˌʌndərˈɡɒn","subir"],
+["undertake","ˌʌndərˈteɪk","undertook","ˌʌndərˈtʊk","undertaken","ˌʌndərˈteɪkən","entreprendre"],
+["overthrow","ˌəʊvərˈθrəʊ","overthrew","ˌəʊvərˈθruː","overthrown","ˌəʊvərˈθrəʊn","renverser"],
+["mistake","mɪˈsteɪk","mistook","mɪˈstʊk","mistaken","mɪˈsteɪkən","se tromper"],
+["sew","səʊ","sewed","səʊd","sewn","səʊn","coudre"],
+["tread","trɛd","trod","trɒd","trodden","ˈtrɒdən","fouler"],
+["wring","rɪŋ","wrung","rʌŋ","wrung","rʌŋ","tordre"],
+["strive","straɪv","strove","strəʊv","striven","ˈstrɪvən","s'efforcer"],
+["thrust","θrʌst","thrust","θrʌst","thrust","θrʌst","pousser brusquement"],
+["shed","ʃɛd","shed","ʃɛd","shed","ʃɛd","verser, perdre"]
+];
+
+// ═══════════════════════════════════
+// STATE
+// ═══════════════════════════════════
+var GSIZE = 15;
+var NGROUPS = Math.ceil(V.length / GSIZE);
+var currentGroup = -1;
+var groupVerbs = [];
+var available = [];
+var reviewQueue = [];
+var known = [];
+var turn = 0;
+var current = null;
+var revealed = false;
+var viewMode = 'cards';
+
+var progress = {};
+try {
+  var s = localStorage.getItem('irrverbs_progress');
+  if (s) progress = JSON.parse(s);
+} catch(e) {}
+
+function saveProgress() {
+  try {
+    progress[currentGroup] = { known: known.length, total: groupVerbs.length };
+    localStorage.setItem('irrverbs_progress', JSON.stringify(progress));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════
+// GROUP GRID
+// ═══════════════════════════════════
+function buildGroupGrid() {
+  var grid = document.getElementById('groupsGrid');
+  grid.innerHTML = '';
+  for (var g = 0; g < NGROUPS; g++) {
+    var btn = document.createElement('div');
+    btn.className = 'group-btn';
+    var start = g * GSIZE + 1;
+    var end = Math.min((g + 1) * GSIZE, V.length);
+    var p = progress[g];
+    if (p && p.known >= p.total) btn.className += ' completed';
+    else if (p && p.known > 0) btn.className += ' in-progress';
+    btn.innerHTML = '<span class="gnum">' + (g + 1) + '</span><span class="grange">n° ' + start + '–' + end + '</span>';
+    (function(gg) {
+      btn.addEventListener('click', function() { openGroup(gg); });
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); openGroup(gg); }, {passive:false});
+    })(g);
+    grid.appendChild(btn);
+  }
+}
+
+function openGroup(g) {
+  if (viewMode === 'table') showTable(g);
+  else startGroup(g);
+}
+
+// ═══════════════════════════════════
+// TABLE VIEW
+// ═══════════════════════════════════
+function showTable(g) {
+  var start = g * GSIZE;
+  var end = Math.min(start + GSIZE, V.length);
+  document.getElementById('tableTitle').textContent = 'Groupe ' + (g + 1) + ' · verbes ' + (start+1) + '–' + end;
+  var tbody = document.getElementById('tBody');
+  tbody.innerHTML = '';
+  for (var i = start; i < end; i++) {
+    var v = V[i];
+    var tr = document.createElement('tr');
+    tr.innerHTML =
+      '<td>' + v[0] + '</td>' +
+      '<td>' + v[2] + '</td>' +
+      '<td>' + v[4] + '</td>' +
+      '<td class="ipa-cell">/' + v[1] + '/ · /' + v[3] + '/ · /' + v[5] + '/</td>' +
+      '<td class="fr-cell">' + v[6] + '</td>';
+    tbody.appendChild(tr);
+  }
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenTable').classList.add('active');
+}
+
+// ═══════════════════════════════════
+// FLASHCARD MODE
+// ═══════════════════════════════════
+function startGroup(g) {
+  currentGroup = g;
+  var start = g * GSIZE;
+  var end = Math.min(start + GSIZE, V.length);
+  groupVerbs = [];
+  for (var i = start; i < end; i++) {
+    groupVerbs.push({ idx: i, base: V[i][0], bIpa: V[i][1], past: V[i][2], pIpa: V[i][3], pp: V[i][4], ppIpa: V[i][5], fr: V[i][6] });
+  }
+  available = groupVerbs.slice();
+  reviewQueue = []; known = []; turn = 0; revealed = false;
+
+  document.getElementById('groupLabel').textContent = 'Groupe ' + (g+1) + ' · verbes ' + (start+1) + '–' + end;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenCard').classList.add('active');
+  showVerb();
+}
+
+function goBack() {
+  if (currentGroup >= 0) saveProgress();
+  document.getElementById('screenCard').classList.remove('active');
+  document.getElementById('screenTable').classList.remove('active');
+  document.getElementById('screenGroups').classList.add('active');
+  buildGroupGrid();
+}
+
+function pickNext() {
+  var i, pick;
+  var due = [];
+  for (i = 0; i < reviewQueue.length; i++) {
+    if (reviewQueue[i].showAtTurn <= turn) due.push(reviewQueue[i]);
+  }
+  if (due.length > 0) {
+    pick = due[Math.floor(Math.random() * due.length)];
+    reviewQueue = reviewQueue.filter(function(r) { return r !== pick; });
+    return pick.w;
+  }
+  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+  if (reviewQueue.length > 0) {
+    reviewQueue.sort(function(a,b){ return a.showAtTurn - b.showAtTurn; });
+    pick = reviewQueue[0];
+    reviewQueue = reviewQueue.slice(1);
+    return pick.w;
+  }
+  return null;
+}
+
+function showVerb() {
+  current = pickNext();
+  if (!current) {
+    document.getElementById('theCard').style.display = 'none';
+    document.querySelector('.buttons-zone').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('doneBox').style.display = 'block';
+    document.getElementById('doneSummary').textContent = 'Tous les ' + groupVerbs.length + ' verbes sont maîtrisés !';
+    saveProgress();
+    return;
+  }
+  revealed = false;
+  document.getElementById('verbRank').textContent = '#' + (current.idx + 1);
+  document.getElementById('verbBase').textContent = current.base;
+  document.getElementById('verbBaseIpa').textContent = '/' + current.bIpa + '/';
+  document.getElementById('verbForms').innerHTML = '<div style="color:#3d4f66;font-size:0.85rem;margin-top:1rem">Prétérit · Participe passé · Traduction</div>';
+
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  updateStats();
+}
+
+function doReveal() {
+  if (!current || revealed) return;
+  revealed = true;
+  turn++;
+  var html = '';
+  html += '<div class="verb-row"><span class="verb-label">Past</span><span class="verb-val">' + current.past + '</span><span class="verb-val-ipa">/' + current.pIpa + '/</span></div>';
+  html += '<div class="verb-row"><span class="verb-label">P.P.</span><span class="verb-val">' + current.pp + '</span><span class="verb-val-ipa">/' + current.ppIpa + '/</span></div>';
+  html += '<div class="verb-fr">' + current.fr + '</div>';
+  document.getElementById('verbForms').innerHTML = html;
+
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+}
+
+function doKnown() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  known.push(w);
+  saveProgress();
+  showVerb();
+}
+
+function doReview() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  reviewQueue.push({ w: w, showAtTurn: turn + 3 });
+  showVerb();
+}
+
+function updateStats() {
+  var pct = groupVerbs.length > 0 ? Math.round(known.length / groupVerbs.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stats').innerHTML =
+    '✓ Connus\u00A0: <strong>' + known.length + '</strong> · ' +
+    '↻ À revoir\u00A0: <strong>' + reviewQueue.length + '</strong> · ' +
+    'Restants\u00A0: <strong>' + available.length + '</strong>';
+}
+
+function doRestart() {
+  available = groupVerbs.slice();
+  reviewQueue = []; known = []; turn = 0;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  showVerb();
+}
+
+// ═══════════════════════════════════
+// MODE TOGGLE
+// ═══════════════════════════════════
+function setMode(m) {
+  viewMode = m;
+  document.querySelectorAll('.mode-btn').forEach(function(b) {
+    b.classList.toggle('active', b.getAttribute('data-mode') === m);
+  });
+}
+
+// ═══════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════
+function tapHandler(id, fn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var touched = false;
+  el.addEventListener('touchstart', function(e) {
+    e.preventDefault(); e.stopPropagation(); touched = true; fn();
+  }, { passive: false });
+  el.addEventListener('touchend', function(e) {
+    e.preventDefault(); e.stopPropagation();
+  }, { passive: false });
+  el.addEventListener('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!touched) fn();
+    touched = false;
+  });
+}
+
+tapHandler('revealBtn', doReveal);
+tapHandler('knownBtn', doKnown);
+tapHandler('reviewBtn', doReview);
+tapHandler('restartBtn', doRestart);
+tapHandler('backBtn', goBack);
+tapHandler('backBtn2', goBack);
+tapHandler('backBtnT', goBack);
+tapHandler('modeCards', function(){ setMode('cards'); });
+tapHandler('modeTable', function(){ setMode('table'); });
+
+document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('screenCard').classList.contains('active')) {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!revealed) doReveal(); }
+    else if (e.code === 'ArrowRight' || e.code === 'KeyK') { if (revealed) doKnown(); }
+    else if (e.code === 'ArrowLeft' || e.code === 'KeyR') { if (revealed) doReview(); }
+    else if (e.code === 'Escape') { goBack(); }
+  }
+  if (document.getElementById('screenTable').classList.contains('active')) {
+    if (e.code === 'Escape') goBack();
+  }
+});
+
+buildGroupGrid();
+</script>
+</body>
+</html>

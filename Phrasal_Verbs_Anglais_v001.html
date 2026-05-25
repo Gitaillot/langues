@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Phrasal Verbs — Anglais</title>
+<style>
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #13111a;
+    color: #e4e0ec;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  html { height: -webkit-fill-available; overflow: hidden; }
+  .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ── GROUP SELECT ── */
+  .group-select {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 1.8rem;
+  }
+  .group-select h1 {
+    font-size: 1.4rem;
+    font-weight: 300;
+    letter-spacing: 0.05em;
+    color: #a090d0;
+    margin-bottom: 0.2rem;
+    flex-shrink: 0;
+  }
+  .group-select .subtitle {
+    font-size: 0.78rem;
+    color: #504868;
+    margin-bottom: 0.5rem;
+    flex-shrink: 0;
+    text-align: center;
+    line-height: 1.5;
+  }
+  .mode-toggle {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 1rem;
+    flex-shrink: 0;
+  }
+  .mode-btn {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 8px;
+    color: #605880;
+    font-size: 0.78rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all 0.2s;
+  }
+  .mode-btn.active {
+    background: rgba(140,110,220,0.1);
+    border-color: rgba(140,110,220,0.25);
+    color: #b8a0e8;
+  }
+  .mode-btn:active { transform: scale(0.95); }
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 9px;
+    max-width: 440px;
+    width: 100%;
+    padding-bottom: 2rem;
+    flex-shrink: 0;
+  }
+  .group-btn {
+    background: rgba(255,255,255,0.025);
+    border: 1px solid rgba(255,255,255,0.055);
+    border-radius: 12px;
+    padding: 12px 10px;
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.2s;
+    touch-action: manipulation;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .group-btn:active { transform: scale(0.96); }
+  .group-btn .gverb {
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #8878b0;
+    flex-shrink: 0;
+    min-width: 52px;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .group-btn .gtext { display: flex; flex-direction: column; }
+  .group-btn .gname { font-size: 0.78rem; font-weight: 500; color: #a898cc; line-height: 1.3; }
+  .group-btn .gcount { font-size: 0.62rem; color: #504868; margin-top: 2px; }
+  .group-btn.completed { border-color: #3a7a50; background: rgba(50,110,70,0.08); }
+  .group-btn.completed .gverb { color: #6ada8a; }
+  .group-btn.completed .gname { color: #6ada8a; }
+  .group-btn.in-progress { border-color: #6a6a30; background: rgba(90,90,40,0.08); }
+  .group-btn.in-progress .gverb { color: #d4d060; }
+
+  /* ── CARD SCREEN ── */
+  .card-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 0.8rem;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 480px;
+    margin-bottom: 0.5rem;
+  }
+  .back-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 8px;
+    color: #605880;
+    font-size: 0.8rem;
+    padding: 5px 12px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .back-btn:active { opacity: 0.6; }
+  .group-label { font-size: 0.78rem; color: #504868; }
+  .progress-track {
+    width: 100%;
+    max-width: 480px;
+    height: 3px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 2px;
+    margin-bottom: 0.9rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7060b0, #a080e0);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0;
+  }
+
+  /* ── THE CARD ── */
+  .card {
+    width: 100%;
+    max-width: 480px;
+    min-height: 300px;
+    background: linear-gradient(155deg, rgba(255,255,255,0.04), rgba(255,255,255,0.012));
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1.6rem 1.4rem;
+    margin-bottom: 0.9rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -30%;
+    width: 130%;
+    height: 130%;
+    background: radial-gradient(ellipse at 30% 30%, rgba(120,80,200,0.04), transparent 55%);
+    pointer-events: none;
+  }
+  .pv-group-tag {
+    font-size: 0.6rem;
+    color: #504868;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 0.6rem;
+  }
+  .pv-main {
+    font-size: 2.3rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-align: center;
+    line-height: 1.2;
+    margin-bottom: 0.15rem;
+  }
+  .pv-particle {
+    color: #b898f0;
+  }
+  .pv-ipa {
+    font-size: 1rem;
+    color: #605880;
+    font-weight: 300;
+    margin-bottom: 0.7rem;
+  }
+
+  /* Revealed */
+  .pv-details {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: center;
+  }
+  .pv-hint {
+    color: #504868;
+    font-size: 0.82rem;
+    margin-top: 1rem;
+  }
+  .pv-meaning {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: #e8c860;
+    text-align: center;
+    line-height: 1.35;
+  }
+  .pv-fr {
+    font-size: 0.95rem;
+    color: #80a8c0;
+    text-align: center;
+  }
+  .pv-sep {
+    width: 40px;
+    height: 1px;
+    background: rgba(255,255,255,0.05);
+    margin: 0.15rem 0;
+  }
+  .pv-example {
+    font-size: 0.85rem;
+    color: #908aa0;
+    text-align: center;
+    font-style: italic;
+    line-height: 1.5;
+    max-width: 95%;
+  }
+  .pv-example em {
+    color: #c0b0e0;
+    font-style: normal;
+    font-weight: 600;
+  }
+  .pv-register {
+    font-size: 0.65rem;
+    color: #504868;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    padding: 2px 10px;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 6px;
+    margin-top: 0.2rem;
+  }
+
+  /* ── BUTTONS ── */
+  .buttons-zone {
+    height: 3.4rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.3rem;
+    position: relative;
+    width: 100%;
+    max-width: 480px;
+  }
+  .buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    position: absolute;
+  }
+  .buttons.hidden { visibility: hidden; pointer-events: none; }
+  button {
+    padding: 13px 22px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button:active:not(:disabled) { transform: scale(0.95); opacity: 0.85; }
+  button:disabled { cursor: default; opacity: 0.35; }
+  .btn-reveal {
+    background: linear-gradient(135deg, #6050a0, #4a3880);
+    color: #d8d0f0;
+    min-width: 200px;
+    box-shadow: 0 4px 18px rgba(70,50,120,0.4);
+  }
+  .btn-known {
+    background: linear-gradient(135deg, #2a8a5a, #34a06a);
+    color: white;
+    box-shadow: 0 4px 12px rgba(42,138,90,0.3);
+  }
+  .btn-review {
+    background: linear-gradient(135deg, #a08030, #b89040);
+    color: white;
+    box-shadow: 0 4px 12px rgba(160,128,48,0.3);
+  }
+  .btn-restart {
+    background: linear-gradient(135deg, #6050a0, #4a3880);
+    color: #d8d0f0;
+    min-width: 200px;
+  }
+
+  .stats {
+    font-size: 0.72rem;
+    color: #504868;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .stats strong { color: #7868a0; }
+
+  .done-box { text-align: center; padding: 2rem; }
+  .done-box h2 { font-size: 1.7rem; font-weight: 300; color: #6ada8a; margin-bottom: 1rem; }
+  .done-box p { color: #504868; margin-bottom: 1.5rem; line-height: 1.6; }
+
+  /* ── TABLE SCREEN ── */
+  .table-screen {
+    flex-direction: column;
+    padding: 0.8rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 1.2rem;
+  }
+  .table-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 650px;
+    margin-bottom: 0.8rem;
+    flex-shrink: 0;
+  }
+  .table-header h2 { font-size: 1rem; font-weight: 400; color: #a090d0; }
+  .ref-table {
+    width: 100%;
+    max-width: 650px;
+    border-collapse: collapse;
+    flex-shrink: 0;
+    margin-bottom: 2rem;
+  }
+  .ref-table th {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: #504868;
+    padding: 7px 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    text-align: left;
+  }
+  .ref-table td {
+    font-size: 0.78rem;
+    padding: 7px 5px;
+    border-bottom: 1px solid rgba(255,255,255,0.025);
+    color: #908aa0;
+    vertical-align: top;
+    line-height: 1.4;
+  }
+  .ref-table td:first-child { color: #d0c8e8; font-weight: 600; }
+  .ref-table td.fr-cell { color: #80a8c0; }
+  .ref-table td.ex-cell { color: #706888; font-style: italic; font-size: 0.72rem; }
+  .ref-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  @media (max-width: 400px) {
+    .pv-main { font-size: 1.85rem; }
+    .groups-grid { grid-template-columns: 1fr; }
+    button { padding: 12px 18px; font-size: 0.86rem; }
+  }
+  @media (max-height: 680px) {
+    .card { min-height: 250px; padding: 1.2rem; }
+    .pv-main { font-size: 1.85rem; }
+  }
+</style>
+</head>
+<body>
+
+<div class="screen group-select active" id="screenGroups">
+  <h1>🔗 Phrasal Verbs</h1>
+  <div class="subtitle">Les verbes à particule essentiels de l'anglais</div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="modeCards" data-mode="cards">Flashcards</div>
+    <div class="mode-btn" id="modeTable" data-mode="table">Tableau</div>
+  </div>
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="dirNormal" data-dir="normal">🇬🇧 → 🇫🇷 Normal</div>
+    <div class="mode-btn" id="dirReverse" data-dir="reverse">🇫🇷 → 🇬🇧 Inversé</div>
+  </div>
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
+
+<div class="screen card-screen" id="screenCard">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn">← Groupes</button>
+    <span class="group-label" id="groupLabel"></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="card" id="theCard">
+    <div class="pv-group-tag" id="pvTag"></div>
+    <div class="pv-main" id="pvMain">&nbsp;</div>
+    <div class="pv-ipa" id="pvIpa">&nbsp;</div>
+    <div class="pv-details" id="pvDetails"><div class="pv-hint">Sens · Traduction · Exemple ?</div></div>
+  </div>
+  <div class="buttons-zone">
+    <div class="buttons" id="revealButtons"><button class="btn-reveal" id="revealBtn">Révéler</button></div>
+    <div class="buttons hidden" id="actionButtons">
+      <button class="btn-known" id="knownBtn">✓ Connu</button>
+      <button class="btn-review" id="reviewBtn">↻ À revoir</button>
+    </div>
+  </div>
+  <div class="stats" id="stats"></div>
+  <div class="done-box" id="doneBox" style="display:none">
+    <h2>✓ Groupe terminé !</h2>
+    <p id="doneSummary"></p>
+    <button class="btn-restart" id="restartBtn">Recommencer</button>
+    <br><button class="back-btn" id="backBtn2" style="margin-top:12px">← Retour</button>
+  </div>
+</div>
+
+<div class="screen table-screen" id="screenTable">
+  <div class="table-header">
+    <button class="back-btn" id="backBtnT">← Retour</button>
+    <h2 id="tableTitle"></h2>
+  </div>
+  <table class="ref-table">
+    <thead><tr><th>Phrasal verb</th><th>Sens</th><th>Français</th><th>Exemple</th></tr></thead>
+    <tbody id="tBody"></tbody>
+  </table>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+// [phrasal verb, meaning, french, example (with <em> tags), register]
+// register: "" = standard, "informal", "formal", "business"
+// ═══════════════════════════════════════════════════════════
+var CATS = [
+{
+  name: "GET", tag: "get", items: [
+    ["get up","to rise from bed","se lever","I <em>get up</em> at 7 every morning.",""],
+    ["get on","to board (transport); to have a relationship","monter (dans) ; s'entendre","We <em>get on</em> really well.",""],
+    ["get off","to leave (transport); to finish work","descendre (de) ; finir le travail","I <em>get off</em> the bus at the next stop.",""],
+    ["get along","to have a friendly relationship","s'entendre, bien s'entendre","Do you <em>get along</em> with your colleagues?",""],
+    ["get over","to recover from","se remettre de","It took weeks to <em>get over</em> the flu.",""],
+    ["get away","to escape; to go on holiday","s'échapper ; partir en vacances","We need to <em>get away</em> for a few days.",""],
+    ["get by","to manage (financially/generally)","s'en sortir, survivre","It's hard to <em>get by</em> on minimum wage.","informal"],
+    ["get through","to finish; to reach by phone","finir ; joindre (par tél.)","I can't <em>get through</em> to customer service.",""],
+    ["get out","to leave; to become known","sortir ; se savoir","The secret <em>got out</em> somehow.",""],
+    ["get rid of","to eliminate, discard","se débarrasser de","It's time to <em>get rid of</em> old clothes.",""],
+    ["get back","to return; to recover","revenir ; récupérer","When did you <em>get back</em> from holiday?",""],
+    ["get into","to become involved/interested in","se mettre à, s'intéresser à","She's really <em>getting into</em> yoga.",""],
+    ["get around","to travel; to avoid (a rule)","se déplacer ; contourner","How do you <em>get around</em> in the city?",""],
+    ["get across","to communicate successfully","faire passer (un message)","I couldn't <em>get</em> my point <em>across</em>.",""],
+  ]
+},
+{
+  name: "TAKE", tag: "take", items: [
+    ["take off","to remove; to leave the ground; to suddenly succeed","enlever ; décoller ; démarrer fort","The plane <em>took off</em> on time.",""],
+    ["take on","to accept (work/responsibility); to hire","prendre en charge ; embaucher","We <em>took on</em> three new employees.",""],
+    ["take up","to start (hobby/activity); to occupy (space/time)","se mettre à ; occuper","She <em>took up</em> painting last year.",""],
+    ["take over","to assume control","reprendre, prendre le contrôle","A larger company <em>took over</em> the business.","business"],
+    ["take out","to remove; to go on a date","retirer ; inviter (sortir)","He <em>took</em> her <em>out</em> for dinner.",""],
+    ["take in","to understand; to deceive; to shelter","comprendre ; tromper ; héberger","It was hard to <em>take in</em> all that information.",""],
+    ["take back","to return; to retract","rapporter ; retirer (ce qu'on a dit)","I <em>take back</em> what I said.",""],
+    ["take down","to dismantle; to write/note","démonter ; noter","<em>Take down</em> this phone number.",""],
+    ["take after","to resemble (family)","ressembler à (famille)","She <em>takes after</em> her mother.",""],
+    ["take apart","to disassemble","démonter, décomposer","He <em>took apart</em> the entire engine.",""],
+  ]
+},
+{
+  name: "PUT", tag: "put", items: [
+    ["put on","to wear; to switch on; to gain (weight)","mettre (vêtement) ; allumer ; prendre (poids)","<em>Put on</em> a coat, it's cold outside.",""],
+    ["put off","to postpone; to discourage","reporter ; décourager","Don't <em>put off</em> until tomorrow what you can do today.",""],
+    ["put up with","to tolerate","supporter, tolérer","I can't <em>put up with</em> this noise anymore.",""],
+    ["put out","to extinguish; to publish; to inconvenience","éteindre ; publier ; déranger","Please <em>put out</em> your cigarette.",""],
+    ["put away","to store; to save (money)","ranger ; mettre de côté","<em>Put away</em> your toys, please.",""],
+    ["put down","to place on surface; to criticize; to euthanize","poser ; dénigrer ; piquer (animal)","Stop <em>putting</em> yourself <em>down</em>.",""],
+    ["put forward","to propose, suggest","proposer, avancer (une idée)","She <em>put forward</em> an interesting idea.","formal"],
+    ["put through","to connect (phone); to cause to experience","passer (appel) ; faire subir","Can you <em>put</em> me <em>through</em> to the manager?",""],
+    ["put together","to assemble","assembler, monter","It took hours to <em>put together</em> the furniture.",""],
+    ["put aside","to save; to disregard","mettre de côté ; ignorer","Let's <em>put aside</em> our differences.",""],
+  ]
+},
+{
+  name: "TURN", tag: "turn", items: [
+    ["turn on","to switch on; to excite","allumer ; exciter","<em>Turn on</em> the TV, the match is starting.",""],
+    ["turn off","to switch off; to repel","éteindre ; rebuter","His attitude really <em>turns</em> me <em>off</em>.",""],
+    ["turn up","to arrive; to increase (volume)","arriver ; monter (le son)","She <em>turned up</em> late as usual.","informal"],
+    ["turn down","to refuse; to reduce (volume)","refuser ; baisser (le son)","They <em>turned down</em> my application.",""],
+    ["turn out","to result; to prove to be","s'avérer ; finalement être","It <em>turned out</em> to be a great idea.",""],
+    ["turn into","to become, transform","se transformer en","The caterpillar <em>turned into</em> a butterfly.",""],
+    ["turn around","to reverse direction; to improve","faire demi-tour ; redresser","The company managed to <em>turn</em> things <em>around</em>.",""],
+    ["turn over","to flip; to yield (revenue)","retourner ; réaliser (chiffre d'affaires)","<em>Turn over</em> the page.",""],
+  ]
+},
+{
+  name: "COME", tag: "come", items: [
+    ["come up","to arise, occur; to approach","survenir ; s'approcher","Something important <em>came up</em> at work.",""],
+    ["come across","to find by chance; to seem","tomber sur ; avoir l'air","She <em>comes across</em> as very confident.",""],
+    ["come back","to return","revenir, retourner","When are you <em>coming back</em>?",""],
+    ["come out","to be released; to emerge; to reveal","sortir ; apparaître ; se révéler","The new album <em>comes out</em> next week.",""],
+    ["come up with","to think of, invent","trouver, inventer (idée)","Who <em>came up with</em> this plan?",""],
+    ["come down to","to be essentially about","se résumer à","It all <em>comes down to</em> money.",""],
+    ["come along","to progress; to accompany","progresser ; accompagner","How's your project <em>coming along</em>?",""],
+    ["come over","to visit; to suddenly feel","passer (chez qqn) ; avoir soudain","<em>Come over</em> for dinner tonight!","informal"],
+    ["come round","to visit; to regain consciousness","passer ; reprendre connaissance","She <em>came round</em> after the operation.",""],
+  ]
+},
+{
+  name: "LOOK", tag: "look", items: [
+    ["look up","to search (information); to improve","chercher (une info) ; s'améliorer","<em>Look up</em> the word in a dictionary.",""],
+    ["look after","to take care of","s'occuper de","Can you <em>look after</em> my cat this weekend?",""],
+    ["look for","to search for","chercher","I'm <em>looking for</em> my keys.",""],
+    ["look forward to","to anticipate with pleasure","avoir hâte de","I <em>look forward to</em> meeting you.",""],
+    ["look into","to investigate","examiner, enquêter sur","The police are <em>looking into</em> it.",""],
+    ["look out","to be careful","faire attention","<em>Look out</em>! There's a car coming!",""],
+    ["look down on","to consider inferior","mépriser, regarder de haut","He <em>looks down on</em> people without degrees.",""],
+    ["look up to","to admire, respect","admirer","Children <em>look up to</em> their parents.",""],
+    ["look over","to review, examine","examiner, passer en revue","Could you <em>look over</em> my essay?",""],
+    ["look through","to examine carefully; to ignore","parcourir ; ignorer","She <em>looked through</em> the report quickly.",""],
+  ]
+},
+{
+  name: "BREAK / BRING / CARRY", tag: "break+", items: [
+    ["break down","to stop working; to collapse emotionally","tomber en panne ; craquer","The car <em>broke down</em> on the motorway.",""],
+    ["break up","to end a relationship; to separate","rompre ; se séparer","They <em>broke up</em> after five years.",""],
+    ["break into","to enter by force","entrer par effraction","Someone <em>broke into</em> our house.",""],
+    ["break out","to start suddenly (war, fire, disease)","éclater (guerre, feu, maladie)","A fire <em>broke out</em> in the factory.",""],
+    ["break through","to make a major advance","percer, faire une avancée","Scientists <em>broke through</em> with a new treatment.",""],
+    ["bring up","to raise (child); to mention (topic)","élever (enfant) ; aborder (sujet)","Don't <em>bring up</em> politics at dinner.",""],
+    ["bring about","to cause to happen","provoquer, entraîner","Technology <em>brought about</em> huge changes.","formal"],
+    ["bring back","to return; to evoke memories","rapporter ; rappeler (souvenirs)","This song <em>brings back</em> memories.",""],
+    ["carry on","to continue","continuer","<em>Carry on</em> working, don't stop.",""],
+    ["carry out","to perform, execute","effectuer, réaliser","They <em>carried out</em> the experiment.","formal"],
+  ]
+},
+{
+  name: "MAKE / DO / GO", tag: "make+", items: [
+    ["make up","to invent (story); to reconcile; to apply cosmetics","inventer ; se réconcilier ; se maquiller","They argued but <em>made up</em> the next day.",""],
+    ["make out","to manage to see/hear/understand; to kiss","distinguer ; s'embrasser","I can barely <em>make out</em> what he's saying.",""],
+    ["make up for","to compensate for","compenser","He <em>made up for</em> being late by working overtime.",""],
+    ["make of","to think/have an opinion about","penser de","What do you <em>make of</em> the new boss?",""],
+    ["do away with","to abolish, eliminate","supprimer, abolir","They want to <em>do away with</em> the old system.","formal"],
+    ["do without","to manage without","se passer de","I can't <em>do without</em> my morning coffee.",""],
+    ["do up","to fasten; to renovate","attacher ; rénover","We're <em>doing up</em> the kitchen.","informal"],
+    ["go on","to continue; to happen","continuer ; se passer","What's <em>going on</em> here?",""],
+    ["go through","to experience; to examine carefully","traverser (épreuve) ; examiner","She's <em>going through</em> a difficult time.",""],
+    ["go off","to explode; to ring (alarm); to spoil (food)","exploser ; sonner ; tourner (nourriture)","The alarm <em>went off</em> at 6 AM.",""],
+    ["go ahead","to proceed","aller de l'avant, procéder","<em>Go ahead</em>, I'm listening.",""],
+    ["go over","to review","revoir, réviser","Let's <em>go over</em> the plan one more time.",""],
+  ]
+},
+{
+  name: "SET / GIVE / HOLD", tag: "set+", items: [
+    ["set up","to establish; to prepare","établir ; installer","She <em>set up</em> her own company.",""],
+    ["set off","to start a journey; to trigger","partir ; déclencher","We <em>set off</em> early in the morning.",""],
+    ["set out","to begin (with a purpose); to display","entreprendre ; exposer","He <em>set out</em> to prove them wrong.",""],
+    ["set back","to delay; to cost","retarder ; coûter","The delays <em>set</em> the project <em>back</em> by months.",""],
+    ["give up","to stop trying; to quit","abandonner ; arrêter","Never <em>give up</em> on your dreams.",""],
+    ["give in","to surrender, yield","céder","She finally <em>gave in</em> to their demands.",""],
+    ["give away","to donate; to reveal","donner ; révéler","Don't <em>give away</em> the ending!",""],
+    ["give back","to return","rendre","<em>Give</em> me <em>back</em> my book.",""],
+    ["hold on","to wait; to grip tightly","attendre ; s'accrocher","<em>Hold on</em>, I'll check for you.",""],
+    ["hold up","to delay; to rob","retarder ; braquer","Traffic <em>held</em> us <em>up</em> for an hour.",""],
+    ["hold back","to restrain; to hesitate","retenir ; hésiter","She <em>held back</em> her tears.",""],
+  ]
+},
+{
+  name: "PICK / PULL / RUN / WORK", tag: "pick+", items: [
+    ["pick up","to collect; to learn casually; to improve","ramasser ; apprendre ; s'améliorer","I <em>picked up</em> some Spanish on holiday.",""],
+    ["pick on","to bully, single out","s'en prendre à","Stop <em>picking on</em> your little brother.","informal"],
+    ["pick out","to choose, select","choisir, sélectionner","She <em>picked out</em> a dress for the party.",""],
+    ["pull off","to succeed at something difficult","réussir (un exploit)","They <em>pulled off</em> an amazing comeback.","informal"],
+    ["pull over","to stop at the side of road","se ranger (sur le bas-côté)","The police told him to <em>pull over</em>.",""],
+    ["pull out","to withdraw","se retirer","The army <em>pulled out</em> of the region.",""],
+    ["run out of","to exhaust the supply","être à court de","We've <em>run out of</em> milk.",""],
+    ["run into","to meet by chance; to encounter (problem)","tomber sur ; rencontrer (problème)","I <em>ran into</em> an old friend yesterday.",""],
+    ["run over","to hit with vehicle; to exceed (time)","écraser ; dépasser (le temps)","Be careful not to <em>run over</em> the dog.",""],
+    ["work out","to exercise; to solve; to succeed","faire du sport ; résoudre ; marcher","Everything <em>worked out</em> in the end.",""],
+    ["work on","to try to improve","travailler sur, améliorer","I need to <em>work on</em> my accent.",""],
+  ]
+},
+{
+  name: "CALL / CHECK / CUT / FIGURE", tag: "call+", items: [
+    ["call off","to cancel","annuler","They <em>called off</em> the wedding.",""],
+    ["call back","to return a phone call","rappeler","I'll <em>call</em> you <em>back</em> in ten minutes.",""],
+    ["call for","to require; to demand","nécessiter ; réclamer","This situation <em>calls for</em> immediate action.","formal"],
+    ["check in","to register (hotel/airport)","s'enregistrer","You can <em>check in</em> online.",""],
+    ["check out","to leave (hotel); to examine","quitter ; vérifier, regarder","<em>Check out</em> this new restaurant.","informal"],
+    ["check up on","to verify, monitor","vérifier, surveiller","She's always <em>checking up on</em> me.",""],
+    ["cut off","to disconnect; to isolate","couper ; isoler","The storm <em>cut off</em> the power supply.",""],
+    ["cut down on","to reduce","réduire","You should <em>cut down on</em> sugar.",""],
+    ["cut in","to interrupt; to overtake dangerously","couper la parole ; faire une queue de poisson","Sorry to <em>cut in</em>, but I have a question.",""],
+    ["figure out","to understand, solve","comprendre, résoudre","I can't <em>figure out</em> this puzzle.",""],
+  ]
+},
+{
+  name: "FILL / HAND / KEEP / PASS / POINT", tag: "fill+", items: [
+    ["fill in","to complete (form); to substitute","remplir ; remplacer","Please <em>fill in</em> this application form.",""],
+    ["fill up","to make completely full","faire le plein, remplir","I need to <em>fill up</em> the car.",""],
+    ["hand in","to submit","rendre, remettre","<em>Hand in</em> your assignment by Friday.",""],
+    ["hand out","to distribute","distribuer","The teacher <em>handed out</em> the worksheets.",""],
+    ["hand over","to give, transfer","remettre, céder","<em>Hand over</em> the documents.",""],
+    ["keep up with","to stay at the same level","suivre le rythme de","I can't <em>keep up with</em> all the changes.",""],
+    ["keep on","to continue","continuer","She <em>kept on</em> talking despite the noise.",""],
+    ["pass away","to die (euphemism)","décéder","Her grandmother <em>passed away</em> last night.",""],
+    ["pass out","to faint; to distribute","s'évanouir ; distribuer","He <em>passed out</em> from the heat.",""],
+    ["point out","to indicate, highlight","signaler, faire remarquer","She <em>pointed out</em> several errors.",""],
+    ["pass on","to transmit; to decline","transmettre ; décliner","Could you <em>pass on</em> the message?",""],
+  ]
+},
+{
+  name: "SORT / STAND / SHOW / SHUT / THROW / WRAP", tag: "sort+", items: [
+    ["sort out","to resolve; to organize","résoudre ; organiser","We need to <em>sort out</em> this mess.",""],
+    ["stand for","to represent; to tolerate","représenter ; tolérer","I won't <em>stand for</em> this behaviour.",""],
+    ["stand out","to be noticeable","se démarquer, se distinguer","Her CV really <em>stands out</em>.",""],
+    ["stand up for","to defend","défendre","You should <em>stand up for</em> your rights.",""],
+    ["show off","to boast, display proudly","frimer, se vanter","He's always <em>showing off</em> his car.","informal"],
+    ["show up","to arrive; to be visible","se pointer ; apparaître","He didn't <em>show up</em> for the meeting.","informal"],
+    ["shut down","to close completely; to stop operating","fermer ; arrêter","The factory <em>shut down</em> last year.",""],
+    ["throw away","to discard","jeter","Don't <em>throw away</em> that box.",""],
+    ["throw up","to vomit","vomir","The child <em>threw up</em> on the bus.","informal"],
+    ["wrap up","to finish; to dress warmly","conclure ; s'emmitoufler","Let's <em>wrap up</em> this meeting.",""],
+    ["end up","to finally be/do","finir par","We <em>ended up</em> staying until midnight.",""],
+    ["slow down","to reduce speed","ralentir","<em>Slow down</em>, you're driving too fast.",""],
+  ]
+}
+];
+
+// ═══════════════
+// STATE
+// ═══════════════
+var currentCat = -1, catItems = [], available = [], reviewQueue = [], known = [], turn = 0, current = null, revealed = false, viewMode = 'cards', reverseMode = false;
+var progress = {};
+try { var s = localStorage.getItem('pv_progress'); if (s) progress = JSON.parse(s); } catch(e) {}
+function saveProgress() { try { progress[currentCat] = { known: known.length, total: catItems.length }; localStorage.setItem('pv_progress', JSON.stringify(progress)); } catch(e) {} }
+
+function buildGroupGrid() {
+  var grid = document.getElementById('groupsGrid'); grid.innerHTML = '';
+  for (var g = 0; g < CATS.length; g++) {
+    var c = CATS[g], btn = document.createElement('div');
+    btn.className = 'group-btn';
+    var p = progress[g];
+    if (p && p.known >= p.total) btn.className += ' completed';
+    else if (p && p.known > 0) btn.className += ' in-progress';
+    btn.innerHTML = '<span class="gverb">' + c.tag.replace('+','…') + '</span><div class="gtext"><span class="gname">' + c.name + '</span><span class="gcount">' + c.items.length + ' phrasal verbs</span></div>';
+    (function(gg) {
+      btn.addEventListener('click', function() { openGroup(gg); });
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); openGroup(gg); }, {passive:false});
+    })(g);
+    grid.appendChild(btn);
+  }
+}
+
+function openGroup(g) { if (viewMode === 'table') showTable(g); else startGroup(g); }
+
+function showTable(g) {
+  var c = CATS[g];
+  document.getElementById('tableTitle').textContent = c.name;
+  var tbody = document.getElementById('tBody'); tbody.innerHTML = '';
+  for (var i = 0; i < c.items.length; i++) {
+    var it = c.items[i], tr = document.createElement('tr');
+    tr.innerHTML = '<td>' + it[0] + '</td><td>' + it[1] + '</td><td class="fr-cell">' + it[2] + '</td><td class="ex-cell">' + it[3] + '</td>';
+    tbody.appendChild(tr);
+  }
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenTable').classList.add('active');
+}
+
+function startGroup(g) {
+  currentCat = g;
+  var c = CATS[g]; catItems = [];
+  for (var i = 0; i < c.items.length; i++) {
+    var it = c.items[i];
+    catItems.push({ idx: i, group: c.name, pv: it[0], meaning: it[1], fr: it[2], example: it[3], register: it[4] });
+  }
+  available = catItems.slice(); reviewQueue = []; known = []; turn = 0; revealed = false;
+  document.getElementById('groupLabel').textContent = c.name + ' — ' + c.items.length + ' phrasal verbs';
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenCard').classList.add('active');
+  showItem();
+}
+
+function goBack() {
+  if (currentCat >= 0) saveProgress();
+  document.getElementById('screenCard').classList.remove('active');
+  document.getElementById('screenTable').classList.remove('active');
+  document.getElementById('screenGroups').classList.add('active');
+  buildGroupGrid();
+}
+
+function pickNext() {
+  var i, pick, due = [];
+  for (i = 0; i < reviewQueue.length; i++) { if (reviewQueue[i].t <= turn) due.push(reviewQueue[i]); }
+  if (due.length > 0) { pick = due[Math.floor(Math.random() * due.length)]; reviewQueue = reviewQueue.filter(function(r){ return r !== pick; }); return pick.w; }
+  if (available.length > 0) return available[Math.floor(Math.random() * available.length)];
+  if (reviewQueue.length > 0) { reviewQueue.sort(function(a,b){ return a.t - b.t; }); pick = reviewQueue[0]; reviewQueue = reviewQueue.slice(1); return pick.w; }
+  return null;
+}
+
+function showItem() {
+  current = pickNext();
+  if (!current) {
+    document.getElementById('theCard').style.display = 'none';
+    document.querySelector('.buttons-zone').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('doneBox').style.display = 'block';
+    document.getElementById('doneSummary').textContent = 'Les ' + catItems.length + ' phrasal verbs sont maîtrisés !';
+    saveProgress(); return;
+  }
+  revealed = false;
+  document.getElementById('pvTag').textContent = current.group;
+  if (reverseMode) {
+    // Reverse: show meaning + french, hide the phrasal verb
+    document.getElementById('pvMain').innerHTML = '<span style="font-size:0.75em;color:#e8c860">' + current.meaning + '</span>';
+    document.getElementById('pvIpa').textContent = current.fr;
+    document.getElementById('pvDetails').innerHTML = '<div class="pv-hint">Quel est le phrasal verb ?</div>';
+  } else {
+    // Normal: show the phrasal verb
+    var parts = current.pv.split(' ');
+    var base = parts[0];
+    var particle = parts.slice(1).join(' ');
+    document.getElementById('pvMain').innerHTML = base + ' <span class="pv-particle">' + particle + '</span>';
+    document.getElementById('pvIpa').textContent = '';
+    document.getElementById('pvDetails').innerHTML = '<div class="pv-hint">Sens · Traduction · Exemple ?</div>';
+  }
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  updateStats();
+}
+
+function doReveal() {
+  if (!current || revealed) return;
+  revealed = true; turn++;
+  var h = '';
+  if (reverseMode) {
+    // Reverse: reveal the phrasal verb + example
+    var parts = current.pv.split(' ');
+    var base = parts[0];
+    var particle = parts.slice(1).join(' ');
+    h += '<div class="pv-meaning" style="font-size:1.6rem">' + base + ' <span class="pv-particle">' + particle + '</span></div>';
+    h += '<div class="pv-sep"></div>';
+    h += '<div class="pv-example">' + current.example + '</div>';
+    if (current.register) h += '<div class="pv-register">' + current.register + '</div>';
+  } else {
+    // Normal: reveal meaning + french + example
+    h += '<div class="pv-meaning">' + current.meaning + '</div>';
+    h += '<div class="pv-fr">' + current.fr + '</div>';
+    h += '<div class="pv-sep"></div>';
+    h += '<div class="pv-example">' + current.example + '</div>';
+    if (current.register) h += '<div class="pv-register">' + current.register + '</div>';
+  }
+  document.getElementById('pvDetails').innerHTML = h;
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+}
+
+function doKnown() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  known.push(w); saveProgress(); showItem();
+}
+function doReview() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x){ return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x){ return x.w !== w; });
+  reviewQueue.push({ w: w, t: turn + 3 }); showItem();
+}
+function updateStats() {
+  var pct = catItems.length > 0 ? Math.round(known.length / catItems.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stats').innerHTML = '✓ Connus\u00A0: <strong>' + known.length + '</strong> · ↻ À revoir\u00A0: <strong>' + reviewQueue.length + '</strong> · Restants\u00A0: <strong>' + available.length + '</strong>';
+}
+function doRestart() {
+  available = catItems.slice(); reviewQueue = []; known = []; turn = 0;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  showItem();
+}
+function setMode(m) { viewMode = m; document.querySelectorAll('.mode-btn[data-mode]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-mode') === m); }); }
+function setDir(d) { reverseMode = (d === 'reverse'); document.querySelectorAll('.mode-btn[data-dir]').forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-dir') === d); }); }
+
+function tapHandler(id, fn) {
+  var el = document.getElementById(id); if (!el) return;
+  var touched = false;
+  el.addEventListener('touchstart', function(e) { e.preventDefault(); e.stopPropagation(); touched = true; fn(); }, { passive: false });
+  el.addEventListener('touchend', function(e) { e.preventDefault(); e.stopPropagation(); }, { passive: false });
+  el.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); if (!touched) fn(); touched = false; });
+}
+tapHandler('revealBtn', doReveal);
+tapHandler('knownBtn', doKnown);
+tapHandler('reviewBtn', doReview);
+tapHandler('restartBtn', doRestart);
+tapHandler('backBtn', goBack);
+tapHandler('backBtn2', goBack);
+tapHandler('backBtnT', goBack);
+tapHandler('modeCards', function(){ setMode('cards'); });
+tapHandler('modeTable', function(){ setMode('table'); });
+tapHandler('dirNormal', function(){ setDir('normal'); });
+tapHandler('dirReverse', function(){ setDir('reverse'); });
+document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('screenCard').classList.contains('active')) {
+    if (e.code === 'Space' || e.code === 'Enter') { e.preventDefault(); if (!revealed) doReveal(); }
+    else if (e.code === 'ArrowRight' || e.code === 'KeyK') { if (revealed) doKnown(); }
+    else if (e.code === 'ArrowLeft' || e.code === 'KeyR') { if (revealed) doReview(); }
+    else if (e.code === 'Escape') goBack();
+  }
+  if (document.getElementById('screenTable').classList.contains('active')) { if (e.code === 'Escape') goBack(); }
+});
+buildGroupGrid();
+</script>
+</body>
+</html>
