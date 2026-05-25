@@ -1,0 +1,1629 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>1000 Mots Anglais — Vocabulaire & Prononciation</title>
+<style>
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  body {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: #0f1923;
+    color: #e8e6e3;
+    overflow: hidden;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+  }
+  html { height: -webkit-fill-available; overflow: hidden; }
+
+  /* ── SCREENS ── */
+  .screen { display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0; }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ── GROUP SELECT ── */
+  .group-select {
+    flex-direction: column;
+    padding: 1rem;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    align-items: center;
+    justify-content: flex-start !important;
+    padding-top: 2rem;
+  }
+  .group-select h1 {
+    font-size: 1.5rem;
+    font-weight: 300;
+    letter-spacing: 0.06em;
+    color: #8a9bb5;
+    margin-bottom: 0.3rem;
+    flex-shrink: 0;
+  }
+  .group-select .subtitle {
+    font-size: 0.82rem;
+    color: #4e5d73;
+    margin-bottom: 1.2rem;
+    flex-shrink: 0;
+  }
+  .groups-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    max-width: 420px;
+    width: 100%;
+    padding-bottom: 2rem;
+    flex-shrink: 0;
+  }
+  .group-btn {
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px;
+    padding: 10px 4px;
+    font-size: 0.78rem;
+    color: #7a8ea6;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    line-height: 1.3;
+    touch-action: manipulation;
+  }
+  .group-btn:active { transform: scale(0.93); }
+  .group-btn .gnum { font-size: 1.05rem; font-weight: 700; color: #b0c4de; display: block; }
+  .group-btn .grange { font-size: 0.62rem; color: #4e5d73; display: block; margin-top: 2px; }
+  .group-btn.completed { border-color: #2a6e4e; background: rgba(42,110,78,0.15); }
+  .group-btn.completed .gnum { color: #5bbd8a; }
+  .group-btn.in-progress { border-color: #5a5030; background: rgba(90,80,48,0.15); }
+  .group-btn.in-progress .gnum { color: #d4b85a; }
+
+  /* ── CARD SCREEN ── */
+  .card-screen {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 440px;
+    margin-bottom: 0.6rem;
+  }
+  .back-btn {
+    background: none;
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    color: #7a8ea6;
+    font-size: 0.82rem;
+    padding: 6px 14px;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .back-btn:active { opacity: 0.6; }
+  .group-label {
+    font-size: 0.82rem;
+    color: #4e5d73;
+  }
+  .progress-track {
+    width: 100%;
+    max-width: 440px;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 2px;
+    margin-bottom: 1.4rem;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3a8f6a, #5bbd8a);
+    border-radius: 2px;
+    transition: width 0.4s ease;
+    width: 0;
+  }
+
+  /* ── THE CARD ── */
+  .card {
+    width: 100%;
+    max-width: 440px;
+    min-height: 260px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem 1.5rem;
+    margin-bottom: 1.2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .card::before {
+    content: '';
+    position: absolute;
+    top: -60%;
+    left: -20%;
+    width: 140%;
+    height: 140%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(90,160,230,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .word-rank {
+    font-size: 0.72rem;
+    color: #3d4f66;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+  }
+  .word-en {
+    font-size: 2.8rem;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.02em;
+    margin-bottom: 0.5rem;
+    text-align: center;
+    line-height: 1.15;
+  }
+  .word-ipa {
+    font-size: 1.5rem;
+    color: #6cb4ee;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+    min-height: 2.2rem;
+    text-align: center;
+  }
+  .word-fr {
+    font-size: 1.15rem;
+    color: #d4b85a;
+    font-weight: 400;
+    min-height: 1.6rem;
+    text-align: center;
+  }
+  .word-class {
+    font-size: 0.75rem;
+    color: #4e5d73;
+    font-style: italic;
+    margin-top: 0.4rem;
+    min-height: 1rem;
+  }
+
+  /* ── BUTTONS ── */
+  .buttons-zone {
+    height: 3.8rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0.4rem;
+    position: relative;
+    width: 100%;
+    max-width: 440px;
+  }
+  .buttons {
+    display: flex;
+    gap: 0.6rem;
+    justify-content: center;
+    position: absolute;
+  }
+  .buttons.hidden { visibility: hidden; pointer-events: none; }
+  button {
+    padding: 14px 24px;
+    border: none;
+    border-radius: 12px;
+    font-size: 0.95rem;
+    font-weight: 700;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+  button:active:not(:disabled) { transform: scale(0.95); opacity: 0.85; }
+  button:disabled { cursor: default; opacity: 0.35; }
+  .btn-reveal {
+    background: linear-gradient(135deg, #3a6fa0, #2a5080);
+    color: white;
+    min-width: 200px;
+    box-shadow: 0 4px 20px rgba(42,80,128,0.4);
+  }
+  .btn-known {
+    background: linear-gradient(135deg, #2a8a5a, #34a06a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(42,138,90,0.3);
+  }
+  .btn-review {
+    background: linear-gradient(135deg, #c07a30, #d4943a);
+    color: white;
+    box-shadow: 0 4px 15px rgba(192,122,48,0.3);
+  }
+  .btn-restart {
+    background: linear-gradient(135deg, #3a6fa0, #2a5080);
+    color: white;
+    min-width: 200px;
+  }
+
+  .stats {
+    font-size: 0.74rem;
+    color: #3d4f66;
+    line-height: 1.8;
+    text-align: center;
+  }
+  .stats strong { color: #6a7f9a; }
+
+  /* ── DONE ── */
+  .done-box {
+    text-align: center;
+    padding: 2rem;
+  }
+  .done-box h2 {
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: #5bbd8a;
+    margin-bottom: 1rem;
+  }
+  .done-box p {
+    color: #5a6f88;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 370px) {
+    .word-en { font-size: 2.2rem; }
+    .word-ipa { font-size: 1.25rem; }
+    .groups-grid { grid-template-columns: repeat(4, 1fr); }
+    button { padding: 12px 18px; font-size: 0.88rem; }
+  }
+  @media (max-height: 650px) {
+    .card { min-height: 200px; padding: 1.2rem; }
+    .word-en { font-size: 2.2rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══ SCREEN 1: GROUP SELECT ═══ -->
+<div class="screen group-select active" id="screenGroups">
+  <h1>🔤 1000 Mots Anglais</h1>
+  <div class="subtitle">Prononciation API · Groupes de 20 par fréquence</div>
+  <div class="groups-grid" id="groupsGrid"></div>
+</div>
+
+<!-- ═══ SCREEN 2: FLASHCARD ═══ -->
+<div class="screen card-screen" id="screenCard">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn">← Groupes</button>
+    <span class="group-label" id="groupLabel">Groupe 1</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="theCard">
+    <div class="word-rank" id="wordRank">#1</div>
+    <div class="word-en" id="wordEn">&nbsp;</div>
+    <div class="word-ipa" id="wordIpa">&nbsp;</div>
+    <div class="word-fr" id="wordFr">&nbsp;</div>
+    <div class="word-class" id="wordClass">&nbsp;</div>
+  </div>
+
+  <div class="buttons-zone">
+    <div class="buttons" id="revealButtons">
+      <button class="btn-reveal" id="revealBtn">Révéler</button>
+    </div>
+    <div class="buttons hidden" id="actionButtons">
+      <button class="btn-known" id="knownBtn">✓ Connu</button>
+      <button class="btn-review" id="reviewBtn">↻ À revoir</button>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="done-box" id="doneBox" style="display:none">
+    <h2>✓ Groupe terminé !</h2>
+    <p id="doneSummary">Tous les mots sont maîtrisés.</p>
+    <button class="btn-restart" id="restartBtn">Recommencer ce groupe</button>
+    <br><br>
+    <button class="back-btn" id="backBtn2">← Retour aux groupes</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 1000 MOST FREQUENT ENGLISH WORDS — [word, IPA, french, class]
+// ═══════════════════════════════════════════════════════════════
+var W = [
+// ── Group 1: 1–20 ──
+["the","ðə","le, la, les","art."],
+["be","biː","être","v."],
+["to","tuː","à, vers","prep."],
+["of","ɒv","de","prep."],
+["and","ænd","et","conj."],
+["a","eɪ","un, une","art."],
+["in","ɪn","dans","prep."],
+["that","ðæt","que, ce","conj./pron."],
+["have","hæv","avoir","v."],
+["I","aɪ","je","pron."],
+["it","ɪt","il, ça","pron."],
+["for","fɔːr","pour","prep."],
+["not","nɒt","ne…pas","adv."],
+["on","ɒn","sur","prep."],
+["with","wɪð","avec","prep."],
+["he","hiː","il","pron."],
+["as","æz","comme","conj."],
+["you","juː","tu, vous","pron."],
+["do","duː","faire","v."],
+["at","æt","à","prep."],
+// ── Group 2: 21–40 ──
+["this","ðɪs","ceci, ce","pron./adj."],
+["but","bʌt","mais","conj."],
+["his","hɪz","son, sa","adj.poss."],
+["by","baɪ","par","prep."],
+["from","frɒm","de, depuis","prep."],
+["they","ðeɪ","ils, elles","pron."],
+["we","wiː","nous","pron."],
+["say","seɪ","dire","v."],
+["her","hɜːr","elle, sa","pron./adj."],
+["she","ʃiː","elle","pron."],
+["or","ɔːr","ou","conj."],
+["an","ən","un, une","art."],
+["will","wɪl","(futur)","v.aux."],
+["my","maɪ","mon, ma","adj.poss."],
+["one","wʌn","un","num./pron."],
+["all","ɔːl","tout, tous","adj./pron."],
+["would","wʊd","(conditionnel)","v.aux."],
+["there","ðɛər","là, y","adv."],
+["their","ðɛər","leur","adj.poss."],
+["what","wɒt","quoi, que","pron."],
+// ── Group 3: 41–60 ──
+["so","səʊ","donc, si","adv./conj."],
+["up","ʌp","en haut","adv."],
+["out","aʊt","dehors","adv."],
+["if","ɪf","si","conj."],
+["about","əˈbaʊt","à propos de","prep."],
+["who","huː","qui","pron."],
+["get","ɡɛt","obtenir","v."],
+["which","wɪtʃ","lequel, quel","pron."],
+["go","ɡəʊ","aller","v."],
+["me","miː","moi, me","pron."],
+["when","wɛn","quand","adv."],
+["make","meɪk","faire, fabriquer","v."],
+["can","kæn","pouvoir","v.aux."],
+["like","laɪk","aimer ; comme","v./prep."],
+["time","taɪm","temps, heure","n."],
+["no","nəʊ","non","adv."],
+["just","dʒʌst","juste","adv."],
+["him","hɪm","lui, le","pron."],
+["know","nəʊ","savoir","v."],
+["take","teɪk","prendre","v."],
+// ── Group 4: 61–80 ──
+["people","ˈpiːpəl","gens","n."],
+["into","ˈɪntuː","dans","prep."],
+["year","jɪər","année","n."],
+["your","jɔːr","ton, votre","adj.poss."],
+["good","ɡʊd","bon","adj."],
+["some","sʌm","quelques","adj."],
+["could","kʊd","pourrait","v.aux."],
+["them","ðɛm","eux, les","pron."],
+["see","siː","voir","v."],
+["other","ˈʌðər","autre","adj."],
+["than","ðæn","que (comparaison)","conj."],
+["then","ðɛn","alors, puis","adv."],
+["now","naʊ","maintenant","adv."],
+["look","lʊk","regarder","v."],
+["only","ˈəʊnli","seulement","adv."],
+["come","kʌm","venir","v."],
+["its","ɪts","son, sa (neutre)","adj.poss."],
+["over","ˈəʊvər","au-dessus","prep./adv."],
+["think","θɪŋk","penser","v."],
+["also","ˈɔːlsəʊ","aussi","adv."],
+// ── Group 5: 81–100 ──
+["back","bæk","dos ; retour","n./adv."],
+["after","ˈɑːftər","après","prep."],
+["use","juːz","utiliser","v."],
+["two","tuː","deux","num."],
+["how","haʊ","comment","adv."],
+["our","ˈaʊər","notre","adj.poss."],
+["work","wɜːrk","travail, travailler","n./v."],
+["first","fɜːrst","premier","adj."],
+["well","wɛl","bien","adv."],
+["way","weɪ","chemin, manière","n."],
+["even","ˈiːvən","même","adv."],
+["new","njuː","nouveau","adj."],
+["want","wɒnt","vouloir","v."],
+["because","bɪˈkɒz","parce que","conj."],
+["any","ˈɛni","n'importe quel","adj."],
+["these","ðiːz","ces, ceux-ci","pron."],
+["give","ɡɪv","donner","v."],
+["day","deɪ","jour","n."],
+["most","məʊst","le plus","adv."],
+["us","ʌs","nous","pron."],
+// ── Group 6: 101–120 ──
+["great","ɡreɪt","grand, formidable","adj."],
+["find","faɪnd","trouver","v."],
+["here","hɪər","ici","adv."],
+["thing","θɪŋ","chose","n."],
+["many","ˈmɛni","beaucoup de","adj."],
+["still","stɪl","encore","adv."],
+["long","lɒŋ","long","adj."],
+["own","əʊn","propre ; posséder","adj./v."],
+["right","raɪt","droit ; correct","adj./n."],
+["old","əʊld","vieux","adj."],
+["tell","tɛl","dire, raconter","v."],
+["very","ˈvɛri","très","adv."],
+["much","mʌtʃ","beaucoup","adv."],
+["need","niːd","avoir besoin","v."],
+["such","sʌtʃ","tel","adj."],
+["mean","miːn","signifier","v."],
+["try","traɪ","essayer","v."],
+["hand","hænd","main","n."],
+["high","haɪ","haut","adj."],
+["place","pleɪs","endroit","n."],
+// ── Group 7: 121–140 ──
+["keep","kiːp","garder","v."],
+["help","hɛlp","aider","v."],
+["put","pʊt","mettre","v."],
+["where","wɛər","où","adv."],
+["life","laɪf","vie","n."],
+["house","haʊs","maison","n."],
+["might","maɪt","pourrait","v.aux."],
+["world","wɜːrld","monde","n."],
+["move","muːv","bouger","v."],
+["live","lɪv","vivre","v."],
+["should","ʃʊd","devrait","v.aux."],
+["school","skuːl","école","n."],
+["every","ˈɛvri","chaque","adj."],
+["country","ˈkʌntri","pays","n."],
+["feel","fiːl","sentir, ressentir","v."],
+["point","pɔɪnt","point","n."],
+["ask","ɑːsk","demander","v."],
+["play","pleɪ","jouer","v."],
+["small","smɔːl","petit","adj."],
+["number","ˈnʌmbər","nombre","n."],
+// ── Group 8: 141–160 ──
+["again","əˈɡɛn","encore","adv."],
+["turn","tɜːrn","tourner","v."],
+["real","rɪəl","réel","adj."],
+["leave","liːv","partir, laisser","v."],
+["man","mæn","homme","n."],
+["show","ʃəʊ","montrer","v."],
+["part","pɑːrt","partie","n."],
+["child","tʃaɪld","enfant","n."],
+["group","ɡruːp","groupe","n."],
+["under","ˈʌndər","sous","prep."],
+["begin","bɪˈɡɪn","commencer","v."],
+["seem","siːm","sembler","v."],
+["head","hɛd","tête","n."],
+["end","ɛnd","fin","n."],
+["word","wɜːrd","mot","n."],
+["must","mʌst","devoir","v.aux."],
+["call","kɔːl","appeler","v."],
+["run","rʌn","courir","v."],
+["while","waɪl","pendant que","conj."],
+["last","lɑːst","dernier","adj."],
+// ── Group 9: 161–180 ──
+["through","θruː","à travers","prep."],
+["change","tʃeɪndʒ","changer","v."],
+["set","sɛt","mettre, ensemble","v./n."],
+["line","laɪn","ligne","n."],
+["big","bɪɡ","grand, gros","adj."],
+["off","ɒf","hors, éteint","adv."],
+["home","həʊm","maison, foyer","n."],
+["same","seɪm","même","adj."],
+["write","raɪt","écrire","v."],
+["read","riːd","lire","v."],
+["name","neɪm","nom","n."],
+["grow","ɡrəʊ","grandir","v."],
+["different","ˈdɪfrənt","différent","adj."],
+["city","ˈsɪti","ville","n."],
+["add","æd","ajouter","v."],
+["follow","ˈfɒləʊ","suivre","v."],
+["between","bɪˈtwiːn","entre","prep."],
+["close","kləʊz","fermer ; proche","v./adj."],
+["open","ˈəʊpən","ouvrir ; ouvert","v./adj."],
+["without","wɪˈðaʊt","sans","prep."],
+// ── Group 10: 181–200 ──
+["state","steɪt","état","n."],
+["start","stɑːrt","commencer","v."],
+["another","əˈnʌðər","un autre","adj."],
+["stop","stɒp","arrêter","v."],
+["govern","ˈɡʌvərn","gouverner","v."],
+["woman","ˈwʊmən","femme","n."],
+["side","saɪd","côté","n."],
+["water","ˈwɔːtər","eau","n."],
+["story","ˈstɔːri","histoire","n."],
+["young","jʌŋ","jeune","adj."],
+["already","ɔːlˈrɛdi","déjà","adv."],
+["light","laɪt","lumière ; léger","n./adj."],
+["eye","aɪ","œil","n."],
+["let","lɛt","laisser","v."],
+["face","feɪs","visage","n."],
+["interest","ˈɪntrəst","intérêt","n."],
+["become","bɪˈkʌm","devenir","v."],
+["problem","ˈprɒbləm","problème","n."],
+["power","ˈpaʊər","pouvoir","n."],
+["both","bəʊθ","les deux","adj."],
+// ── Group 11: 201–220 ──
+["family","ˈfæməli","famille","n."],
+["since","sɪns","depuis","prep./conj."],
+["against","əˈɡɛnst","contre","prep."],
+["fact","fækt","fait","n."],
+["during","ˈdjʊərɪŋ","pendant","prep."],
+["money","ˈmʌni","argent","n."],
+["hold","həʊld","tenir","v."],
+["though","ðəʊ","bien que","conj."],
+["system","ˈsɪstəm","système","n."],
+["area","ˈɛəriə","zone","n."],
+["night","naɪt","nuit","n."],
+["car","kɑːr","voiture","n."],
+["happen","ˈhæpən","arriver, se passer","v."],
+["bring","brɪŋ","apporter","v."],
+["stand","stænd","se tenir debout","v."],
+["believe","bɪˈliːv","croire","v."],
+["lose","luːz","perdre","v."],
+["pay","peɪ","payer","v."],
+["meet","miːt","rencontrer","v."],
+["include","ɪnˈkluːd","inclure","v."],
+// ── Group 12: 221–240 ──
+["continue","kənˈtɪnjuː","continuer","v."],
+["learn","lɜːrn","apprendre","v."],
+["lead","liːd","mener","v."],
+["understand","ˌʌndərˈstænd","comprendre","v."],
+["question","ˈkwɛstʃən","question","n."],
+["body","ˈbɒdi","corps","n."],
+["develop","dɪˈvɛləp","développer","v."],
+["matter","ˈmætər","matière ; importer","n./v."],
+["form","fɔːrm","forme","n."],
+["force","fɔːrs","force","n."],
+["political","pəˈlɪtɪkəl","politique","adj."],
+["possible","ˈpɒsəbəl","possible","adj."],
+["level","ˈlɛvəl","niveau","n."],
+["idea","aɪˈdɪə","idée","n."],
+["move","muːv","déplacer","v."],
+["reason","ˈriːzən","raison","n."],
+["provide","prəˈvaɪd","fournir","v."],
+["war","wɔːr","guerre","n."],
+["few","fjuː","peu de","adj."],
+["mind","maɪnd","esprit","n."],
+// ── Group 13: 241–260 ──
+["sure","ʃʊər","sûr","adj."],
+["act","ækt","agir ; acte","v./n."],
+["white","waɪt","blanc","adj."],
+["case","keɪs","cas","n."],
+["feel","fiːl","ressentir","v."],
+["enough","ɪˈnʌf","assez","adv./adj."],
+["talk","tɔːk","parler","v."],
+["study","ˈstʌdi","étudier","v."],
+["hear","hɪər","entendre","v."],
+["far","fɑːr","loin","adv."],
+["something","ˈsʌmθɪŋ","quelque chose","pron."],
+["able","ˈeɪbəl","capable","adj."],
+["job","dʒɒb","emploi","n."],
+["often","ˈɒfən","souvent","adv."],
+["public","ˈpʌblɪk","public","adj./n."],
+["expect","ɪkˈspɛkt","attendre, s'attendre","v."],
+["always","ˈɔːlweɪz","toujours","adv."],
+["important","ɪmˈpɔːrtənt","important","adj."],
+["until","ənˈtɪl","jusqu'à","prep."],
+["watch","wɒtʃ","regarder ; montre","v./n."],
+// ── Group 14: 261–280 ──
+["program","ˈprəʊɡræm","programme","n."],
+["speak","spiːk","parler","v."],
+["allow","əˈlaʊ","permettre","v."],
+["result","rɪˈzʌlt","résultat","n."],
+["present","ˈprɛzənt","présent","adj./n."],
+["die","daɪ","mourir","v."],
+["month","mʌnθ","mois","n."],
+["plan","plæn","plan","n."],
+["moment","ˈməʊmənt","moment","n."],
+["child","tʃaɪld","enfant","n."],
+["sit","sɪt","s'asseoir","v."],
+["create","kriˈeɪt","créer","v."],
+["report","rɪˈpɔːrt","rapport","n."],
+["step","stɛp","pas, étape","n."],
+["however","haʊˈɛvər","cependant","adv."],
+["kill","kɪl","tuer","v."],
+["door","dɔːr","porte","n."],
+["walk","wɔːk","marcher","v."],
+["room","ruːm","pièce, chambre","n."],
+["early","ˈɜːrli","tôt","adv./adj."],
+// ── Group 15: 281–300 ──
+["late","leɪt","tard, en retard","adj./adv."],
+["idea","aɪˈdɪə","idée","n."],
+["before","bɪˈfɔːr","avant","prep."],
+["large","lɑːrdʒ","grand","adj."],
+["order","ˈɔːrdər","ordre","n."],
+["base","beɪs","base","n."],
+["hear","hɪər","entendre","v."],
+["true","truː","vrai","adj."],
+["yet","jɛt","encore, pourtant","adv."],
+["reach","riːtʃ","atteindre","v."],
+["rest","rɛst","repos ; reste","n."],
+["history","ˈhɪstəri","histoire","n."],
+["kind","kaɪnd","genre ; gentil","n./adj."],
+["market","ˈmɑːrkɪt","marché","n."],
+["return","rɪˈtɜːrn","retourner","v."],
+["member","ˈmɛmbər","membre","n."],
+["class","klɑːs","classe","n."],
+["age","eɪdʒ","âge","n."],
+["company","ˈkʌmpəni","entreprise","n."],
+["free","friː","libre, gratuit","adj."],
+// ── Group 16: 301–320 ──
+["keep","kiːp","garder","v."],
+["effect","ɪˈfɛkt","effet","n."],
+["music","ˈmjuːzɪk","musique","n."],
+["human","ˈhjuːmən","humain","adj./n."],
+["health","hɛlθ","santé","n."],
+["later","ˈleɪtər","plus tard","adv."],
+["role","rəʊl","rôle","n."],
+["table","ˈteɪbəl","table","n."],
+["although","ɔːlˈðəʊ","bien que","conj."],
+["office","ˈɒfɪs","bureau","n."],
+["land","lænd","terre","n."],
+["rather","ˈrɑːðər","plutôt","adv."],
+["away","əˈweɪ","loin, parti","adv."],
+["today","təˈdeɪ","aujourd'hui","adv."],
+["service","ˈsɜːrvɪs","service","n."],
+["street","striːt","rue","n."],
+["rate","reɪt","taux","n."],
+["view","vjuː","vue","n."],
+["picture","ˈpɪktʃər","image","n."],
+["food","fuːd","nourriture","n."],
+// ── Group 17: 321–340 ──
+["court","kɔːrt","tribunal, cour","n."],
+["hard","hɑːrd","dur","adj."],
+["field","fiːld","champ, domaine","n."],
+["price","praɪs","prix","n."],
+["morning","ˈmɔːrnɪŋ","matin","n."],
+["among","əˈmʌŋ","parmi","prep."],
+["book","bʊk","livre","n."],
+["million","ˈmɪljən","million","n."],
+["offer","ˈɒfər","offrir, offre","v./n."],
+["air","ɛər","air","n."],
+["several","ˈsɛvrəl","plusieurs","adj."],
+["behind","bɪˈhaɪnd","derrière","prep."],
+["least","liːst","le moins","adv."],
+["half","hɑːf","moitié","n."],
+["accept","əkˈsɛpt","accepter","v."],
+["piece","piːs","morceau","n."],
+["deal","diːl","affaire","n."],
+["miss","mɪs","manquer","v."],
+["visit","ˈvɪzɪt","visiter","v."],
+["appear","əˈpɪər","apparaître","v."],
+// ── Group 18: 341–360 ──
+["build","bɪld","construire","v."],
+["above","əˈbʌv","au-dessus","prep."],
+["maybe","ˈmeɪbi","peut-être","adv."],
+["short","ʃɔːrt","court","adj."],
+["cost","kɒst","coûter ; coût","v./n."],
+["less","lɛs","moins","adv."],
+["decision","dɪˈsɪʒən","décision","n."],
+["experience","ɪkˈspɪəriəns","expérience","n."],
+["team","tiːm","équipe","n."],
+["record","ˈrɛkɔːrd","record, enregistrer","n./v."],
+["rise","raɪz","monter","v."],
+["within","wɪˈðɪn","à l'intérieur de","prep."],
+["paper","ˈpeɪpər","papier","n."],
+["space","speɪs","espace","n."],
+["ground","ɡraʊnd","sol","n."],
+["answer","ˈɑːnsər","répondre ; réponse","v./n."],
+["event","ɪˈvɛnt","événement","n."],
+["build","bɪld","construire","v."],
+["choice","tʃɔɪs","choix","n."],
+["nature","ˈneɪtʃər","nature","n."],
+// ── Group 19: 361–380 ──
+["sound","saʊnd","son","n."],
+["behind","bɪˈhaɪnd","derrière","prep."],
+["death","dɛθ","mort","n."],
+["sort","sɔːrt","sorte, trier","n./v."],
+["quite","kwaɪt","assez, tout à fait","adv."],
+["almost","ˈɔːlməʊst","presque","adv."],
+["whole","həʊl","entier","adj."],
+["president","ˈprɛzɪdənt","président","n."],
+["increase","ɪnˈkriːs","augmenter","v."],
+["clear","klɪər","clair","adj."],
+["love","lʌv","amour, aimer","n./v."],
+["inside","ˌɪnˈsaɪd","à l'intérieur","adv."],
+["across","əˈkrɒs","à travers","prep."],
+["voice","vɔɪs","voix","n."],
+["cover","ˈkʌvər","couvrir","v."],
+["toward","təˈwɔːrd","vers","prep."],
+["control","kənˈtrəʊl","contrôle","n."],
+["sense","sɛns","sens","n."],
+["position","pəˈzɪʃən","position","n."],
+["explain","ɪkˈspleɪn","expliquer","v."],
+// ── Group 20: 381–400 ──
+["teacher","ˈtiːtʃər","professeur","n."],
+["student","ˈstjuːdənt","étudiant","n."],
+["church","tʃɜːrtʃ","église","n."],
+["center","ˈsɛntər","centre","n."],
+["second","ˈsɛkənd","deuxième ; seconde","adj./n."],
+["possible","ˈpɒsəbəl","possible","adj."],
+["perhaps","pərˈhæps","peut-être","adv."],
+["pass","pɑːs","passer","v."],
+["per","pɜːr","par","prep."],
+["minute","ˈmɪnɪt","minute","n."],
+["strong","strɒŋ","fort","adj."],
+["street","striːt","rue","n."],
+["ready","ˈrɛdi","prêt","adj."],
+["simple","ˈsɪmpəl","simple","adj."],
+["leave","liːv","quitter","v."],
+["society","səˈsaɪəti","société","n."],
+["pull","pʊl","tirer","v."],
+["grow","ɡrəʊ","grandir, pousser","v."],
+["cut","kʌt","couper","v."],
+["human","ˈhjuːmən","humain","adj."],
+// ── Group 21: 401–420 ──
+["black","blæk","noir","adj."],
+["market","ˈmɑːrkɪt","marché","n."],
+["special","ˈspɛʃəl","spécial","adj."],
+["cause","kɔːz","cause ; causer","n./v."],
+["economic","ˌiːkəˈnɒmɪk","économique","adj."],
+["local","ˈləʊkəl","local","adj."],
+["current","ˈkʌrənt","actuel ; courant","adj./n."],
+["carry","ˈkæri","porter, transporter","v."],
+["value","ˈvæljuː","valeur","n."],
+["hit","hɪt","frapper","v."],
+["player","ˈpleɪər","joueur","n."],
+["reach","riːtʃ","atteindre","v."],
+["remain","rɪˈmeɪn","rester","v."],
+["week","wiːk","semaine","n."],
+["drop","drɒp","laisser tomber","v."],
+["deep","diːp","profond","adj."],
+["fall","fɔːl","tomber ; automne","v./n."],
+["care","kɛər","soin ; se soucier","n./v."],
+["full","fʊl","plein","adj."],
+["once","wʌns","une fois","adv."],
+// ── Group 22: 421–440 ──
+["produce","prəˈdjuːs","produire","v."],
+["bed","bɛd","lit","n."],
+["buy","baɪ","acheter","v."],
+["drive","draɪv","conduire","v."],
+["hot","hɒt","chaud","adj."],
+["wall","wɔːl","mur","n."],
+["daughter","ˈdɔːtər","fille","n."],
+["son","sʌn","fils","n."],
+["note","nəʊt","note","n."],
+["common","ˈkɒmən","commun","adj."],
+["upon","əˈpɒn","sur","prep."],
+["draw","drɔː","dessiner","v."],
+["break","breɪk","casser ; pause","v./n."],
+["dark","dɑːrk","sombre","adj."],
+["require","rɪˈkwaɪər","exiger","v."],
+["together","təˈɡɛðər","ensemble","adv."],
+["whether","ˈwɛðər","si (condition)","conj."],
+["support","səˈpɔːrt","soutenir ; soutien","v./n."],
+["type","taɪp","type","n."],
+["condition","kənˈdɪʃən","condition","n."],
+// ── Group 23: 441–460 ──
+["bit","bɪt","morceau ; un peu","n."],
+["red","rɛd","rouge","adj."],
+["energy","ˈɛnərdʒi","énergie","n."],
+["project","ˈprɒdʒɛkt","projet","n."],
+["letter","ˈlɛtər","lettre","n."],
+["sign","saɪn","signe ; signer","n./v."],
+["girl","ɡɜːrl","fille","n."],
+["boy","bɔɪ","garçon","n."],
+["seat","siːt","siège","n."],
+["stuff","stʌf","truc, affaires","n."],
+["front","frʌnt","devant","n./adj."],
+["practice","ˈpræktɪs","pratique","n."],
+["save","seɪv","sauver ; économiser","v."],
+["respond","rɪˈspɒnd","répondre","v."],
+["catch","kætʃ","attraper","v."],
+["individual","ˌɪndɪˈvɪdʒuəl","individu","n./adj."],
+["raise","reɪz","lever, élever","v."],
+["test","tɛst","test","n."],
+["game","ɡeɪm","jeu","n."],
+["arm","ɑːrm","bras","n."],
+// ── Group 24: 461–480 ──
+["foot","fʊt","pied","n."],
+["lay","leɪ","poser","v."],
+["hair","hɛər","cheveux","n."],
+["trade","treɪd","commerce","n."],
+["scene","siːn","scène","n."],
+["check","tʃɛk","vérifier","v."],
+["figure","ˈfɪɡər","figure ; chiffre","n."],
+["rule","ruːl","règle","n."],
+["certain","ˈsɜːrtən","certain","adj."],
+["along","əˈlɒŋ","le long de","prep."],
+["film","fɪlm","film","n."],
+["future","ˈfjuːtʃər","futur","n./adj."],
+["soon","suːn","bientôt","adv."],
+["disease","dɪˈziːz","maladie","n."],
+["nation","ˈneɪʃən","nation","n."],
+["subject","ˈsʌbdʒɪkt","sujet","n."],
+["issue","ˈɪʃuː","problème, question","n."],
+["range","reɪndʒ","gamme","n."],
+["police","pəˈliːs","police","n."],
+["single","ˈsɪŋɡəl","seul, célibataire","adj."],
+// ── Group 25: 481–500 ──
+["blood","blʌd","sang","n."],
+["window","ˈwɪndəʊ","fenêtre","n."],
+["dog","dɒɡ","chien","n."],
+["season","ˈsiːzən","saison","n."],
+["couple","ˈkʌpəl","couple","n."],
+["tax","tæks","impôt, taxe","n."],
+["act","ækt","agir","v."],
+["material","məˈtɪəriəl","matériel","n./adj."],
+["cold","kəʊld","froid","adj."],
+["hour","ˈaʊər","heure","n."],
+["laugh","lɑːf","rire","v."],
+["fight","faɪt","se battre","v."],
+["general","ˈdʒɛnərəl","général","adj."],
+["star","stɑːr","étoile","n."],
+["likely","ˈlaɪkli","probable","adj."],
+["security","sɪˈkjʊərəti","sécurité","n."],
+["heart","hɑːrt","cœur","n."],
+["baby","ˈbeɪbi","bébé","n."],
+["appear","əˈpɪər","apparaître","v."],
+["image","ˈɪmɪdʒ","image","n."],
+// ── Group 26: 501–520 ──
+["south","saʊθ","sud","n."],
+["north","nɔːrθ","nord","n."],
+["west","wɛst","ouest","n."],
+["east","iːst","est","n."],
+["green","ɡriːn","vert","adj."],
+["phone","fəʊn","téléphone","n."],
+["oil","ɔɪl","huile, pétrole","n."],
+["personal","ˈpɜːrsənəl","personnel","adj."],
+["cell","sɛl","cellule","n."],
+["floor","flɔːr","sol, étage","n."],
+["party","ˈpɑːrti","fête ; parti","n."],
+["garden","ˈɡɑːrdən","jardin","n."],
+["chance","tʃɑːns","chance","n."],
+["brother","ˈbrʌðər","frère","n."],
+["consider","kənˈsɪdər","considérer","v."],
+["protect","prəˈtɛkt","protéger","v."],
+["finish","ˈfɪnɪʃ","finir","v."],
+["pain","peɪn","douleur","n."],
+["measure","ˈmɛʒər","mesure ; mesurer","n./v."],
+["press","prɛs","presse ; appuyer","n./v."],
+// ── Group 27: 521–540 ──
+["concern","kənˈsɜːrn","préoccupation","n."],
+["color","ˈkʌlər","couleur","n."],
+["happy","ˈhæpi","heureux","adj."],
+["serve","sɜːrv","servir","v."],
+["language","ˈlæŋɡwɪdʒ","langue, langage","n."],
+["argue","ˈɑːrɡjuː","discuter, argumenter","v."],
+["easy","ˈiːzi","facile","adj."],
+["attention","əˈtɛnʃən","attention","n."],
+["wrong","rɒŋ","faux, mauvais","adj."],
+["shoulder","ˈʃəʊldər","épaule","n."],
+["fly","flaɪ","voler","v."],
+["college","ˈkɒlɪdʒ","université","n."],
+["period","ˈpɪəriəd","période","n."],
+["attack","əˈtæk","attaque","n."],
+["stage","steɪdʒ","scène, étape","n."],
+["fire","ˈfaɪər","feu","n."],
+["wish","wɪʃ","souhait ; souhaiter","n./v."],
+["stay","steɪ","rester","v."],
+["race","reɪs","course ; race","n."],
+["forget","fərˈɡɛt","oublier","v."],
+// ── Group 28: 541–560 ──
+["claim","kleɪm","revendiquer","v."],
+["smile","smaɪl","sourire","n./v."],
+["parent","ˈpɛərənt","parent","n."],
+["agreement","əˈɡriːmənt","accord","n."],
+["approach","əˈprəʊtʃ","approche","n."],
+["finally","ˈfaɪnəli","finalement","adv."],
+["operation","ˌɒpəˈreɪʃən","opération","n."],
+["property","ˈprɒpərti","propriété","n."],
+["evening","ˈiːvnɪŋ","soir","n."],
+["unit","ˈjuːnɪt","unité","n."],
+["machine","məˈʃiːn","machine","n."],
+["computer","kəmˈpjuːtər","ordinateur","n."],
+["edge","ɛdʒ","bord","n."],
+["character","ˈkærəktər","personnage","n."],
+["evidence","ˈɛvɪdəns","preuve","n."],
+["focus","ˈfəʊkəs","concentrer ; focus","v./n."],
+["dream","driːm","rêve","n."],
+["strategy","ˈstrætədʒi","stratégie","n."],
+["challenge","ˈtʃælɪndʒ","défi","n."],
+["success","səkˈsɛs","succès","n."],
+// ── Group 29: 561–580 ──
+["purpose","ˈpɜːrpəs","but","n."],
+["skill","skɪl","compétence","n."],
+["cup","kʌp","tasse","n."],
+["safe","seɪf","sûr","adj."],
+["trouble","ˈtrʌbəl","problème","n."],
+["apply","əˈplaɪ","appliquer","v."],
+["train","treɪn","train ; entraîner","n./v."],
+["doctor","ˈdɒktər","médecin","n."],
+["finger","ˈfɪŋɡər","doigt","n."],
+["tree","triː","arbre","n."],
+["source","sɔːrs","source","n."],
+["red","rɛd","rouge","adj."],
+["method","ˈmɛθəd","méthode","n."],
+["actually","ˈæktʃuəli","en fait","adv."],
+["data","ˈdeɪtə","données","n."],
+["director","dɪˈrɛktər","directeur","n."],
+["design","dɪˈzaɪn","design ; concevoir","n./v."],
+["sit","sɪt","s'asseoir","v."],
+["image","ˈɪmɪdʒ","image","n."],
+["bank","bæŋk","banque","n."],
+// ── Group 30: 581–600 ──
+["peace","piːs","paix","n."],
+["rock","rɒk","rocher","n."],
+["task","tɑːsk","tâche","n."],
+["wide","waɪd","large","adj."],
+["hang","hæŋ","accrocher","v."],
+["employee","ɪmˈplɔɪiː","employé","n."],
+["sign","saɪn","signe","n."],
+["determine","dɪ�ˈtɜːrmɪn","déterminer","v."],
+["share","ʃɛər","partager ; part","v./n."],
+["language","ˈlæŋɡwɪdʒ","langue","n."],
+["establish","ɪˈstæblɪʃ","établir","v."],
+["fly","flaɪ","voler","v."],
+["forget","fərˈɡɛt","oublier","v."],
+["dinner","ˈdɪnər","dîner","n."],
+["huge","hjuːdʒ","énorme","adj."],
+["ball","bɔːl","balle, ballon","n."],
+["beautiful","ˈbjuːtɪfəl","beau","adj."],
+["middle","ˈmɪdəl","milieu","n./adj."],
+["summer","ˈsʌmər","été","n."],
+["fill","fɪl","remplir","v."],
+// ── Group 31: 601–620 ──
+["win","wɪn","gagner","v."],
+["kitchen","ˈkɪtʃɪn","cuisine","n."],
+["pain","peɪn","douleur","n."],
+["avoid","əˈvɔɪd","éviter","v."],
+["push","pʊʃ","pousser","v."],
+["hotel","həʊˈtɛl","hôtel","n."],
+["activity","ækˈtɪvəti","activité","n."],
+["shake","ʃeɪk","secouer","v."],
+["board","bɔːrd","tableau ; conseil","n."],
+["standard","ˈstændərd","standard","n./adj."],
+["benefit","ˈbɛnɪfɪt","avantage","n."],
+["process","ˈprɒsɛs","processus","n."],
+["popular","ˈpɒpjʊlər","populaire","adj."],
+["mile","maɪl","mile","n."],
+["river","ˈrɪvər","rivière","n."],
+["mouth","maʊθ","bouche","n."],
+["send","sɛnd","envoyer","v."],
+["eight","eɪt","huit","num."],
+["possible","ˈpɒsəbəl","possible","adj."],
+["effort","ˈɛfərt","effort","n."],
+// ── Group 32: 621–640 ──
+["pretty","ˈprɪti","joli ; assez","adj./adv."],
+["opinion","əˈpɪnjən","opinion","n."],
+["manage","ˈmænɪdʒ","gérer","v."],
+["detail","ˈdiːteɪl","détail","n."],
+["model","ˈmɒdəl","modèle","n."],
+["painting","ˈpeɪntɪŋ","peinture","n."],
+["nor","nɔːr","ni","conj."],
+["stock","stɒk","stock","n."],
+["modern","ˈmɒdərn","moderne","adj."],
+["response","rɪˈspɒns","réponse","n."],
+["movement","ˈmuːvmənt","mouvement","n."],
+["fish","fɪʃ","poisson","n."],
+["particular","pərˈtɪkjʊlər","particulier","adj."],
+["camera","ˈkæmərə","caméra","n."],
+["structure","ˈstrʌktʃər","structure","n."],
+["century","ˈsɛntʃəri","siècle","n."],
+["direction","dɪˈrɛkʃən","direction","n."],
+["treatment","ˈtriːtmənt","traitement","n."],
+["everybody","ˈɛvrɪbɒdi","tout le monde","pron."],
+["resource","rɪˈzɔːrs","ressource","n."],
+// ── Group 33: 641–660 ──
+["key","kiː","clé","n."],
+["remove","r�ɪˈmuːv","enlever","v."],
+["nation","ˈneɪʃən","nation","n."],
+["prevent","prɪˈvɛnt","empêcher","v."],
+["worker","ˈwɜːrkər","travailleur","n."],
+["professor","prəˈfɛsər","professeur","n."],
+["represent","ˌrɛpr�ɪˈzɛnt","représenter","v."],
+["risk","rɪsk","risque","n."],
+["trip","trɪp","voyage","n."],
+["paper","ˈpeɪpər","papier","n."],
+["technology","tɛkˈnɒlədʒi","technologie","n."],
+["campaign","kæmˈpeɪn","campagne","n."],
+["guy","ɡaɪ","gars","n."],
+["material","məˈtɪəriəl","matériel","n."],
+["education","ˌɛdʒʊˈkeɪʃən","éducation","n."],
+["knowledge","ˈnɒlɪdʒ","connaissance","n."],
+["choose","tʃuːz","choisir","v."],
+["enjoy","ɪnˈdʒɔɪ","apprécier","v."],
+["magazine","ˌmæɡəˈziːn","magazine","n."],
+["hotel","həʊˈtɛl","hôtel","n."],
+// ── Group 34: 661–680 ──
+["skin","skɪn","peau","n."],
+["performance","pərˈfɔːrməns","performance","n."],
+["improve","ɪmˈpruːv","améliorer","v."],
+["art","ɑːrt","art","n."],
+["contain","kənˈteɪn","contenir","v."],
+["exist","ɪɡˈzɪst","exister","v."],
+["huge","hjuːdʒ","énorme","adj."],
+["federal","ˈfɛdərəl","fédéral","adj."],
+["behavior","bɪˈheɪvjər","comportement","n."],
+["travel","ˈtrævəl","voyager","v."],
+["recently","ˈriːsəntli","récemment","adv."],
+["suggest","səˈdʒɛst","suggérer","v."],
+["action","ˈækʃən","action","n."],
+["whatever","wɒtˈɛvər","peu importe","pron."],
+["wife","waɪf","épouse","n."],
+["husband","ˈhʌzbənd","époux","n."],
+["price","praɪs","prix","n."],
+["debate","dɪˈbeɪt","débat","n."],
+["eat","iːt","manger","v."],
+["site","saɪt","site","n."],
+// ── Group 35: 681–700 ──
+["drug","drʌɡ","drogue ; médicament","n."],
+["western","ˈwɛstərn","occidental","adj."],
+["blue","bluː","bleu","adj."],
+["magazine","ˌmæɡəˈziːn","magazine","n."],
+["culture","ˈkʌltʃər","culture","n."],
+["daughter","ˈdɔːtər","fille","n."],
+["election","ɪˈlɛkʃən","élection","n."],
+["box","bɒks","boîte","n."],
+["glass","ɡlɑːs","verre","n."],
+["hospital","ˈhɒspɪtəl","hôpital","n."],
+["animal","ˈænɪməl","animal","n."],
+["miss","mɪs","manquer","v."],
+["bank","bæŋk","banque","n."],
+["rich","rɪtʃ","riche","adj."],
+["recognize","ˈrɛkəɡnaɪz","reconnaître","v."],
+["pick","pɪk","choisir, ramasser","v."],
+["count","kaʊnt","compter","v."],
+["network","ˈnɛtwɜːrk","réseau","n."],
+["shoulder","ˈʃəʊldər","épaule","n."],
+["manager","ˈmænɪdʒər","directeur","n."],
+// ── Group 36: 701–720 ──
+["spring","sprɪŋ","printemps","n."],
+["quickly","ˈkwɪkli","rapidement","adv."],
+["tough","tʌf","dur, difficile","adj."],
+["animal","ˈænɪməl","animal","n."],
+["throw","θrəʊ","lancer","v."],
+["wear","wɛər","porter (vêtement)","v."],
+["entire","ɪnˈtaɪər","entier","adj."],
+["collection","kəˈlɛkʃən","collection","n."],
+["politics","ˈpɒlɪtɪks","politique","n."],
+["natural","ˈnætʃərəl","naturel","adj."],
+["fast","fɑːst","rapide","adj."],
+["yeah","jɛə","ouais","interj."],
+["teach","tiːtʃ","enseigner","v."],
+["season","ˈsiːzən","saison","n."],
+["tonight","təˈnaɪt","ce soir","adv."],
+["poor","pʊər","pauvre","adj."],
+["nearly","ˈnɪərli","presque","adv."],
+["bill","bɪl","facture ; projet de loi","n."],
+["town","taʊn","ville","n."],
+["beyond","bɪˈjɒnd","au-delà","prep."],
+// ── Group 37: 721–740 ──
+["pattern","ˈpætərn","motif, modèle","n."],
+["necessary","ˈnɛsəsəri","nécessaire","adj."],
+["protect","prəˈtɛkt","protéger","v."],
+["bus","bʌs","bus","n."],
+["draw","drɔː","dessiner","v."],
+["prove","pruːv","prouver","v."],
+["executive","ɪɡˈzɛkjʊtɪv","exécutif","adj./n."],
+["wonder","ˈwʌndər","se demander","v."],
+["final","ˈfaɪnəl","final","adj."],
+["reduce","rɪˈdjuːs","réduire","v."],
+["plant","plɑːnt","plante","n."],
+["lake","leɪk","lac","n."],
+["assume","əˈsjuːm","supposer","v."],
+["reality","riˈæləti","réalité","n."],
+["amount","əˈmaʊnt","montant","n."],
+["traditional","trəˈdɪʃənəl","traditionnel","adj."],
+["situation","ˌsɪtʃuˈeɪʃən","situation","n."],
+["weight","weɪt","poids","n."],
+["similar","ˈsɪmɪlər","similaire","adj."],
+["relate","rɪˈleɪt","relier","v."],
+// ── Group 38: 741–760 ──
+["laugh","lɑːf","rire","v."],
+["entire","ɪnˈtaɪər","entier","adj."],
+["legal","ˈliːɡəl","légal","adj."],
+["likely","ˈlaɪkli","probable","adj."],
+["private","ˈpraɪvət","privé","adj."],
+["tend","tɛnd","tendre à","v."],
+["identify","aɪˈdɛntɪfaɪ","identifier","v."],
+["significant","sɪɡˈnɪfɪkənt","significatif","adj."],
+["memory","ˈmɛməri","mémoire","n."],
+["shoulder","ˈʃəʊldər","épaule","n."],
+["compare","kəmˈpɛər","comparer","v."],
+["pain","peɪn","douleur","n."],
+["generation","ˌdʒɛnəˈreɪʃən","génération","n."],
+["physical","ˈfɪzɪkəl","physique","adj."],
+["partner","ˈpɑːrtnər","partenaire","n."],
+["shoot","ʃuːt","tirer","v."],
+["discover","dɪˈskʌvər","découvrir","v."],
+["specific","spəˈsɪfɪk","spécifique","adj."],
+["conversation","ˌkɒnvərˈseɪʃən","conversation","n."],
+["mouth","maʊθ","bouche","n."],
+// ── Group 39: 761–780 ──
+["message","ˈmɛsɪdʒ","message","n."],
+["song","sɒŋ","chanson","n."],
+["finger","ˈfɪŋɡər","doigt","n."],
+["kitchen","ˈkɪtʃɪn","cuisine","n."],
+["total","ˈtəʊtəl","total","adj./n."],
+["leg","lɛɡ","jambe","n."],
+["success","səkˈsɛs","succès","n."],
+["tonight","təˈnaɪt","ce soir","adv."],
+["science","ˈsaɪəns","science","n."],
+["defense","dɪˈfɛns","défense","n."],
+["myself","maɪˈsɛlf","moi-même","pron."],
+["outside","ˈaʊtˈsaɪd","dehors","adv."],
+["page","peɪdʒ","page","n."],
+["situation","ˌsɪtʃuˈeɪʃən","situation","n."],
+["budget","ˈbʌdʒɪt","budget","n."],
+["bit","bɪt","un peu","n."],
+["radio","ˈreɪdiəʊ","radio","n."],
+["above","əˈbʌv","au-dessus","prep."],
+["artist","ˈɑːrtɪst","artiste","n."],
+["majority","məˈdʒɒrəti","majorité","n."],
+// ── Group 40: 781–800 ──
+["relationship","rɪˈleɪʃənʃɪp","relation","n."],
+["development","dɪˈvɛləpmənt","développement","n."],
+["medical","ˈmɛdɪkəl","médical","adj."],
+["exactly","ɪɡˈzæktli","exactement","adv."],
+["feeling","ˈfiːlɪŋ","sentiment","n."],
+["movie","ˈmuːvi","film","n."],
+["entire","ɪnˈtaɪər","entier","adj."],
+["realize","ˈrɪəlaɪz","réaliser","v."],
+["tonight","təˈnaɪt","ce soir","adv."],
+["note","nəʊt","note","n."],
+["heavy","ˈhɛvi","lourd","adj."],
+["bar","bɑːr","bar ; barre","n."],
+["wonder","ˈwʌndər","se demander","v."],
+["herself","hɜːrˈsɛlf","elle-même","pron."],
+["himself","hɪmˈsɛlf","lui-même","pron."],
+["wind","wɪnd","vent","n."],
+["address","əˈdrɛs","adresse","n."],
+["player","ˈpleɪər","joueur","n."],
+["industry","ˈɪndəstri","industrie","n."],
+["instead","ɪnˈstɛd","au lieu de","adv."],
+// ── Group 41: 801–820 ──
+["fear","fɪər","peur","n."],
+["memory","ˈmɛməri","mémoire","n."],
+["imagine","ɪˈmædʒɪn","imaginer","v."],
+["weight","weɪt","poids","n."],
+["quickly","ˈkwɪkli","rapidement","adv."],
+["sing","sɪŋ","chanter","v."],
+["crime","kraɪm","crime","n."],
+["born","bɔːrn","né","adj."],
+["crowd","kraʊd","foule","n."],
+["seven","ˈsɛvən","sept","num."],
+["six","sɪks","six","num."],
+["ten","tɛn","dix","num."],
+["finger","ˈfɪŋɡər","doigt","n."],
+["rain","reɪn","pluie","n."],
+["professor","prəˈfɛsər","professeur","n."],
+["trouble","ˈtrʌbəl","problème","n."],
+["somebody","ˈsʌmbɒdi","quelqu'un","pron."],
+["clearly","ˈklɪərli","clairement","adv."],
+["impact","ˈɪmpækt","impact","n."],
+["opinion","əˈpɪnjən","opinion","n."],
+// ── Group 42: 821–840 ──
+["catch","kætʃ","attraper","v."],
+["animal","ˈænɪməl","animal","n."],
+["section","ˈsɛkʃən","section","n."],
+["surface","ˈsɜːrfɪs","surface","n."],
+["teach","tiːtʃ","enseigner","v."],
+["soldier","ˈsəʊldʒər","soldat","n."],
+["environment","ɪnˈvaɪrənmənt","environnement","n."],
+["cat","kæt","chat","n."],
+["store","stɔːr","magasin","n."],
+["internet","ˈɪntərnɛt","internet","n."],
+["account","əˈkaʊnt","compte","n."],
+["manager","ˈmænɪdʒər","directeur","n."],
+["recently","ˈriːsəntli","récemment","adv."],
+["responsibility","rɪˌspɒnsəˈbɪləti","responsabilité","n."],
+["express","ɪkˈsprɛs","exprimer","v."],
+["natural","ˈnætʃərəl","naturel","adj."],
+["clean","kliːn","propre ; nettoyer","adj./v."],
+["basic","ˈbeɪsɪk","basique","adj."],
+["wish","wɪʃ","souhaiter","v."],
+["glass","ɡlɑːs","verre","n."],
+// ── Group 43: 841–860 ──
+["trouble","ˈtrʌbəl","ennui","n."],
+["collect","kəˈlɛkt","collecter","v."],
+["shop","ʃɒp","magasin","n."],
+["stretch","strɛtʃ","étirer","v."],
+["throw","θrəʊ","jeter","v."],
+["wonder","ˈwʌndər","merveille","n."],
+["mountain","ˈmaʊntɪn","montagne","n."],
+["list","lɪst","liste","n."],
+["newspaper","ˈnjuːspeɪpər","journal","n."],
+["chance","tʃɑːns","occasion","n."],
+["sleep","sliːp","dormir","v."],
+["victim","ˈvɪktɪm","victime","n."],
+["various","ˈvɛəriəs","divers","adj."],
+["exist","ɪɡˈzɪst","exister","v."],
+["nor","nɔːr","ni","conj."],
+["forward","ˈfɔːrwərd","en avant","adv."],
+["born","bɔːrn","né","adj."],
+["speech","spiːtʃ","discours","n."],
+["attention","əˈtɛnʃən","attention","n."],
+["patient","ˈpeɪʃənt","patient","n./adj."],
+// ── Group 44: 861–880 ──
+["amount","əˈmaʊnt","quantité","n."],
+["assume","əˈsjuːm","supposer","v."],
+["soldier","ˈsəʊldʒər","soldat","n."],
+["reflect","rɪˈflɛkt","refléter","v."],
+["quickly","ˈkwɪkli","vite","adv."],
+["restaurant","ˈrɛstərɒnt","restaurant","n."],
+["brother","ˈbrʌðər","frère","n."],
+["confirm","kənˈfɜːrm","confirmer","v."],
+["organization","ˌɔːrɡənaɪˈzeɪʃən","organisation","n."],
+["fan","fæn","fan ; ventilateur","n."],
+["shape","ʃeɪp","forme","n."],
+["stone","stəʊn","pierre","n."],
+["demand","dɪˈmɑːnd","demande ; exiger","n./v."],
+["reporter","rɪˈpɔːrtər","journaliste","n."],
+["quality","ˈkwɒləti","qualité","n."],
+["explain","ɪkˈspleɪn","expliquer","v."],
+["season","ˈsiːzən","saison","n."],
+["promise","ˈprɒmɪs","promesse","n."],
+["character","ˈkærəktər","caractère","n."],
+["serve","sɜːrv","servir","v."],
+// ── Group 45: 881–900 ──
+["majority","məˈdʒɒrəti","majorité","n."],
+["spring","sprɪŋ","printemps ; source","n."],
+["officer","ˈɒfɪsər","officier","n."],
+["camp","kæmp","camp","n."],
+["whom","huːm","qui (objet)","pron."],
+["apply","əˈplaɪ","postuler","v."],
+["shake","ʃeɪk","secouer","v."],
+["rock","rɒk","rock ; rocher","n."],
+["decide","dɪˈsaɪd","décider","v."],
+["yard","jɑːrd","cour ; yard","n."],
+["camera","ˈkæmərə","caméra","n."],
+["crowd","kraʊd","foule","n."],
+["garden","ˈɡɑːrdən","jardin","n."],
+["generation","ˌdʒɛnəˈreɪʃən","génération","n."],
+["seat","siːt","siège","n."],
+["theory","ˈθɪəri","théorie","n."],
+["worker","ˈwɜːrkər","ouvrier","n."],
+["floor","flɔːr","sol","n."],
+["series","ˈsɪəriːz","série","n."],
+["dark","dɑːrk","sombre","adj."],
+// ── Group 46: 901–920 ──
+["wonder","ˈwʌndər","se demander","v."],
+["alone","əˈləʊn","seul","adj."],
+["dress","drɛs","robe ; s'habiller","n./v."],
+["property","ˈprɒpərti","propriété","n."],
+["private","ˈpraɪvət","privé","adj."],
+["store","stɔːr","magasin","n."],
+["bottom","ˈbɒtəm","fond","n."],
+["horse","hɔːrs","cheval","n."],
+["interview","ˈɪntərvjuː","entretien","n."],
+["study","ˈstʌdi","étude","n."],
+["civil","ˈsɪvəl","civil","adj."],
+["movement","ˈmuːvmənt","mouvement","n."],
+["manager","ˈmænɪdʒər","manager","n."],
+["fish","fɪʃ","poisson","n."],
+["natural","ˈnætʃərəl","naturel","adj."],
+["technology","tɛkˈnɒlədʒi","technologie","n."],
+["traditional","trəˈdɪʃənəl","traditionnel","adj."],
+["capital","ˈkæpɪtəl","capitale ; capital","n."],
+["whatever","wɒtˈɛvər","quoi que","pron."],
+["coach","kəʊtʃ","entraîneur","n."],
+// ── Group 47: 921–940 ──
+["practice","ˈpræktɪs","pratique","n."],
+["kitchen","ˈkɪtʃɪn","cuisine","n."],
+["land","lænd","terre, terrain","n."],
+["consumer","kənˈsjuːmər","consommateur","n."],
+["region","ˈriːdʒən","région","n."],
+["island","ˈaɪlənd","île","n."],
+["victim","ˈvɪktɪm","victime","n."],
+["prepare","prɪˈpɛər","préparer","v."],
+["brain","breɪn","cerveau","n."],
+["style","staɪl","style","n."],
+["reality","riˈæləti","réalité","n."],
+["newspaper","ˈnjuːspeɪpər","journal","n."],
+["sport","spɔːrt","sport","n."],
+["original","əˈrɪdʒɪnəl","original","adj."],
+["race","reɪs","course","n."],
+["despite","dɪˈspaɪt","malgré","prep."],
+["pressure","ˈprɛʃər","pression","n."],
+["green","ɡriːn","vert","adj."],
+["nor","nɔːr","ni","conj."],
+["agency","ˈeɪdʒənsi","agence","n."],
+// ── Group 48: 941–960 ──
+["certainly","ˈsɜːrtənli","certainement","adv."],
+["agreement","əˈɡriːmənt","accord","n."],
+["figure","ˈfɪɡər","chiffre","n."],
+["enjoy","ɪnˈdʒɔɪ","apprécier","v."],
+["administration","ədˌmɪnɪˈstreɪʃən","administration","n."],
+["production","prəˈdʌkʃən","production","n."],
+["whose","huːz","dont, à qui","pron."],
+["statement","ˈsteɪtmənt","déclaration","n."],
+["cover","ˈkʌvər","couverture","n."],
+["herself","hɜːrˈsɛlf","elle-même","pron."],
+["relate","rɪˈleɪt","raconter","v."],
+["supply","səˈplaɪ","approvisionnement","n."],
+["article","ˈɑːrtɪkəl","article","n."],
+["community","kəˈmjuːnəti","communauté","n."],
+["wrong","rɒŋ","tort","adj."],
+["audience","ˈɔːdiəns","public","n."],
+["shot","ʃɒt","tir ; coup","n."],
+["ability","əˈbɪləti","capacité","n."],
+["access","ˈæksɛs","accès","n."],
+["writer","ˈraɪtər","écrivain","n."],
+// ── Group 49: 961–980 ──
+["trouble","ˈtrʌbəl","souci","n."],
+["discussion","dɪˈskʌʃən","discussion","n."],
+["opportunity","ˌɒpərˈtjuːnəti","opportunité","n."],
+["cheap","tʃiːp","pas cher","adj."],
+["teacher","ˈtiːtʃər","enseignant","n."],
+["citizen","ˈsɪtɪzən","citoyen","n."],
+["network","ˈnɛtwɜːrk","réseau","n."],
+["sweet","swiːt","sucré, doux","adj."],
+["collection","kəˈlɛkʃən","collection","n."],
+["choice","tʃɔɪs","choix","n."],
+["weapon","ˈwɛpən","arme","n."],
+["dinner","ˈdɪnər","dîner","n."],
+["official","əˈfɪʃəl","officiel","adj./n."],
+["seek","siːk","chercher","v."],
+["painting","ˈpeɪntɪŋ","tableau","n."],
+["target","ˈtɑːrɡɪt","cible","n."],
+["trial","ˈtraɪəl","procès ; essai","n."],
+["task","tɑːsk","tâche","n."],
+["machine","məˈʃiːn","machine","n."],
+["threat","θrɛt","menace","n."],
+// ── Group 50: 981–1000 ──
+["beach","biːtʃ","plage","n."],
+["maintain","meɪnˈteɪn","maintenir","v."],
+["character","ˈkærəktər","personnage","n."],
+["indeed","ɪnˈdiːd","en effet","adv."],
+["firm","fɜːrm","ferme ; entreprise","adj./n."],
+["negative","ˈnɛɡətɪv","négatif","adj."],
+["exercise","ˈɛksərsaɪz","exercice","n."],
+["obviously","ˈɒbviəsli","évidemment","adv."],
+["customer","ˈkʌstəmər","client","n."],
+["wild","waɪld","sauvage","adj."],
+["positive","ˈpɒzətɪv","positif","adj."],
+["stuff","stʌf","truc","n."],
+["prison","ˈprɪzən","prison","n."],
+["forget","fərˈɡɛt","oublier","v."],
+["release","rɪˈliːs","libérer ; sortie","v./n."],
+["argue","ˈɑːrɡjuː","argumenter","v."],
+["worth","wɜːrθ","valeur ; valant","n./adj."],
+["crisis","ˈkraɪsɪs","crise","n."],
+["decade","ˈdɛkeɪd","décennie","n."],
+["absolutely","ˌæbsəˈluːtli","absolument","adv."]
+];
+
+// ═══════════════════════════════════
+// APP STATE
+// ═══════════════════════════════════
+var GSIZE = 20;
+var NGROUPS = Math.ceil(W.length / GSIZE);
+var currentGroup = -1;
+var groupWords = [];
+var available = [];
+var reviewQueue = [];
+var known = [];
+var turn = 0;
+var current = null;
+var revealed = false;
+
+// Load progress from memory
+var progress = {};
+try {
+  var saved = localStorage.getItem('eng1000_progress');
+  if (saved) progress = JSON.parse(saved);
+} catch(e) {}
+
+function saveProgress() {
+  try {
+    progress[currentGroup] = { known: known.length, total: groupWords.length };
+    localStorage.setItem('eng1000_progress', JSON.stringify(progress));
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════
+// GROUP SELECT
+// ═══════════════════════════════════
+function buildGroupGrid() {
+  var grid = document.getElementById('groupsGrid');
+  grid.innerHTML = '';
+  for (var g = 0; g < NGROUPS; g++) {
+    var btn = document.createElement('div');
+    btn.className = 'group-btn';
+    var start = g * GSIZE + 1;
+    var end = Math.min((g + 1) * GSIZE, W.length);
+    var p = progress[g];
+    if (p && p.known >= p.total) btn.className += ' completed';
+    else if (p && p.known > 0) btn.className += ' in-progress';
+    btn.innerHTML = '<span class="gnum">' + (g + 1) + '</span><span class="grange">' + start + '–' + end + '</span>';
+    btn.setAttribute('data-g', g);
+    (function(gg) {
+      btn.addEventListener('click', function() { startGroup(gg); });
+      btn.addEventListener('touchstart', function(e) { e.preventDefault(); startGroup(gg); }, {passive:false});
+    })(g);
+    grid.appendChild(btn);
+  }
+}
+
+function startGroup(g) {
+  currentGroup = g;
+  var start = g * GSIZE;
+  var end = Math.min(start + GSIZE, W.length);
+  groupWords = [];
+  for (var i = start; i < end; i++) {
+    groupWords.push({ idx: i, word: W[i][0], ipa: W[i][1], fr: W[i][2], cls: W[i][3] });
+  }
+  available = groupWords.slice();
+  reviewQueue = [];
+  known = [];
+  turn = 0;
+  revealed = false;
+
+  document.getElementById('groupLabel').textContent = 'Groupe ' + (g + 1) + ' · mots ' + (start + 1) + '–' + end;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+
+  document.getElementById('screenGroups').classList.remove('active');
+  document.getElementById('screenCard').classList.add('active');
+  showWord();
+}
+
+function goBack() {
+  saveProgress();
+  document.getElementById('screenCard').classList.remove('active');
+  document.getElementById('screenGroups').classList.add('active');
+  buildGroupGrid();
+}
+
+// ═══════════════════════════════════
+// FLASHCARD LOGIC
+// ═══════════════════════════════════
+function pickNext() {
+  var i, pick;
+  var due = [];
+  for (i = 0; i < reviewQueue.length; i++) {
+    if (reviewQueue[i].showAtTurn <= turn) due.push(reviewQueue[i]);
+  }
+  if (due.length > 0) {
+    pick = due[Math.floor(Math.random() * due.length)];
+    reviewQueue = reviewQueue.filter(function(r) { return r !== pick; });
+    return pick.w;
+  }
+  if (available.length > 0) {
+    return available[Math.floor(Math.random() * available.length)];
+  }
+  if (reviewQueue.length > 0) {
+    reviewQueue.sort(function(a, b) { return a.showAtTurn - b.showAtTurn; });
+    pick = reviewQueue[0];
+    reviewQueue = reviewQueue.slice(1);
+    return pick.w;
+  }
+  return null;
+}
+
+function showWord() {
+  current = pickNext();
+  if (!current) {
+    document.getElementById('theCard').style.display = 'none';
+    document.querySelector('.buttons-zone').style.display = 'none';
+    document.getElementById('stats').style.display = 'none';
+    document.getElementById('doneBox').style.display = 'block';
+    document.getElementById('doneSummary').textContent =
+      'Vous avez maîtrisé les ' + groupWords.length + ' mots de ce groupe !';
+    saveProgress();
+    return;
+  }
+  revealed = false;
+  document.getElementById('wordRank').textContent = '#' + (current.idx + 1);
+  document.getElementById('wordEn').textContent = current.word;
+  document.getElementById('wordIpa').innerHTML = '&nbsp;';
+  document.getElementById('wordFr').innerHTML = '&nbsp;';
+  document.getElementById('wordClass').innerHTML = '&nbsp;';
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  updateStats();
+}
+
+function doReveal() {
+  if (!current || revealed) return;
+  revealed = true;
+  turn++;
+  document.getElementById('wordIpa').textContent = '/' + current.ipa + '/';
+  document.getElementById('wordFr').textContent = current.fr;
+  document.getElementById('wordClass').textContent = current.cls;
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+}
+
+function doKnown() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x) { return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x) { return x.w !== w; });
+  known.push(w);
+  saveProgress();
+  showWord();
+}
+
+function doReview() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x) { return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x) { return x.w !== w; });
+  reviewQueue.push({ w: w, showAtTurn: turn + 3 });
+  showWord();
+}
+
+function updateStats() {
+  var pct = groupWords.length > 0 ? Math.round(known.length / groupWords.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stats').innerHTML =
+    '✓ Connus\u00A0: <strong>' + known.length + '</strong> · ' +
+    '↻ À revoir\u00A0: <strong>' + reviewQueue.length + '</strong> · ' +
+    'Restants\u00A0: <strong>' + available.length + '</strong>';
+}
+
+function doRestart() {
+  available = groupWords.slice();
+  reviewQueue = [];
+  known = [];
+  turn = 0;
+  document.getElementById('doneBox').style.display = 'none';
+  document.getElementById('theCard').style.display = '';
+  document.querySelector('.buttons-zone').style.display = '';
+  document.getElementById('stats').style.display = '';
+  showWord();
+}
+
+// ═══════════════════════════════════
+// EVENT HANDLERS
+// ═══════════════════════════════════
+function tapHandler(id, fn) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var touched = false;
+  el.addEventListener('touchstart', function(e) {
+    e.preventDefault(); e.stopPropagation(); touched = true; fn();
+  }, { passive: false });
+  el.addEventListener('touchend', function(e) {
+    e.preventDefault(); e.stopPropagation();
+  }, { passive: false });
+  el.addEventListener('click', function(e) {
+    e.preventDefault(); e.stopPropagation();
+    if (!touched) fn();
+    touched = false;
+  });
+}
+
+tapHandler('revealBtn', doReveal);
+tapHandler('knownBtn', doKnown);
+tapHandler('reviewBtn', doReview);
+tapHandler('restartBtn', doRestart);
+tapHandler('backBtn', goBack);
+tapHandler('backBtn2', goBack);
+
+document.addEventListener('touchmove', function(e) { e.preventDefault(); }, { passive: false });
+
+// Keyboard support
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('screenCard').classList.contains('active')) {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      e.preventDefault();
+      if (!revealed) doReveal();
+    } else if (e.code === 'ArrowRight' || e.code === 'KeyK') {
+      if (revealed) doKnown();
+    } else if (e.code === 'ArrowLeft' || e.code === 'KeyR') {
+      if (revealed) doReview();
+    } else if (e.code === 'Escape') {
+      goBack();
+    }
+  }
+});
+
+buildGroupGrid();
+</script>
+</body>
+</html>
