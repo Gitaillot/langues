@@ -653,7 +653,7 @@ var W = [
 ["study", "ˈstʌdi", "étudier", "", 534],
 ["gave", "ɡeɪv", "a donné", "", 539],
 ["gets", "ɡɛts", "obtient", "", 540],
-["cost", "kɑst", "coûter", "", 548],
+["cost", "kɔst", "coûter", "", 548],
 ["cut", "kʌt", "couper", "", 549],
 ["held", "hɛld", "tenu", "", 551],
 ["seems", "simz", "semble", "", 557],
