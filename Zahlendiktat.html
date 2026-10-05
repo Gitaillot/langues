@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Zahlendiktat – nombres et calculs dictés en allemand</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FBFBF6; --grid:#D3DEEA; --ink:#1F3FA6; --red:#C8102E; --green:#1E7A46;
+  --text:#2B3038; --muted:#5E6570; --panel:#FFFFFF; --line:#C4CEDA; --hl:#E6ECFA;
+  color-scheme:light; box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#1C2424; --grid:#2A3636; --ink:#9DB4FF; --red:#FF7A85; --green:#6FD39A;
+    --text:#E7ECEA; --muted:#A3AEAB; --panel:#232D2D; --line:#3A4848; --hl:#2C3A4F; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#1C2424; --grid:#2A3636; --ink:#9DB4FF; --red:#FF7A85; --green:#6FD39A;
+  --text:#E7ECEA; --muted:#A3AEAB; --panel:#232D2D; --line:#3A4848; --hl:#2C3A4F; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{
+  margin:0; color:var(--text); background-color:var(--paper);
+  background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
+  background-size:24px 24px;
+  font-family:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",sans-serif; font-size:17px; line-height:1.5;
+}
+main{max-width:660px; margin:0 auto; padding:32px 20px 48px}
+h1{font-size:2rem; line-height:1.15; margin:0 0 4px; color:var(--ink)}
+.sub{margin:0 0 20px; color:var(--muted)}
+.modes{display:flex; gap:0; margin-bottom:16px; border:2px solid var(--ink); border-radius:6px; overflow:hidden; width:max-content; max-width:100%}
+.modes button{font:inherit; font-weight:700; padding:9px 18px; border:none; background:var(--panel); color:var(--ink); cursor:pointer}
+.modes button[aria-pressed="true"]{background:var(--ink); color:var(--paper)}
+.modes button:disabled{cursor:default}
+.settings{display:grid; grid-template-columns:1fr 1fr; gap:14px 18px; background:var(--panel);
+  border:1px solid var(--line); border-radius:6px; padding:16px 18px; margin-bottom:24px}
+.settings label{display:block; font-size:.88rem; color:var(--muted); margin-bottom:4px}
+.settings .full{grid-column:1/-1}
+.hidden{display:none !important}
+select,input[type=range]{width:100%}
+select{font:inherit; font-size:.95rem; padding:7px 8px; border:1px solid var(--line); border-radius:4px; background:var(--paper); color:var(--text)}
+select:disabled{opacity:.55}
+.controls{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px}
+button.btn{font:inherit; font-weight:700; padding:10px 18px; border-radius:4px; cursor:pointer;
+  border:2px solid var(--ink); background:var(--ink); color:var(--paper)}
+button.btn.ghost{background:transparent; color:var(--ink)}
+button.btn:disabled{opacity:.4; cursor:default}
+button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid var(--ink); outline-offset:2px}
+.status{color:var(--muted); font-size:.95rem; margin:0 0 16px; min-height:1.5em}
+.sheet{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:8px 0}
+.sheet:empty{display:none !important}
+.row{display:grid; grid-template-columns:52px 1fr; align-items:center; gap:10px; padding:4px 16px 4px 10px; border-left:4px solid transparent}
+.row.current{background:var(--hl); border-left-color:var(--ink)}
+.num{font:inherit; font-weight:700; font-size:.95rem; width:42px; height:36px; border-radius:4px;
+  border:1px solid var(--line); background:var(--paper); color:var(--ink); cursor:pointer}
+.num:hover{border-color:var(--ink)}
+.row input{font-family:"Patrick Hand","Comic Sans MS",cursive; font-size:1.7rem; color:var(--ink);
+  background:transparent; border:none; border-bottom:2px solid var(--line); padding:0 6px; width:100%; outline:none}
+.row input:focus{border-bottom-color:var(--ink)}
+.row .fb{grid-column:2; font-size:.92rem; margin:-2px 0 4px; word-break:break-word}
+.row.ok input{color:var(--green); border-bottom-color:var(--green)}
+.row.ko input{color:var(--red); border-bottom-color:var(--red); text-decoration:line-through}
+.row.sol input{display:none}
+.fb b{color:var(--text)} .fb span{color:var(--muted)}
+.row.sol .fb{font-size:1rem; margin:6px 0}
+.solhint{grid-column:2; font-size:.92rem; margin:-2px 0 4px; word-break:break-word; display:none}
+.solhint b{color:var(--text)} .solhint span{color:var(--muted)}
+.sheet.showsol .solhint.revealed{display:block}
+.listscore{font-family:"Patrick Hand",cursive; font-size:1.8rem; text-align:center; margin:18px 0 0; min-height:1.2em}
+.session{display:flex; justify-content:center; gap:24px; margin:12px 0 6px; font-size:.95rem; color:var(--muted); flex-wrap:wrap}
+.session b{color:var(--text); font-size:1.1rem}
+details{background:var(--panel); border:1px solid var(--line); border-radius:6px; padding:10px 16px; margin-top:16px}
+summary{cursor:pointer; font-weight:700}
+.histwrap{overflow-x:auto}
+table{border-collapse:collapse; width:100%; font-size:.9rem; margin-top:8px}
+td,th{text-align:left; padding:5px 8px; border-bottom:1px solid var(--line); vertical-align:top}
+th{color:var(--muted); font-weight:400}
+.warn{background:var(--panel); border:2px solid var(--red); padding:10px 14px; border-radius:6px; margin-bottom:20px; display:none}
+@media (max-width:520px){ .settings{grid-template-columns:1fr} h1{font-size:1.7rem} .row input{font-size:1.5rem} }
+</style>
+</head>
+<body>
+<main>
+  <h1>Zahlendiktat</h1>
+  <p class="sub" id="sub">Écoute la liste en allemand. Écris tes réponses ici ou sur papier.</p>
+  <div class="warn" id="warn"></div>
+
+  <div class="modes" role="group" aria-label="Mode">
+    <button id="mNum" aria-pressed="true">Nombres</button>
+    <button id="mCalc" aria-pressed="false">Calculette</button>
+  </div>
+
+  <section class="settings" aria-label="Réglages">
+    <div id="boxLevel">
+      <label for="level">Niveau</label>
+      <select id="level">
+        <option value="0-20">0 à 20</option>
+        <option value="21-99" selected>21 à 99</option>
+        <option value="100-999">100 à 999</option>
+        <option value="1000-9999">1 000 à 9 999</option>
+        <option value="10000-999999">10 000 à 999 999</option>
+        <option value="1000000-99999999">Millions (jusqu’à 99 999 999)</option>
+        <option value="years">Années (1100 à 2099)</option>
+        <option value="dec">Nombres décimaux (ex. 3,75)</option>
+        <option value="mix">Mélange de tout</option>
+      </select>
+    </div>
+    <div id="boxTerms" class="hidden">
+      <label for="terms">Nombre de termes par opération</label>
+      <select id="terms"><option>2</option><option selected>3</option><option>4</option><option>5</option><option>6</option></select>
+    </div>
+    <div id="boxSize" class="hidden">
+      <label for="size">Taille des nombres</label>
+      <select id="size">
+        <option value="1-20">1 à 20</option>
+        <option value="1-99" selected>1 à 99</option>
+        <option value="100-999">100 à 999</option>
+        <option value="1000-9999">1 000 à 9 999</option>
+        <option value="mix">Mélange (1 à 999)</option>
+      </select>
+    </div>
+    <div>
+      <label for="len">Longueur de la liste</label>
+      <select id="len">
+        <option>5</option><option selected>10</option><option>15</option><option>20</option>
+      </select>
+    </div>
+    <div>
+      <label for="gap"><span id="gapLbl">Pause entre deux nombres</span> : <span id="gapVal">0,5</span> s</label>
+      <input type="range" id="gap" min="0" max="2" step="0.1" value="0.5">
+    </div>
+    <div id="boxTermGap" class="hidden">
+      <label for="termGap">Pause entre les termes d’une opération : <span id="termGapVal">1,0</span> s</label>
+      <input type="range" id="termGap" min="0" max="3" step="0.1" value="1">
+    </div>
+    <div>
+      <label for="rate">Vitesse de lecture : <span id="rateVal">1,00</span></label>
+      <input type="range" id="rate" min="0.2" max="2.5" step="0.05" value="1">
+    </div>
+    <div class="full">
+      <label for="voice">Voix allemande</label>
+      <select id="voice"></select>
+    </div>
+  </section>
+
+  <div class="controls">
+    <button class="btn" id="start">Démarrer</button>
+    <button class="btn ghost" id="pause" disabled>Pause</button>
+    <button class="btn ghost" id="reread" disabled>Relire toute la liste</button>
+    <button class="btn ghost" id="sol" disabled>Afficher la solution</button>
+    <button class="btn ghost" id="correct" disabled>Corriger</button>
+  </div>
+  <p class="status" id="status" aria-live="polite">Choisis tes réglages, puis clique sur Démarrer.</p>
+
+  <section class="sheet" id="sheet_num" aria-label="Feuille de réponses – nombres"></section>
+  <section class="sheet hidden" id="sheet_calc" aria-label="Feuille de réponses – calculette"></section>
+  <p class="listscore" id="listscore_num" aria-live="polite"></p>
+  <p class="listscore hidden" id="listscore_calc" aria-live="polite"></p>
+
+  <div class="session">
+    <span>Listes : <b id="sLists">0</b></span>
+    <span>Justes : <b id="sOk">0</b></span>
+    <span>Fautes : <b id="sKo">0</b></span>
+    <span>Taux : <b id="sPct">–</b></span>
+  </div>
+
+  <details>
+    <summary>Historique de la séance</summary>
+    <div class="histwrap">
+      <table>
+        <thead><tr><th>Liste</th><th>Mode et niveau</th><th>Score</th><th>Erreurs</th></tr></thead>
+        <tbody id="hist"></tbody>
+      </table>
+    </div>
+    <p style="margin:10px 0 2px"><button class="btn ghost" id="reset">Remettre le score à zéro</button></p>
+  </details>
+</main>
+<script>
+/* ---------- Nombres en toutes lettres (allemand) ---------- */
+const SMALL = ["null","eins","zwei","drei","vier","fünf","sechs","sieben","acht","neun","zehn",
+  "elf","zwölf","dreizehn","vierzehn","fünfzehn","sechzehn","siebzehn","achtzehn","neunzehn"];
+const TENS = ["","","zwanzig","dreißig","vierzig","fünfzig","sechzig","siebzig","achtzig","neunzig"];
+
+function below100(n){
+  if(n<20) return SMALL[n];
+  const u=n%10, t=Math.floor(n/10);
+  if(!u) return TENS[t];
+  return (u===1?"ein":SMALL[u])+"und"+TENS[t];
+}
+function below1000(n){
+  const h=Math.floor(n/100), r=n%100;
+  let s="";
+  if(h) s+=(h===1?"ein":SMALL[h])+"hundert";
+  if(r) s+=below100(r);
+  return s;
+}
+function asPrefix(s){ return s.endsWith("eins") ? s.slice(0,-1) : s; } // "eins" -> "ein" devant tausend
+function germanWords(n){
+  if(n===0) return "null";
+  let parts=[];
+  const m=Math.floor(n/1e6), k=Math.floor((n%1e6)/1000), r=n%1000;
+  if(m) parts.push(m===1 ? "eine Million" : below1000(m)+" Millionen");
+  let rest="";
+  if(k) rest+=asPrefix(below1000(k))+"tausend";
+  if(r) rest+=below1000(r);
+  if(rest) parts.push(rest);
+  return parts.join(" ");
+}
+function yearWords(y){
+  if(y>=1100 && y<2000){
+    const r=y%100;
+    return below100(Math.floor(y/100))+"hundert"+(r?below100(r):"");
+  }
+  return germanWords(y);
+}
+function decimalWords(intPart, decStr){
+  return germanWords(intPart)+" Komma "+decStr.split("").map(d=>SMALL[+d]).join(" ");
+}
+
+
+/* ---------- Outils ---------- */
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const fmt=n=>n.toLocaleString("de-DE");          // 12.345 (aussi utilisé pour la lecture : évite la lecture « année » des nombres à 4 chiffres)
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+/* ---------- Mode Nombres ---------- */
+const LEVELS=["0-20","21-99","100-999","1000-9999","10000-999999","1000000-99999999","years","dec"];
+function makeNumber(level){
+  if(level==="mix") level=LEVELS[rnd(0,LEVELS.length-1)];
+  if(level==="years"){ const y=rnd(1100,2099), w=yearWords(y); return {kind:"num",answer:String(y),display:String(y),words:w,speak:w}; }
+  if(level==="dec"){
+    const i=rnd(0,99), dl=rnd(1,2), d=String(rnd(dl===1?1:10, dl===1?9:99)), w=decimalWords(i,d);
+    return {kind:"num",answer:i+","+d,display:i+","+d,words:w,speak:w};
+  }
+  const [a,b]=level.split("-").map(Number), n=rnd(a,b);
+  return {kind:"num",answer:String(n),display:fmt(n),words:germanWords(n),speak:fmt(n)};
+}
+
+/* ---------- Mode Calculette ---------- */
+const OPS=["+","-","*","/"];
+const OP_SPEAK={"+":"plus","-":"minus","*":"mal","/":"geteilt durch"};
+const OP_SHOW={"+":"+","-":"−","*":"×","/":"÷"};
+function operand(size){
+  if(size==="mix") size=["1-20","1-99","100-999"][rnd(0,2)];
+  const [a,b]=size.split("-").map(Number); return rnd(a,b);
+}
+function evaluate(nums,ops){            // priorité des opérations : × et ÷ d'abord
+  const n=[nums[0]], o=[];
+  for(let i=0;i<ops.length;i++){
+    const op=ops[i], x=nums[i+1];
+    if(op==="*") n[n.length-1]*=x;
+    else if(op==="/") n[n.length-1]/=x;
+    else { o.push(op); n.push(x); }
+  }
+  let r=n[0]; o.forEach((op,i)=>{ r = op==="+" ? r+n[i+1] : r-n[i+1]; });
+  return r;
+}
+function calcDisplay(x){                // affichage d'une calculette à 10 chiffres
+  if(x===0) return {text:"0",value:0,dec:0};
+  const a=Math.abs(x);
+  let intDigits = a>=1 ? Math.floor(Math.log10(a))+1 : 1;
+  let dec=Math.max(0,10-intDigits);
+  let s=x.toFixed(dec);
+  if(s.replace(/[-.]/g,"").length>10 && dec>0){ dec--; s=x.toFixed(dec); }
+  const value=parseFloat(s);
+  if(s.includes(".")) s=s.replace(/0+$/,"").replace(/\.$/,"");
+  return {text:s.replace(".",",").replace("-","−"),value,dec};
+}
+function makeCalc(terms,size){
+  for(let k=0;k<200;k++){
+    const nums=[operand(size)], ops=[];
+    for(let i=1;i<terms;i++){ ops.push(OPS[rnd(0,3)]); nums.push(operand(size)); }
+    const r=evaluate(nums,ops), a=Math.abs(r);
+    if(!isFinite(r) || a>=1e10 || (r!==0 && a<1e-4)) continue;
+    const d=calcDisplay(r);
+    let show=String(fmt(nums[0])), speakTxt=fmt(nums[0]), words=germanWords(nums[0]);
+    ops.forEach((op,i)=>{
+      show+=" "+OP_SHOW[op]+" "+fmt(nums[i+1]);
+      speakTxt+=" "+OP_SPEAK[op]+" "+fmt(nums[i+1]);
+      words+=" "+OP_SPEAK[op]+" "+germanWords(nums[i+1]);
+    });
+    const parts=[fmt(nums[0])]; ops.forEach((op,i)=>{ parts.push(OP_SPEAK[op]); parts.push(fmt(nums[i+1])); });
+    return {kind:"calc", answer:d.text, value:d.value, dec:d.dec, display:show+" = "+d.text, words, speak:speakTxt, parts, key:show};
+  }
+}
+function parseUser(s){
+  s=s.trim().replace(/\s/g,"").replace(/−/g,"-");
+  if(s.includes(",") && s.includes(".")) s=s.replace(/\./g,"").replace(",",".");
+  else s=s.replace(",",".");
+  if(!/^-?\d*\.?\d+$/.test(s)) return NaN;
+  return parseFloat(s);
+}
+function calcIsRight(given,it){
+  const u=parseUser(given); if(isNaN(u)) return false;
+  return Math.abs(u-it.value) <= 1.000001*Math.pow(10,-it.dec);   // tolérance : 1 unité sur le dernier chiffre
+}
+
+/* ---------- Listes ---------- */
+let mode="num";
+function makeList(len){
+  const out=[], seen=new Set(); let guard=0;
+  while(out.length<len && guard++<1000){
+    const it = mode==="num" ? makeNumber($("level").value) : makeCalc(+$("terms").value,$("size").value);
+    const key=it.key||it.answer;
+    if(seen.has(key)) continue;
+    seen.add(key); out.push(it);
+  }
+  return out;
+}
+
+/* ---------- Synthèse vocale ---------- */
+const synth=window.speechSynthesis, voiceSel=$("voice"), warn=$("warn");
+let voices=[];
+function loadVoices(){
+  if(!synth) return;
+  voices=synth.getVoices().filter(v=>/^de([-_]|$)/i.test(v.lang));
+  voiceSel.innerHTML="";
+  if(!voices.length){ voiceSel.innerHTML='<option value="">Voix par défaut (de-DE)</option>'; return; }
+  voices.forEach((v,i)=>{ const o=document.createElement("option"); o.value=i; o.textContent=v.name+" ("+v.lang+")"; voiceSel.appendChild(o); });
+  const p=voices.findIndex(v=>/de-DE/i.test(v.lang)); if(p>=0) voiceSel.value=p;
+}
+if(!synth){ warn.style.display="block"; warn.textContent="Ce navigateur ne propose pas de synthèse vocale. Essaie Chrome, Edge ou Safari."; }
+else{
+  loadVoices(); synth.onvoiceschanged=loadVoices;
+  setTimeout(()=>{ if(!voices.length){ warn.style.display="block";
+    warn.textContent="Aucune voix allemande détectée. Le navigateur essaiera la voix par défaut ; installe une voix allemande dans les réglages de ton système pour une meilleure prononciation."; } },1500);
+}
+const frNum=(x,d)=>x.toFixed(d).replace(".",",");
+$("gap").addEventListener("input",()=>$("gapVal").textContent=frNum(+$("gap").value,1));
+
+function speak(text,onEnd){
+  if(!synth){ if(onEnd) setTimeout(onEnd,500); return; }
+  synth.cancel();
+  const u=new SpeechSynthesisUtterance(text);
+  u.lang="de-DE"; const v=voices[+voiceSel.value]; if(v) u.voice=v;
+  u.rate=+$("rate").value;
+  let done=false; const fin=()=>{ if(done) return; done=true; if(onEnd) onEnd(); };
+  u.onend=fin; u.onerror=fin;
+  synth.speak(u);
+}
+
+/* ---------- Déroulement (un état par mode) ---------- */
+function newState(rate){ return {list:[], idx:0, readMax:0, showSol:false, state:"idle", readMode:"dictate", rate, len:"10",
+  status:"Choisis tes réglages, puis clique sur Démarrer."}; }
+const S={num:newState("1"), calc:newState("0.8")};
+let token=0, timer=null, lists=0, ok=0, ko=0;
+const status=$("status");
+const cur=()=>S[mode];
+const sheetEl=()=>$("sheet_"+mode);
+const rowEl=i=>$(mode+"_row"+i);
+function setStatus(t){ cur().status=t; status.textContent=t; }
+
+function showRate(){ $("rateVal").textContent=frNum(+$("rate").value,2); }
+$("rate").addEventListener("input",()=>{ cur().rate=$("rate").value; showRate(); });
+$("len").addEventListener("change",()=>{ cur().len=$("len").value; });
+$("termGap").addEventListener("input",()=>$("termGapVal").textContent=frNum(+$("termGap").value,1));
+
+function setMode(m){
+  if(m===mode) return;
+  const c=cur();
+  if(c.state==="running"){ stopAll(); c.state="paused"; c.status="En pause (changement de mode). L’élément "+(c.idx+1)+" sera relu à la reprise."; }
+  else stopAll();
+  highlight(null);
+  mode=m;
+  const n=cur();
+  $("mNum").setAttribute("aria-pressed",m==="num"); $("mCalc").setAttribute("aria-pressed",m==="calc");
+  $("boxLevel").classList.toggle("hidden",m!=="num");
+  $("boxTerms").classList.toggle("hidden",m!=="calc");
+  $("boxSize").classList.toggle("hidden",m!=="calc");
+  $("boxTermGap").classList.toggle("hidden",m!=="calc");
+  $("gapLbl").textContent = m==="num" ? "Pause entre deux nombres" : "Pause entre deux opérations";
+  ["num","calc"].forEach(k=>{ $("sheet_"+k).classList.toggle("hidden",k!==m); $("listscore_"+k).classList.toggle("hidden",k!==m); });
+  $("sub").textContent = m==="num"
+    ? "Écoute la liste en allemand. Écris tes réponses ici ou sur papier."
+    : "Écoute les opérations en allemand, calcule-les sur ta calculette sans parenthèses, puis note les résultats ici ou sur papier.";
+  $("rate").value=n.rate; showRate();
+  $("len").value=n.len;
+  status.textContent=n.status;
+  setButtons();
+}
+function buildSheet(){
+  const sheet=sheetEl(); sheet.innerHTML="";
+  cur().list.forEach((it,i)=>{
+    const row=document.createElement("div"); row.className="row"; row.id=mode+"_row"+i;
+    row.innerHTML=`<button class="num" aria-label="Réécouter l’élément ${i+1}" title="Réécouter">${i+1}</button>
+      <input inputmode="decimal" autocomplete="off" aria-label="${mode==="calc"?"Résultat":"Réponse"} ${i+1} (facultatif)">`;
+    const inp=row.querySelector("input");
+    inp.addEventListener("keydown",e=>{ if(e.key==="Enter"){ e.preventDefault(); const n=rowEl(i+1); if(n) n.querySelector("input").focus(); } });
+    row.querySelector(".num").addEventListener("click",()=>replayOne(i));
+    const sh=document.createElement("div"); sh.className="solhint";
+    sh.innerHTML=`<b>${esc(it.display)}</b><br><span>${esc(it.words)}</span>`;
+    row.appendChild(sh);
+    sheet.appendChild(row);
+  });
+}
+function highlight(i){
+  document.querySelectorAll(".row.current").forEach(r=>r.classList.remove("current"));
+  if(i!=null && rowEl(i)) rowEl(i).classList.add("current");
+}
+/* Lecture d'un élément : en mode calculette, terme par terme avec la pause réglée */
+function speakItem(it,onEnd){
+  const my=token;
+  const tg=(+$("termGap").value)*1000;
+  const parts = (it.kind==="calc" && tg>0) ? it.parts : [it.speak];
+  let k=0;
+  const next=()=>{
+    if(my!==token) return;
+    if(k>=parts.length){ if(onEnd) onEnd(); return; }
+    speak(parts[k++],()=>{ if(my!==token) return; if(k<parts.length) timer=setTimeout(next,tg); else next(); });
+  };
+  next();
+}
+function setButtons(){
+  const st=cur().state;
+  $("pause").disabled = !(st==="running"||st==="paused");
+  $("pause").textContent = st==="paused" ? "Reprendre" : "Pause";
+  $("reread").disabled = !(st==="done");
+  $("correct").disabled = !(st==="running"||st==="paused"||st==="done");
+  $("sol").disabled = !(st==="running"||st==="paused"||st==="done");
+  $("sol").textContent = cur().showSol && !$("sol").disabled ? "Masquer la solution" : "Afficher la solution";
+}
+function stopAll(){ token++; clearTimeout(timer); if(synth) synth.cancel(); }
+
+function step(){
+  const my=token, c=cur();
+  if(c.idx>=c.list.length){
+    c.state="done"; highlight(null); setButtons();
+    setStatus("Lecture terminée. Tu peux relire toute la liste, corriger tes réponses ou afficher la solution.");
+    return;
+  }
+  highlight(c.idx);
+  setStatus((c.readMode==="reread"?"Relecture : ":"Lecture : ")+(c.idx+1)+" sur "+c.list.length);
+  speakItem(c.list[c.idx],()=>{
+    if(my!==token) return;
+    c.idx++;
+    if(c.idx>c.readMax){ c.readMax=c.idx; revealUpTo(c, mode); }
+    const wait = c.idx>=c.list.length ? 0 : (+$("gap").value)*1000;
+    timer=setTimeout(()=>{ if(my===token && c.state==="running") step(); },wait);
+  });
+}
+function hasTypedAnswers(){
+  const c=cur();
+  if(!(c.state==="running"||c.state==="paused"||c.state==="done")) return false;
+  return [...sheetEl().querySelectorAll("input")].some(i=>i.value.trim()!=="");
+}
+function start(){
+  if(hasTypedAnswers() && !confirm("La liste en cours contient des réponses. L’abandonner et démarrer une nouvelle liste ?")) return;
+  stopAll();
+  const c=cur();
+  c.len=$("len").value;
+  c.list=makeList(+c.len);
+  c.idx=0; c.readMax=0; c.readMode="dictate"; c.state="running";
+  $("listscore_"+mode).textContent="";
+  buildSheet(); setButtons();
+  step();
+}
+function revealUpTo(c,m){
+  const sheet=$("sheet_"+m);
+  sheet.querySelectorAll(".row").forEach((r,i)=>{ const s=r.querySelector(".solhint"); if(s) s.classList.toggle("revealed", i<c.readMax); });
+}
+function toggleSol(){
+  const c=cur(); c.showSol=!c.showSol;
+  sheetEl().classList.toggle("showsol",c.showSol);
+  revealUpTo(c,mode); setButtons();
+}
+function togglePause(){
+  const c=cur();
+  if(c.state==="running"){ stopAll(); c.state="paused"; setStatus("En pause. L’élément "+(c.idx+1)+" sera relu à la reprise."); }
+  else if(c.state==="paused"){ c.state="running"; step(); }
+  setButtons();
+}
+function reread(){ stopAll(); const c=cur(); c.idx=0; c.readMode="reread"; c.state="running"; setButtons(); step(); }
+function replayOne(i){
+  const c=cur();
+  if(c.state==="running"){ stopAll(); c.state="paused"; setButtons(); setStatus("En pause pendant la réécoute. Clique sur Reprendre pour continuer."); }
+  stopAll();
+  speakItem(c.list[i]);
+}
+
+function numIsRight(given,it){
+  let s=given.trim();
+  if(it.answer.includes(",")) s=s.replace(/\s/g,"").replace(".",",");
+  else s=s.replace(/[\s.'’_]/g,"");
+  return s===it.answer;
+}
+function correct(){
+  stopAll(); highlight(null);
+  const c=cur();
+  let good=0, filled=0; const errs=[];
+  sheetEl().querySelectorAll(".solhint").forEach(s=>s.remove());
+  c.list.forEach((it,i)=>{
+    const row=rowEl(i), inp=row.querySelector("input"), given=inp.value.trim();
+    inp.readOnly=true;
+    const fb=document.createElement("div"); fb.className="fb";
+    if(!given){
+      row.classList.add("sol");
+      fb.innerHTML=`<b>${esc(it.display)}</b><br><span>${esc(it.words)}</span>`;
+    }else{
+      filled++;
+      const right = it.kind==="calc" ? calcIsRight(given,it) : numIsRight(given,it);
+      row.classList.add(right?"ok":"ko");
+      if(right) good++; else errs.push(it.kind==="calc" ? it.answer : it.display);
+      fb.innerHTML = right
+        ? `<span>${esc(it.kind==="calc"?it.display:it.words)}</span>`
+        : `<b>${esc(it.display)}</b><br><span>${esc(it.words)}</span>`;
+    }
+    row.appendChild(fb);
+  });
+  lists++;
+  const modeTxt = mode==="num" ? "Nombres – "+$("level").selectedOptions[0].textContent
+    : "Calculette – "+$("terms").value+" termes, "+$("size").selectedOptions[0].textContent;
+  let scoreTxt; const ls=$("listscore_"+mode);
+  if(filled){
+    ok+=good; ko+=filled-good;
+    scoreTxt=`${good} / ${filled}`;
+    ls.textContent = scoreTxt + (good===filled && filled===c.list.length ? " – Sehr gut !" : "") + (filled<c.list.length ? ` (${c.list.length-filled} sans réponse)` : "");
+  }else{ scoreTxt="solution affichée"; ls.textContent="Solution affichée"; }
+  const tr=document.createElement("tr");
+  tr.innerHTML=`<td>${lists}</td><td>${esc(modeTxt)}</td><td>${esc(scoreTxt)}</td><td>${errs.length?esc(errs.join(" ; ")):"–"}</td>`;
+  $("hist").prepend(tr);
+  updateSession();
+  c.state="corrected"; setButtons();
+  $("correct").disabled=true; $("reread").disabled=true;
+  setStatus("Clique sur Démarrer pour une nouvelle liste.");
+}
+function updateSession(){
+  $("sLists").textContent=lists; $("sOk").textContent=ok; $("sKo").textContent=ko;
+  const t=ok+ko; $("sPct").textContent=t?Math.round(ok/t*100)+" %":"–";
+}
+
+$("mNum").addEventListener("click",()=>setMode("num"));
+$("mCalc").addEventListener("click",()=>setMode("calc"));
+$("start").addEventListener("click",start);
+$("pause").addEventListener("click",togglePause);
+$("reread").addEventListener("click",reread);
+$("correct").addEventListener("click",correct);
+$("sol").addEventListener("click",toggleSol);
+$("reset").addEventListener("click",()=>{ lists=0; ok=0; ko=0; $("hist").innerHTML=""; updateSession(); });
+setButtons();
+</script>
+</body>
+</html>
