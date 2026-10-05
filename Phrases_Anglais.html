@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Phrases d'anglais oral — General American (v002)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f1923; --fg: #e8e6e3; --muted: #7a8ea6; --dim: #4e5d73; --faint: #3d4f66;
+    --title: #8a9bb5; --label: #b0c4de; --ipa: #6cb4ee; --fr: #d4b85a; --note: #7e8fa5;
+    --ok: #5bbd8a; --warn: #d4943a; --accent: #3a6fa0;
+    --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    --ipafont: 'Noto Sans', 'Segoe UI', 'Lucida Sans Unicode', 'DejaVu Sans', 'Arial Unicode MS', sans-serif;
+  }
+  /* L'application garde la palette sombre de « 1000 Mots Anglais », quel que soit le thème du système. */
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg: #0f1923; --fg: #e8e6e3; } }
+  :root[data-theme="dark"] { --bg: #0f1923; --fg: #e8e6e3; }
+
+  * {
+    margin: 0; padding: 0; box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  html { height: 100%; overflow: hidden; }
+  body {
+    height: 100%;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--fg);
+    overflow: hidden;
+    position: fixed; width: 100%;
+  }
+
+  /* ── SCREENS ── */
+  .screen {
+    display: none; width: 100%; height: 100%; position: absolute; top: 0; left: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  .screen.active { display: flex; align-items: center; justify-content: center; }
+
+  /* ── HOME ── */
+  .home {
+    flex-direction: column;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
+    justify-content: flex-start !important;
+  }
+  .home-inner {
+    width: 100%; display: flex; flex-direction: column; align-items: center;
+    padding: 2rem 1rem 2rem;
+  }
+  .home h1 { font-size: 1.5rem; font-weight: 300; letter-spacing: 0.04em; color: var(--title); margin-bottom: 0.3rem; text-align: center; }
+  .subtitle { font-size: 0.82rem; color: var(--dim); margin-bottom: 1.2rem; text-align: center; }
+
+  .mode-tabs { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; justify-content: center; }
+  .mode-tab {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 999px; color: var(--muted); font-size: 0.82rem; padding: 8px 18px;
+    cursor: pointer; touch-action: manipulation; font-family: inherit; font-weight: 400;
+  }
+  .mode-tab.active { border-color: var(--accent); background: rgba(58,111,160,0.22); color: #cfe0f2; }
+
+  /* ── VOICE SETTINGS ── */
+  .voice-box {
+    width: 100%; max-width: 380px;
+    display: grid; grid-template-columns: auto minmax(0,1fr); gap: 8px 10px; align-items: center;
+    padding: 10px 12px; margin-bottom: 1.2rem;
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 10px;
+    background: rgba(255,255,255,0.025);
+    font-size: 0.78rem; color: var(--muted);
+  }
+  @media (min-width: 640px) { .voice-box { max-width: 720px; grid-template-columns: auto minmax(0,1fr) auto minmax(0,10rem) auto; } }
+  .voice-box select {
+    width: 100%; min-width: 0;
+    background: #17222e; color: var(--label);
+    border: 1px solid rgba(255,255,255,0.12); border-radius: 8px;
+    padding: 6px 8px; font-size: 0.8rem; font-family: inherit;
+  }
+  .voice-box select:focus-visible, .mode-tab:focus-visible, .group-btn:focus-visible, .back-btn:focus-visible { outline: 2px solid var(--ipa); outline-offset: 2px; }
+  .voice-test {
+    background: rgba(108,180,238,0.12); border: 1px solid rgba(108,180,238,0.35); color: #cfe0f2;
+    font-size: 0.78rem; font-weight: 600; padding: 6px 14px; border-radius: 999px;
+  }
+  @media (max-width: 639px) { .voice-test { grid-column: 1 / -1; justify-self: start; } }
+  .voice-msg { grid-column: 1 / -1; font-size: 0.72rem; color: var(--dim); line-height: 1.45; }
+  .voice-msg.warn { color: var(--warn); }
+  .voice-msg:empty { display: none; }
+
+  .groups-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;
+    max-width: 380px; width: 100%;
+  }
+  @media (min-width: 640px) { .groups-grid { grid-template-columns: repeat(3, 1fr); max-width: 720px; } }
+  @media (min-width: 1000px) { .groups-grid { grid-template-columns: repeat(4, 1fr); max-width: 960px; } .voice-box { max-width: 960px; } }
+  .group-btn {
+    background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 10px; padding: 12px 8px; min-height: 62px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--muted); cursor: pointer; text-align: center; line-height: 1.3;
+    touch-action: manipulation; font-family: inherit; font-weight: 400;
+  }
+  .group-btn:active { transform: scale(0.95); }
+  .group-btn .gname { font-size: 0.82rem; font-weight: 600; color: var(--label); display: block; hyphens: auto; overflow-wrap: break-word; }
+  .group-btn .gcount { font-size: 0.62rem; color: var(--dim); display: block; margin-top: 3px; }
+  .group-btn.all { border-style: dashed; }
+  .group-btn.completed { border-color: #2a6e4e; background: rgba(42,110,78,0.15); }
+  .group-btn.completed .gname { color: var(--ok); }
+  .group-btn.in-progress { border-color: #5a5030; background: rgba(90,80,48,0.15); }
+  .group-btn.in-progress .gname { color: var(--fr); }
+
+  /* ── NOTATION ── */
+  .legend { width: 100%; max-width: 560px; font-size: 0.85rem; color: var(--note); line-height: 1.5; }
+  .legend table { width: 100%; border-collapse: collapse; }
+  .legend td { padding: 7px 6px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: baseline; }
+  .legend td:first-child { font-family: var(--ipafont); color: var(--ipa); font-size: 1.05rem; white-space: nowrap; width: 4.5rem; text-align: center; }
+  .legend p { margin-top: 1rem; font-style: italic; font-size: 0.78rem; }
+
+  /* ── LESSON LIST ── */
+  .lesson-screen { flex-direction: column; align-items: center; justify-content: flex-start !important; padding-left: 1rem; padding-right: 1rem; }
+  .lesson-head {
+    width: 100%; max-width: 640px; display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    margin: 1.4rem 0 0.9rem; flex-shrink: 0;
+  }
+  .lesson-title { font-size: 1.05rem; color: var(--ipa); font-weight: 400; text-align: right; }
+  .lesson-title span { font-size: 0.78rem; color: var(--dim); margin-left: 0.5rem; white-space: nowrap; }
+  .lesson-list { width: 100%; max-width: 640px; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 2rem; flex: 1 1 auto; }
+  .lrow {
+    display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 3px 12px; align-items: baseline;
+    padding: 10px 4px; border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .lrow .lplay { grid-row: 1 / span 3; align-self: start; margin-top: 1px; }
+  .lrow .lw { font-size: 1rem; font-weight: 600; color: var(--fg); overflow-wrap: break-word; }
+  .lrow .li { font-family: var(--ipafont); font-size: 0.98rem; color: var(--ipa); overflow-wrap: break-word; -webkit-user-select: text; user-select: text; }
+  .lrow .lf { font-size: 0.88rem; color: var(--fr); overflow-wrap: break-word; }
+  .lplay {
+    width: 30px; height: 30px; padding: 0; border-radius: 50%;
+    background: rgba(108,180,238,0.12); border: 1px solid rgba(108,180,238,0.35);
+    color: #cfe0f2; font-size: 0.7rem; font-weight: 400;
+  }
+  .lplay.playing { background: rgba(108,180,238,0.3); border-color: var(--ipa); }
+  .lplay:focus-visible, .play-btn:focus-visible { outline: 2px solid var(--ipa); outline-offset: 2px; }
+
+  /* ── CARD SCREEN ── */
+  .card-screen { flex-direction: column; align-items: center; justify-content: center; padding-left: 1rem; padding-right: 1rem; }
+  .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 480px; margin-bottom: 0.6rem; }
+  .back-btn {
+    background: none; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px;
+    color: var(--muted); font-size: 0.82rem; font-weight: 400; padding: 6px 14px;
+    cursor: pointer; touch-action: manipulation; font-family: inherit; flex-shrink: 0;
+  }
+  .back-btn:active { opacity: 0.6; }
+  .group-label { font-size: 0.82rem; color: var(--dim); text-align: right; margin-left: 0.8rem; }
+  .progress-track { width: 100%; max-width: 480px; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; margin-bottom: 1.4rem; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #3a8f6a, #5bbd8a); border-radius: 2px; transition: width 0.4s ease; width: 0; }
+
+  .card {
+    width: 100%; max-width: 480px; min-height: 280px;
+    background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
+    border: 1px solid rgba(255,255,255,0.08); border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 1.8rem 1.4rem; margin-bottom: 1.2rem; position: relative; overflow: hidden;
+  }
+  .card::before {
+    content: ''; position: absolute; top: -60%; left: -20%; width: 140%; height: 140%;
+    background: radial-gradient(ellipse at 30% 20%, rgba(90,160,230,0.06), transparent 60%);
+    pointer-events: none;
+  }
+  .phrase-theme { font-size: 0.72rem; color: var(--faint); letter-spacing: 0.04em; margin-bottom: 0.9rem; text-align: center; }
+  .phrase-en { font-size: 1.9rem; font-weight: 700; color: #fff; margin-bottom: 0.7rem; text-align: center; line-height: 1.2; }
+  .phrase-ipa { font-family: var(--ipafont); font-size: 1.3rem; color: var(--ipa); font-weight: 300; margin-bottom: 0.5rem; min-height: 1.9rem; text-align: center; line-height: 1.45; -webkit-user-select: text; user-select: text; }
+  .phrase-fr { font-size: 1.1rem; color: var(--fr); min-height: 1.6rem; text-align: center; line-height: 1.35; }
+
+  .audio-zone { margin-top: 1rem; display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; min-height: 2.4rem; }
+  .audio-zone.hidden { visibility: hidden; }
+  .play-btn {
+    background: rgba(108,180,238,0.12); border: 1px solid rgba(108,180,238,0.35); color: #cfe0f2;
+    font-size: 0.88rem; font-weight: 600; padding: 8px 18px; border-radius: 999px;
+  }
+  .play-btn.playing { background: rgba(108,180,238,0.28); border-color: var(--ipa); }
+  .play-btn:disabled { background: none; border-color: rgba(255,255,255,0.08); color: var(--dim); opacity: 1; }
+
+  /* ── BUTTONS ── */
+  .buttons-zone { height: 5.4rem; display: flex; align-items: center; justify-content: center; margin-bottom: 0.4rem; position: relative; width: 100%; max-width: 480px; }
+  .buttons { display: flex; gap: 0.6rem; justify-content: center; position: absolute; }
+  .buttons.hidden { visibility: hidden; pointer-events: none; }
+  button {
+    padding: 14px 24px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; touch-action: manipulation; font-family: inherit;
+  }
+  button:active:not(:disabled) { transform: scale(0.95); opacity: 0.85; }
+  button:disabled { cursor: default; opacity: 0.35; }
+  .btn-reveal { background: linear-gradient(135deg, #3a6fa0, #2a5080); color: #fff; min-width: 200px; box-shadow: 0 4px 20px rgba(42,80,128,0.4); }
+  .btn-reveal:focus-visible, .btn-restart:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  .buttons.answer { gap: 1.6rem; }
+  .review-set { display: flex; gap: 0.5rem; }
+  .btn-sq {
+    width: 4.8rem; height: 4.8rem; padding: 0; border-radius: 18px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.15rem;
+    color: #15202b; font-size: 1.15rem; font-weight: 800; line-height: 1.1;
+  }
+  .btn-sq .ic { font-size: 1.25rem; font-weight: 700; }
+  .btn-sq:focus-visible { outline: 2px solid var(--fg); outline-offset: 3px; }
+  .btn-known { background: linear-gradient(135deg, #43e97b, #38f9d7); box-shadow: 0 4px 15px rgba(56,220,160,0.3); }
+  .btn-r3 { background: linear-gradient(135deg, #ff6f91, #ffd36e); box-shadow: 0 4px 15px rgba(255,140,130,0.28); }
+  .btn-r5 { background: linear-gradient(135deg, #f7971e, #ffd200); box-shadow: 0 4px 15px rgba(247,160,30,0.28); }
+  .btn-r20 { background: linear-gradient(135deg, #e53945, #f5576c); box-shadow: 0 4px 15px rgba(229,57,69,0.3); }
+  .btn-restart { background: linear-gradient(135deg, #3a6fa0, #2a5080); color: #fff; min-width: 200px; }
+
+  .stats { font-size: 0.74rem; color: var(--faint); line-height: 1.8; text-align: center; }
+  .stats strong { color: #6a7f9a; }
+  .stats .st { white-space: nowrap; }
+
+  .done-box { text-align: center; padding: 2rem; }
+  .done-box h2 { font-size: 1.8rem; font-weight: 300; color: var(--ok); margin-bottom: 1rem; }
+  .done-box p { color: #5a6f88; margin-bottom: 2rem; line-height: 1.6; }
+
+  @media (max-width: 370px) {
+    .phrase-en { font-size: 1.55rem; }
+    .phrase-ipa { font-size: 1.1rem; }
+    button { padding: 12px 18px; font-size: 0.88rem; }
+    .btn-sq { width: 4.4rem; height: 4.4rem; padding: 0; font-size: 1rem; }
+    .buttons.answer { gap: 1rem; }
+    .review-set { gap: 0.4rem; }
+  }
+  @media (max-height: 650px) {
+    .card { min-height: 210px; padding: 1.2rem; }
+    .audio-zone { margin-top: 0.6rem; }
+    .buttons-zone { height: 4.8rem; }
+    .btn-sq { width: 4.4rem; height: 4.4rem; }
+    .phrase-en { font-size: 1.55rem; }
+  }
+  @media (prefers-reduced-motion: reduce) { .progress-fill { transition: none; } }
+</style>
+</head>
+<body>
+
+<!-- ═══ ÉCRAN 1 : ACCUEIL ═══ -->
+<div class="screen home active" id="screenHome">
+ <div class="home-inner">
+  <h1>💬 Phrases d'anglais oral</h1>
+  <div class="subtitle" id="subtitle">102 phrases · API et intonation · General American</div>
+  <div class="mode-tabs" role="tablist">
+    <button class="mode-tab active" id="tabCards" type="button">Mode flashcards</button>
+    <button class="mode-tab" id="tabLessons" type="button">Mode leçon</button>
+    <button class="mode-tab" id="tabNotation" type="button">Notation</button>
+  </div>
+
+  <div class="voice-box" id="voiceBox">
+    <label for="voiceSel">Voix</label>
+    <select id="voiceSel"></select>
+    <label for="rateSel">Débit</label>
+    <select id="rateSel">
+      <option value="1">Normal</option>
+      <option value="0.85">Un peu lent</option>
+      <option value="0.7">Lent</option>
+    </select>
+    <button class="voice-test" id="voiceTest" type="button">▶ Tester</button>
+    <div class="voice-msg" id="voiceMsg"></div>
+  </div>
+
+  <div class="groups-grid" id="groupsGrid"></div>
+  <div class="groups-grid" id="lessonsGrid" style="display:none"></div>
+  <div class="legend" id="legend" style="display:none">
+    <table>
+      <tr><td>[ ]</td><td>Transcription phonétique, débit naturel de conversation</td></tr>
+      <tr><td>ˈ</td><td>Accent principal</td></tr>
+      <tr><td>ˌ</td><td>Accent secondaire</td></tr>
+      <tr><td>↘</td><td>La voix descend à partir de la syllabe qui suit la flèche</td></tr>
+      <tr><td>↗</td><td>La voix monte à partir de la syllabe qui suit la flèche</td></tr>
+      <tr><td>↘↗</td><td>La voix descend puis remonte (réserve, sous-entendu)</td></tr>
+      <tr><td>→</td><td>La voix reste en suspens (phrase à compléter)</td></tr>
+      <tr><td>|</td><td>Séparation entre deux groupes de souffle</td></tr>
+      <tr><td>ɾ</td><td>t ou d battu, comme un « d » très bref (better, pretty)</td></tr>
+      <tr><td>ʔ</td><td>Coup de glotte remplaçant un t (not, get)</td></tr>
+      <tr><td>n̩ l̩</td><td>Consonne qui forme une syllabe à elle seule (didn't, little)</td></tr>
+      <tr><td>ɚ ɝ</td><td>Voyelles colorées par le r, inaccentuée / accentuée (better, work)</td></tr>
+      <tr><td>…</td><td>Complément à ajouter</td></tr>
+    </table>
+    <p>L'intonation notée est la lecture la plus neutre ; elle peut changer selon le contexte et l'émotion. La voix de synthèse du navigateur ne suit pas forcément l'intonation notée ni les réductions transcrites : la transcription fait foi.</p>
+  </div>
+ </div>
+</div>
+
+<!-- ═══ ÉCRAN 2 : LEÇON ═══ -->
+<div class="screen lesson-screen" id="screenLesson">
+  <div class="lesson-head">
+    <button class="back-btn" id="backBtn3" type="button">← Modules</button>
+    <div class="lesson-title" id="lessonTitle"></div>
+  </div>
+  <div class="lesson-list" id="lessonList"></div>
+</div>
+
+<!-- ═══ ÉCRAN 3 : FLASHCARD ═══ -->
+<div class="screen card-screen" id="screenCard">
+  <div class="top-bar">
+    <button class="back-btn" id="backBtn" type="button">← Modules</button>
+    <span class="group-label" id="groupLabel"></span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+  <div class="card" id="theCard">
+    <div class="phrase-theme" id="phraseTheme">&nbsp;</div>
+    <div class="phrase-en" id="phraseEn">&nbsp;</div>
+    <div class="phrase-ipa" id="phraseIpa">&nbsp;</div>
+    <div class="phrase-fr" id="phraseFr">&nbsp;</div>
+    <div class="audio-zone hidden" id="audioZone">
+      <button class="play-btn" id="playBtn" type="button">▶ Écouter</button>
+      <button class="play-btn" id="playSlowBtn" type="button">▶ Lentement</button>
+    </div>
+  </div>
+
+  <div class="buttons-zone">
+    <div class="buttons" id="revealButtons">
+      <button class="btn-reveal" id="revealBtn" type="button">Révéler</button>
+    </div>
+    <div class="buttons answer hidden" id="actionButtons">
+      <button class="btn-sq btn-known" id="knownBtn" type="button" aria-label="Connue"><span class="ic">✓</span>Connue</button>
+      <div class="review-set">
+        <button class="btn-sq btn-r3" id="review3Btn" type="button" aria-label="À revoir dans 3 tours">+3</button>
+        <button class="btn-sq btn-r5" id="review5Btn" type="button" aria-label="À revoir dans 5 tours">+5</button>
+        <button class="btn-sq btn-r20" id="review20Btn" type="button" aria-label="À revoir dans 20 tours">+20</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats"></div>
+
+  <div class="done-box" id="doneBox" style="display:none">
+    <h2>✓ Module terminé !</h2>
+    <p id="doneSummary"></p>
+    <button class="btn-restart" id="restartBtn" type="button">Recommencer ce module</button>
+    <br><br>
+    <button class="back-btn" id="backBtn2" type="button">← Retour aux modules</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════
+// DONNÉES — Appli_Phrases_Anglais_v002
+// Source : phrases_anglais_API_General_American.txt (102 phrases)
+// Les 16 thèmes d'origine sont regroupés en 11 modules d'au moins 5 phrases.
+// G : [nom du module, [[phrase anglaise, API sans crochets, traduction], …]]
+// ═══════════════════════════════════
+var G = [
+["Salutations et petites conversations", [
+  ["How's it going?", "ˌhaʊzɪʔ ↘ˈgoʊɪŋ", "Comment ça va ?"],
+  ["Long time no see!", "ˌlɔŋ ˌtaɪm noʊ ↘ˈsi", "Ça fait longtemps !"],
+  ["What have you been up to?", "ˌwʌɾəv jə bɪn ↘ˈʌp tu", "Qu'est-ce que tu deviens ?"],
+  ["How was your weekend?", "ˌhaʊ wəz jɚ ↘ˈwikɛnd", "Ton week-end s'est bien passé ?"],
+  ["It's been a while.", "ɪts ˌbɪnə ↘ˈwaɪl", "Ça faisait un moment."],
+  ["Did you have a nice vacation?", "ˌdɪdʒə ˈhævə ˌnaɪs veɪ↗ˈkeɪʃən", "Tu as passé de bonnes vacances ?"],
+  ["Same old, same old.", "ˌseɪm ˌoʊld ˌseɪm ↘ˈoʊld", "Toujours la même routine."],
+  ["Can't complain.", "ˌkænʔ kəm↘ˈpleɪn", "Je ne peux pas me plaindre."],
+  ["I'd better get going.", "aɪd ˌbɛɾɚ gɛʔ ↘ˈgoʊɪŋ", "Il faut que j'y aille."],
+  ["It's been a long week.", "ɪts ˌbɪnə ↘ˈlɔŋ wik", "La semaine a été longue."]
+]],
+["Comprendre et se faire comprendre", [
+  ["Sorry, could you say that again?", "↗ˈsɑɹi | kʊdʒə ˈseɪ ðæɾə↗ˈgɛn", "Pardon, tu peux répéter ?"],
+  ["What do you mean by that?", "ˌwʌɾəjə ↘ˈmin baɪ ðæt", "Qu'est-ce que tu veux dire par là ?"],
+  ["Could you speak a little slower?", "kʊdʒə ˈspikə ˌlɪɾl̩ ↗ˈsloʊɚ", "Tu pourrais parler un peu plus lentement ?"],
+  ["I'm not sure I follow.", "aɪm ˌnɑʔ ˈʃʊɹ aɪ ↘ˈfɑloʊ", "Je ne suis pas sûr de suivre."],
+  ["Just to make sure I understand...", "ˌdʒʌstə ˈmeɪk ˈʃʊɹ aɪ ˌʌndɚ→ˈstænd …", "Juste pour être sûr d'avoir bien compris..."]
+]],
+["Demander de l'aide et remercier", [
+  ["Do you mind if I ...?", "dʒə ↗ˈmaɪnd ɪf aɪ …", "Ça te dérange si je ... ?"],
+  ["I'd really appreciate it.", "aɪd ˌɹili ə↘ˈpɹiʃiˌeɪɾɪt", "Je t'en serais très reconnaissant."],
+  ["No rush.", "noʊ ↘ˈɹʌʃ", "Rien ne presse."],
+  ["Whenever you get a chance.", "wɛˈnɛvɚ jə ˈgɛɾə ↘ˈtʃæns", "Quand tu auras un moment."],
+  ["No worries.", "noʊ ↘ˈwɝiz", "Pas de souci."],
+  ["Don't mention it.", "ˌdoʊn ↘ˈmɛnʃənɪt", "Il n'y a pas de quoi."],
+  ["You shouldn't have!", "jə ↘ˈʃʊdn̩ hæv", "Il ne fallait pas !"],
+  ["My pleasure.", "maɪ ↘ˈplɛʒɚ", "Avec plaisir."]
+]],
+["Excuses", [
+  ["My bad.", "maɪ ↘ˈbæd", "Autant pour moi."],
+  ["I didn't mean to interrupt.", "aɪ ˌdɪdn̩ ˈminə ˌɪnə↘ˈɹʌpt", "Je ne voulais pas t'interrompre."],
+  ["It's no big deal.", "ɪts noʊ ˌbɪg ↘ˈdil", "Ce n'est pas grave."],
+  ["I apologize for the confusion.", "aɪ əˈpɑləˌdʒaɪz fɚ ðə kən↘ˈfjuʒən", "Je m'excuse pour le malentendu."],
+  ["It won't happen again.", "ɪʔ ˌwoʊnʔ ˈhæpənə↘ˈgɛn", "Ça ne se reproduira pas."],
+  ["Sorry to keep you waiting.", "ˈsɑɹi tə ˈkip jə ↘ˈweɪɾɪŋ", "Désolé de t'avoir fait attendre."],
+  ["Sorry to bother you.", "ˈsɑɹi tə ↘ˈbɑðɚjə", "Désolé de te déranger."],
+  ["I didn't realize.", "aɪ ˌdɪdn̩ ↘ˈɹiəˌlaɪz", "Je ne m'en étais pas rendu compte."],
+  ["My apologies.", "maɪ ə↘ˈpɑlədʒiz", "Toutes mes excuses."],
+  ["Sorry for the short notice.", "ˈsɑɹi fɚ ðə ˌʃɔɹʔ ↘ˈnoʊɾɪs", "Désolé de prévenir si tard."],
+  ["Sorry, that came out wrong.", "ˈsɑɹi | ðæʔ ˌkeɪmaʊʔ ↘ˈɹɔŋ", "Désolé, je me suis mal exprimé."],
+  ["Sorry, I wasn't paying attention.", "ˈsɑɹi | aɪ ˌwʌzn̩ ˈpeɪɪŋ ə↘ˈtɛnʃən", "Désolé, je ne faisais pas attention."],
+  ["Sorry, I didn't catch your name.", "ˈsɑɹi | aɪ ˌdɪdn̩ ˈkætʃ jɚ ↘ˈneɪm", "Désolé, je n'ai pas saisi ton nom."],
+  ["Sorry, I totally forgot.", "ˈsɑɹi | aɪ ↘ˈtoʊɾəli fɚˈgɑt", "Désolé, j'ai complètement oublié."],
+  ["I should have told you sooner.", "aɪ ˈʃʊɾə ˈtoʊldʒə ↘ˈsunɚ", "J'aurais dû te le dire plus tôt."]
+]],
+["Réunions", [
+  ["Let's get started.", "lɛts ˌgɛʔ ↘ˈstɑɹɾɪd", "Commençons."],
+  ["Can everyone hear me okay?", "kənˈɛvɹiˌwʌn ˈhɪɹ mi oʊ↗ˈkeɪ", "Tout le monde m'entend bien ?"],
+  ["Can I jump in here?", "kənaɪ ↗ˈdʒʌmpɪn hɪɹ", "Je peux intervenir ?"],
+  ["Sorry, go ahead.", "ˈsɑɹi | ˌgoʊ ə↘ˈhɛd", "Pardon, vas-y."],
+  ["Could you elaborate on that?", "kʊdʒə ɪ↗ˈlæbəˌɹeɪɾɑn ðæt", "Tu pourrais développer ?"],
+  ["I'd like to add something.", "aɪd ˌlaɪktə ↘ˈæd ˌsʌmθɪŋ", "J'aimerais ajouter quelque chose."],
+  ["We're running out of time.", "wɚ ˈɹʌnɪŋ ˈaʊɾə ↘ˈtaɪm", "Il ne nous reste plus beaucoup de temps."],
+  ["Let's recap what we decided.", "lɛts ˈɹiˌkæp wʌʔ wi dɪ↘ˈsaɪɾɪd", "Récapitulons ce qu'on a décidé."],
+  ["What are the next steps?", "ˌwʌɾɚ ðə ˈnɛks ↘ˈstɛps", "Quelles sont les prochaines étapes ?"],
+  ["Let's keep this short.", "lɛts ˈkip ðɪs ↘ˈʃɔɹt", "Faisons court."]
+]],
+["Travail au quotidien et présentation", [
+  ["Can we push it back to next week?", "kən wi ˈpʊʃɪʔ ˈbæk tə ˌnɛks ↗ˈwik", "On peut repousser à la semaine prochaine ?"],
+  ["I'm running a little behind.", "aɪm ˈɹʌnɪŋ ə ˌlɪɾl̩ bɪ↘ˈhaɪnd", "J'ai un peu de retard."],
+  ["I'll take care of it.", "aɪl ˈteɪk ↘ˈkɛɹəvɪt", "Je m'en occupe."],
+  ["I'm in charge of ...", "aɪmɪn →ˈtʃɑɹdʒəv …", "Je suis responsable de ..."],
+  ["I've been with the company for five years.", "aɪv bɪn wɪðə ˈkʌmpəni fɚ ˌfaɪv ↘ˈjɪɹz", "Je suis dans l'entreprise depuis cinq ans."],
+  ["I'm currently working on ...", "aɪm ˌkɝəntli →ˈwɝkɪŋ ɑn …", "En ce moment, je travaille sur ..."],
+  ["I report to the head of ...", "aɪ ɹɪˈpɔɹtə ðə →ˈhɛdəv …", "Je dépends du responsable de ..."],
+  ["It keeps me pretty busy.", "ɪʔ ˈkips mi ˌpɹɪɾi ↘ˈbɪzi", "Ça m'occupe pas mal."]
+]],
+["Téléphone et visio", [
+  ["Can you hear me now?", "kənjə ˈhɪɹ mi ↗ˈnaʊ", "Tu m'entends, là ?"],
+  ["You're breaking up.", "jɚ ˈbɹeɪkɪŋ ↘ˈʌp", "Ça coupe."],
+  ["I think you're on mute.", "aɪ ˈθɪŋk jɚ ɑn ↘ˈmjut", "Je crois que ton micro est coupé."],
+  ["Could you hold on a second?", "kʊdʒə ˈhoʊld ɑnə ↗ˈsɛkənd", "Tu peux patienter une seconde ?"],
+  ["Thanks for calling.", "ˈθæŋks fɚ ↘ˈkɔlɪŋ", "Merci d'avoir appelé."],
+  ["Let me put you on speaker.", "ˈlɛmi ˈpʊtʃə ɑn ↘ˈspikɚ", "Je te mets sur haut-parleur."]
+]],
+["Négocier et résoudre un problème", [
+  ["That works for us.", "ðæʔ ↘ˈwɝks fɚ əs", "Ça nous convient."],
+  ["Where do you have some flexibility?", "ˌwɛɹdəjə ˈhæv səm ˌflɛksə↘ˈbɪləɾi", "Sur quoi avez-vous de la marge ?"],
+  ["We could live with that.", "wi kəd ↘ˈlɪv wɪð ðæt", "On pourrait s'en accommoder."],
+  ["We need a bit more time to decide.", "wi ˈnidə ˌbɪʔ ˈmɔɹ ˈtaɪm tə dɪ↘ˈsaɪd", "Il nous faut un peu plus de temps pour décider."],
+  ["Is there a workaround?", "ɪzðɛɹə ↗ˈwɝkəˌɹaʊnd", "Il y a une solution de contournement ?"],
+  ["Let's try a different approach.", "lɛts ˈtɹaɪ ə ↘ˈdɪfɹənt əˌpɹoʊtʃ", "Essayons une autre approche."],
+  ["That should do the trick.", "ðæʔ ʃəd ˈdu ðə ↘ˈtɹɪk", "Ça devrait faire l'affaire."],
+  ["What happened exactly?", "ˌwʌʔ ˈhæpənd ɪg↘ˈzækli", "Que s'est-il passé exactement ?"],
+  ["What have you tried so far?", "ˌwʌɾəv jə ↘ˈtɹaɪd soʊ fɑɹ", "Qu'est-ce que tu as déjà essayé ?"],
+  ["That's a quick fix.", "ðætsə ˌkwɪk ↘ˈfɪks", "C'est une solution rapide."],
+  ["Let's make sure it doesn't happen again.", "lɛts ˈmeɪk ˈʃʊɹ ɪʔ ˌdʌzn̩ ˈhæpənə↘ˈgɛn", "Faisons en sorte que ça ne se reproduise pas."]
+]],
+["Avis, désaccord et feedback", [
+  ["It depends.", "ɪʔ dɪ↘ˈpɛndz", "Ça dépend."],
+  ["Fair enough.", "ˌfɛɹə↘ˈnʌf", "Ça se défend."],
+  ["I'm not sure that's the best approach.", "aɪm ˌnɑʔ ˈʃʊɹ ðæts ðə ↘ˈbɛst əˌpɹoʊtʃ", "Je ne suis pas sûr que ce soit la meilleure approche."],
+  ["That's not the point.", "ˌðæts ˈnɑʔ ðə ↘ˈpɔɪnt", "Là n'est pas la question."],
+  ["I don't think that's quite right.", "aɪ ˌdoʊnʔ ˈθɪŋk ðæts ˌkwaɪʔ ↘ˈɹaɪt", "Je ne pense pas que ce soit tout à fait juste."],
+  ["I hear you, but ...", "aɪ ↘↗ˈhɪɹ ju | bət …", "Je t'entends, mais ..."],
+  ["Have you considered ...?", "hævjə kən↗ˈsɪdɚd …", "Tu as pensé à ... ?"],
+  ["That's not what I meant.", "ðæts ˈnɑʔ wʌɾaɪ ↘ˈmɛnt", "Ce n'est pas ce que je voulais dire."],
+  ["That's a bit of a stretch.", "ðætsə ˈbɪɾəvə ↘ˈstɹɛtʃ", "C'est un peu tiré par les cheveux."],
+  ["You've lost me there.", "juv ↘ˈlɔs mi ðɛɹ", "Là, tu m'as perdu."],
+  ["It might be worth ...", "ɪʔ ˈmaɪʔ bi →ˈwɝθ …", "Ça vaudrait peut-être le coup de ..."],
+  ["I'd suggest ...", "aɪd səg→ˈdʒɛst …", "Je suggérerais de ..."],
+  ["Point taken.", "ˌpɔɪn ↘ˈteɪkən", "Message reçu."],
+  ["I'll keep that in mind.", "aɪl ˈkip ðæɾɪn ↘ˈmaɪnd", "Je vais m'en souvenir."]
+]],
+["Transitions dans la conversation", [
+  ["That reminds me, ...", "ðæʔ ɹɪ→ˈmaɪndz mi | …", "Ça me fait penser que ..."],
+  ["To get back to what you were saying, ...", "tə ˌgɛʔ ˈbæk tə ˌwʌtʃə wɚ →ˈseɪɪŋ | …", "Pour revenir à ce que tu disais, ..."],
+  ["Long story short, ...", "ˌlɔŋ ˌstɔɹi →ˈʃɔɹt | …", "Pour faire court, ..."],
+  ["Before I forget, ...", "bɪˌfɔɹ aɪ fɚ→ˈgɛʔ | …", "Avant que j'oublie, ..."],
+  ["Having said that, ...", "ˌhævɪŋ →ˈsɛd ðæʔ | …", "Cela dit, ..."],
+  ["What I'm trying to say is ...", "ˌwʌɾaɪm ˈtɹaɪɪŋə →ˈseɪ ɪz …", "Ce que j'essaie de dire, c'est ..."],
+  ["As I was saying, ...", "əzaɪ wəz →ˈseɪɪŋ | …", "Comme je disais, ..."],
+  ["Just out of curiosity, ...", "ˌdʒʌstˈaʊɾə ˌkjʊɹi→ˈɑsəɾi | …", "Juste par curiosité, ..."]
+]],
+["Expressions idiomatiques", [
+  ["I'm all ears.", "aɪmˌɔl ↘ˈɪɹz", "Je suis tout ouïe."],
+  ["It's up to you.", "ɪts ˈʌptə ↘ˈju", "C'est toi qui vois."],
+  ["Better late than never.", "ˌbɛɾɚ ˈleɪʔ ðən ↘ˈnɛvɚ", "Mieux vaut tard que jamais."],
+  ["It's not rocket science.", "ɪts ˌnɑʔ ↘ˈɹɑkɪʔ ˌsaɪəns", "Ce n'est pas sorcier."],
+  ["It's a long shot.", "ɪtsə ↘ˈlɔŋ ʃɑt", "Ça a peu de chances de marcher."],
+  ["We're back to square one.", "wɚ ˈbæk tə ˌskwɛɹ ↘ˈwʌn", "On est revenus à la case départ."],
+  ["That's just the tip of the iceberg.", "ðæts ˌdʒʌs ðə ˈtɪpəv ði ↘ˈaɪsbɝg", "Ce n'est que la partie émergée de l'iceberg."]
+]]
+];
+
+// ═══════════════════════════════════
+// SYNTHÈSE VOCALE (Web Speech API)
+// ═══════════════════════════════════
+var TTS = ('speechSynthesis' in window) && (typeof SpeechSynthesisUtterance !== 'undefined');
+var synth = TTS ? window.speechSynthesis : null;
+var voices = [];           // voix proposées, triées
+var usVoices = 0;          // nombre de voix en-US dans la liste
+var voiceURI = null;       // voix choisie
+var rate = 1;
+var currentUtt = null;     // garde une référence (sinon certains navigateurs perdent onend)
+var playBtnEl = null;
+var SLOW_RATE = 0.7;
+
+try {
+  var sv = localStorage.getItem('phr102_voice_v1'); if (sv) voiceURI = sv;
+  var sr = localStorage.getItem('phr102_rate_v1'); if (sr) rate = parseFloat(sr) || 1;
+} catch (e) {}
+
+function langOf(v) { return (v.lang || '').replace('_', '-').toLowerCase(); }
+
+// Les voix neuronales (Edge « Online (Natural) », Google) passent en tête.
+function voiceScore(v) {
+  var n = v.name || '', s = 0;
+  if (/natural|neural|online/i.test(n)) s += 4;
+  if (/google/i.test(n)) s += 3;
+  if (/aria|jenny|guy|ava|andrew|emma|brian|samantha|allison|evan|zoe|nathan/i.test(n)) s += 2;
+  if (/compact|espeak/i.test(n)) s -= 3;
+  return s;
+}
+
+function loadVoices() {
+  if (!TTS) return;
+  var all = synth.getVoices() || [];
+  var us = all.filter(function(v) { return langOf(v) === 'en-us'; });
+  var list = us;
+  if (!us.length) list = all.filter(function(v) { return langOf(v).indexOf('en') === 0; });
+  list.sort(function(a, b) { return voiceScore(b) - voiceScore(a) || a.name.localeCompare(b.name); });
+  voices = list;
+  usVoices = us.length;
+  var sel = document.getElementById('voiceSel');
+  sel.innerHTML = '';
+  for (var i = 0; i < voices.length; i++) {
+    var o = document.createElement('option');
+    o.value = voices[i].voiceURI;
+    o.textContent = voices[i].name + (usVoices ? '' : ' (' + voices[i].lang + ')');
+    sel.appendChild(o);
+  }
+  var found = voices.some(function(v) { return v.voiceURI === voiceURI; });
+  if (!found) voiceURI = voices.length ? voices[0].voiceURI : null;
+  if (voiceURI) sel.value = voiceURI;
+  updateVoiceMsg();
+}
+
+function updateVoiceMsg() {
+  var msg = document.getElementById('voiceMsg');
+  msg.className = 'voice-msg';
+  if (!TTS) {
+    msg.className = 'voice-msg warn';
+    msg.textContent = 'Ce navigateur ne propose pas de synthèse vocale. Utilisez un navigateur récent (Edge, Chrome, Safari).';
+    return;
+  }
+  if (!voices.length) {
+    msg.className = 'voice-msg warn';
+    msg.textContent = 'Aucune voix anglaise trouvée sur cet appareil. Installez une voix « English (United States) » dans les réglages du système, puis rechargez la page.';
+    return;
+  }
+  if (!usVoices) {
+    msg.className = 'voice-msg warn';
+    msg.textContent = 'Aucune voix américaine (en-US) installée : la lecture utilise une autre variante d\u2019anglais. Installez une voix « English (United States) » pour entendre le General American.';
+    return;
+  }
+  msg.textContent = usVoices + (usVoices > 1 ? ' voix américaines disponibles' : ' voix américaine disponible') +
+    '. Les voix « Natural » (Edge) et « Google US English » (Chrome) sont les plus naturelles.';
+}
+
+function selectedVoice() {
+  for (var i = 0; i < voices.length; i++) if (voices[i].voiceURI === voiceURI) return voices[i];
+  return null;
+}
+
+// Retire les marques « … » / « ... » : la phrase est lue jusqu'au point de suspension.
+function speakableText(t) {
+  return t.replace(/\s*(\.\.\.|…)\s*/g, ' ').replace(/\s+([?!,.])/g, '$1').replace(/,\s*$/, '').trim();
+}
+
+function resetPlayState() {
+  if (playBtnEl) playBtnEl.classList.remove('playing');
+  playBtnEl = null;
+}
+
+function stopAudio() {
+  if (!TTS) return;
+  currentUtt = null;
+  try { synth.cancel(); } catch (e) {}
+  resetPlayState();
+}
+
+function speak(text, btn, r) {
+  if (!TTS) return;
+  var sameBtn = (playBtnEl === btn && btn);
+  stopAudio();
+  if (sameBtn) return;   // second appui sur le bouton en cours = arrêt
+  var u = new SpeechSynthesisUtterance(speakableText(text));
+  var v = selectedVoice();
+  if (v) { u.voice = v; u.lang = v.lang; } else { u.lang = 'en-US'; }
+  u.rate = r || rate;
+  u.pitch = 1;
+  currentUtt = u;
+  playBtnEl = btn || null;
+  if (btn) btn.classList.add('playing');
+  u.onend = u.onerror = function() { if (currentUtt === u) { currentUtt = null; resetPlayState(); } };
+  synth.speak(u);
+  if (synth.paused) synth.resume();
+}
+
+if (TTS) {
+  loadVoices();
+  if ('onvoiceschanged' in synth) synth.onvoiceschanged = loadVoices;
+  setTimeout(loadVoices, 500);
+  setTimeout(loadVoices, 1500);
+} else {
+  updateVoiceMsg();
+  document.getElementById('voiceSel').disabled = true;
+  document.getElementById('rateSel').disabled = true;
+  document.getElementById('voiceTest').disabled = true;
+}
+
+document.getElementById('rateSel').value = String(rate);
+if (document.getElementById('rateSel').value !== String(rate)) { rate = 1; document.getElementById('rateSel').value = '1'; }
+
+document.getElementById('voiceSel').addEventListener('change', function() {
+  voiceURI = this.value;
+  try { localStorage.setItem('phr102_voice_v1', voiceURI); } catch (e) {}
+  speak('How\u2019s it going?', document.getElementById('voiceTest'));
+});
+document.getElementById('rateSel').addEventListener('change', function() {
+  rate = parseFloat(this.value) || 1;
+  try { localStorage.setItem('phr102_rate_v1', String(rate)); } catch (e) {}
+});
+document.getElementById('voiceTest').addEventListener('click', function() {
+  speak('Long time no see! What have you been up to?', this);
+});
+
+// ═══════════════════════════════════
+// ÉTAT DE L'APPLICATION
+// ═══════════════════════════════════
+var NGROUPS = G.length;
+var ALL = NGROUPS;          // indice du groupe « Toutes les phrases »
+var TOTAL = 0;
+for (var gi = 0; gi < NGROUPS; gi++) TOTAL += G[gi][1].length;
+
+var currentGroup = -1;
+var groupItems = [];
+var available = [];
+var reviewQueue = [];
+var known = [];
+var turn = 0;
+var current = null;
+var revealed = false;
+
+var progress = {};
+try {
+  var saved = localStorage.getItem('phr102_progress_v2');
+  if (saved) progress = JSON.parse(saved) || {};
+} catch (e) {}
+
+function saveProgress() {
+  try {
+    progress[currentGroup] = { known: known.length, total: groupItems.length };
+    localStorage.setItem('phr102_progress_v2', JSON.stringify(progress));
+  } catch (e) {}
+}
+
+function groupName(g) { return g === ALL ? 'Toutes les phrases' : G[g][0]; }
+
+function groupState(g) {
+  var p = progress[g];
+  if (p && p.known >= p.total) return 'completed';
+  if (p && p.known > 0) return 'in-progress';
+  return '';
+}
+
+function plural(n) { return n + (n > 1 ? ' phrases' : ' phrase'); }
+
+function makeBtn(grid, title, count, cls, fn) {
+  var btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'group-btn' + (cls ? ' ' + cls : '');
+  btn.innerHTML = '<span class="gname"></span><span class="gcount"></span>';
+  btn.querySelector('.gname').textContent = title;
+  btn.querySelector('.gcount').textContent = plural(count);
+  btn.addEventListener('click', fn);
+  grid.appendChild(btn);
+}
+
+function buildGroupGrid() {
+  var grid = document.getElementById('groupsGrid');
+  grid.innerHTML = '';
+  for (var g = 0; g < NGROUPS; g++) {
+    (function(gg) { makeBtn(grid, G[gg][0], G[gg][1].length, groupState(gg), function() { startGroup(gg); }); })(g);
+  }
+  makeBtn(grid, 'Toutes les phrases', TOTAL, 'all ' + groupState(ALL), function() { startGroup(ALL); });
+}
+
+function buildLessonGrid() {
+  var grid = document.getElementById('lessonsGrid');
+  grid.innerHTML = '';
+  for (var g = 0; g < NGROUPS; g++) {
+    (function(gg) { makeBtn(grid, G[gg][0], G[gg][1].length, '', function() { openLesson(gg); }); })(g);
+  }
+}
+
+function showScreen(id) {
+  var s = document.querySelectorAll('.screen');
+  for (var i = 0; i < s.length; i++) s[i].classList.toggle('active', s[i].id === id);
+}
+
+// ═══════════════════════════════════
+// FLASHCARDS
+// ═══════════════════════════════════
+function startGroup(g) {
+  currentGroup = g;
+  groupItems = [];
+  for (var t = 0; t < NGROUPS; t++) {
+    if (g !== ALL && t !== g) continue;
+    for (var i = 0; i < G[t][1].length; i++) {
+      var p = G[t][1][i];
+      groupItems.push({ en: p[0], ipa: p[1], fr: p[2], theme: G[t][0] });
+    }
+  }
+  document.getElementById('groupLabel').textContent = groupName(g);
+  showScreen('screenCard');
+  doRestart();
+}
+
+function goBack() {
+  stopAudio();
+  if (currentGroup >= 0) saveProgress();
+  showScreen('screenHome');
+  buildGroupGrid();
+}
+
+function pickNext() {
+  var i, pick, due = [];
+  for (i = 0; i < reviewQueue.length; i++) if (reviewQueue[i].showAtTurn <= turn) due.push(reviewQueue[i]);
+  if (due.length) {
+    pick = due[Math.floor(Math.random() * due.length)];
+    reviewQueue = reviewQueue.filter(function(r) { return r !== pick; });
+    return pick.w;
+  }
+  if (available.length) return available[Math.floor(Math.random() * available.length)];
+  if (reviewQueue.length) {
+    reviewQueue.sort(function(a, b) { return a.showAtTurn - b.showAtTurn; });
+    pick = reviewQueue.shift();
+    return pick.w;
+  }
+  return null;
+}
+
+function setCardVisible(on) {
+  document.getElementById('theCard').style.display = on ? '' : 'none';
+  document.querySelector('.buttons-zone').style.display = on ? '' : 'none';
+  document.getElementById('stats').style.display = on ? '' : 'none';
+  document.getElementById('doneBox').style.display = on ? 'none' : 'block';
+}
+
+function showPhrase() {
+  current = pickNext();
+  stopAudio();
+  if (!current) {
+    setCardVisible(false);
+    document.getElementById('doneSummary').textContent =
+      currentGroup === ALL
+      ? 'Vous avez maîtrisé les ' + plural(groupItems.length) + '.'
+      : 'Vous avez maîtrisé les ' + plural(groupItems.length) + ' de ce module.';
+    document.querySelector('#doneBox h2').textContent = currentGroup === ALL ? '✓ Série terminée !' : '✓ Module terminé !';
+    saveProgress();
+    return;
+  }
+  revealed = false;
+  document.getElementById('phraseTheme').textContent = currentGroup === ALL ? current.theme : '\u00A0';
+  document.getElementById('phraseEn').textContent = current.en;
+  document.getElementById('phraseIpa').innerHTML = '&nbsp;';
+  document.getElementById('phraseFr').innerHTML = '&nbsp;';
+  document.getElementById('audioZone').classList.add('hidden');
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('revealButtons').classList.remove('hidden');
+  document.getElementById('actionButtons').classList.add('hidden');
+  updateStats();
+}
+
+function doReveal() {
+  if (!current || revealed) return;
+  revealed = true;
+  turn++;
+  document.getElementById('phraseIpa').textContent = '[' + current.ipa + ']';
+  document.getElementById('phraseFr').textContent = current.fr;
+  var ok = TTS && voices.length;
+  document.getElementById('playBtn').disabled = !ok;
+  document.getElementById('playSlowBtn').disabled = !ok;
+  document.getElementById('audioZone').classList.remove('hidden');
+  updateStats();
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('revealButtons').classList.add('hidden');
+  document.getElementById('actionButtons').classList.remove('hidden');
+}
+
+function playCurrent(slow) {
+  if (!current || !revealed) return;
+  var btn = document.getElementById(slow ? 'playSlowBtn' : 'playBtn');
+  if (btn.disabled) return;
+  speak(current.en, btn, slow ? SLOW_RATE : rate);
+}
+
+function doKnown() {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x) { return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x) { return x.w !== w; });
+  known.push(w);
+  saveProgress();
+  showPhrase();
+}
+
+// La phrase revient après « delay » autres phrases révélées.
+function doReview(delay) {
+  if (!current) return;
+  var w = current;
+  available = available.filter(function(x) { return x !== w; });
+  reviewQueue = reviewQueue.filter(function(x) { return x.w !== w; });
+  reviewQueue.push({ w: w, showAtTurn: turn + delay });
+  showPhrase();
+}
+
+function updateStats() {
+  var pct = groupItems.length ? Math.round(known.length / groupItems.length * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('stats').innerHTML =
+    '<span class="st">✓ Connues\u00A0: <strong>' + known.length + '</strong></span> · ' +
+    '<span class="st">↻ À revoir\u00A0: <strong>' + reviewQueue.length + '</strong></span> · ' +
+    '<span class="st">Restantes\u00A0: <strong>' + available.length + '</strong></span> · ' +
+    '<span class="st">Tour\u00A0: <strong>' + turn + '</strong></span>';
+}
+
+function doRestart() {
+  available = groupItems.slice();
+  reviewQueue = [];
+  known = [];
+  turn = 0;
+  setCardVisible(true);
+  showPhrase();
+}
+
+// ═══════════════════════════════════
+// MODE LEÇON
+// ═══════════════════════════════════
+var lessonGroup = -1;
+
+function openLesson(g) {
+  lessonGroup = g;
+  var list = document.getElementById('lessonList');
+  var items = G[g][1];
+  list.innerHTML = '';
+  for (var k = 0; k < items.length; k++) {
+    var row = document.createElement('div');
+    row.className = 'lrow';
+    row.innerHTML = '<button class="lplay" type="button">▶</button><span class="lw"></span><span class="li"></span><span class="lf"></span>';
+    var b = row.querySelector('.lplay');
+    b.setAttribute('data-k', k);
+    b.setAttribute('aria-label', 'Écouter « ' + items[k][0] + ' »');
+    if (!TTS || !voices.length) b.disabled = true;
+    row.querySelector('.lw').textContent = items[k][0];
+    row.querySelector('.li').textContent = '[' + items[k][1] + ']';
+    row.querySelector('.lf').textContent = items[k][2];
+    list.appendChild(row);
+  }
+  var title = document.getElementById('lessonTitle');
+  title.textContent = G[g][0];
+  var cnt = document.createElement('span');
+  cnt.textContent = plural(items.length);
+  title.appendChild(cnt);
+  list.scrollTop = 0;
+  showScreen('screenLesson');
+}
+
+function backToHome() {
+  stopAudio();
+  showScreen('screenHome');
+}
+
+document.getElementById('lessonList').addEventListener('click', function(e) {
+  var b = e.target.closest ? e.target.closest('.lplay') : null;
+  if (!b || b.disabled || lessonGroup < 0) return;
+  speak(G[lessonGroup][1][+b.getAttribute('data-k')][0], b);
+});
+
+// ═══════════════════════════════════
+// MODES DE L'ACCUEIL
+// ═══════════════════════════════════
+var SUBTITLES = {
+  cards: '102 phrases · API et intonation · General American',
+  lessons: 'Les phrases classées par module, avec lecture',
+  notation: 'Signes utilisés dans les transcriptions'
+};
+function setMode(m) {
+  document.getElementById('tabCards').classList.toggle('active', m === 'cards');
+  document.getElementById('tabLessons').classList.toggle('active', m === 'lessons');
+  document.getElementById('tabNotation').classList.toggle('active', m === 'notation');
+  document.getElementById('groupsGrid').style.display = m === 'cards' ? '' : 'none';
+  document.getElementById('lessonsGrid').style.display = m === 'lessons' ? '' : 'none';
+  document.getElementById('legend').style.display = m === 'notation' ? '' : 'none';
+  document.getElementById('voiceBox').style.display = m === 'notation' ? 'none' : '';
+  document.getElementById('subtitle').textContent = SUBTITLES[m];
+}
+
+// ═══════════════════════════════════
+// ÉVÉNEMENTS
+// ═══════════════════════════════════
+function on(id, fn) { document.getElementById(id).addEventListener('click', function(e) { e.preventDefault(); fn(); }); }
+on('tabCards', function() { setMode('cards'); });
+on('tabLessons', function() { setMode('lessons'); });
+on('tabNotation', function() { setMode('notation'); });
+on('revealBtn', doReveal);
+on('knownBtn', doKnown);
+on('review3Btn', function() { doReview(3); });
+on('review5Btn', function() { doReview(5); });
+on('review20Btn', function() { doReview(20); });
+on('restartBtn', doRestart);
+on('backBtn', goBack);
+on('backBtn2', goBack);
+on('backBtn3', backToHome);
+on('playBtn', function() { playCurrent(false); });
+on('playSlowBtn', function() { playCurrent(true); });
+
+document.addEventListener('keydown', function(e) {
+  var t = e.target && e.target.tagName;
+  if (t === 'SELECT') return;
+  if (document.getElementById('screenCard').classList.contains('active')) {
+    if (e.code === 'Space' || e.code === 'Enter') {
+      if (t === 'BUTTON' && e.target.id !== 'revealBtn') return;
+      e.preventDefault();
+      if (!revealed) doReveal();
+    } else if (e.code === 'ArrowRight' || e.code === 'KeyK') { if (revealed) doKnown(); }
+    else if (e.code === 'ArrowLeft' || e.code === 'KeyR' || e.code === 'Digit1' || e.code === 'Numpad1') { if (revealed) doReview(3); }
+    else if (e.code === 'Digit2' || e.code === 'Numpad2') { if (revealed) doReview(5); }
+    else if (e.code === 'Digit3' || e.code === 'Numpad3') { if (revealed) doReview(20); }
+    else if (e.code === 'KeyP' || e.code === 'KeyL') { if (revealed) playCurrent(false); }
+    else if (e.code === 'KeyS') { if (revealed) playCurrent(true); }
+    else if (e.code === 'Escape') goBack();
+  } else if (document.getElementById('screenLesson').classList.contains('active')) {
+    if (e.code === 'Escape') backToHome();
+  }
+});
+
+buildGroupGrid();
+buildLessonGrid();
+</script>
+</body>
+</html>
