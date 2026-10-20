@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark light">
+<meta name="theme-color" content="#15181d" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#f4f3ef" media="(prefers-color-scheme: light)">
+<title>Genre des noms</title>
+<meta name="apple-mobile-web-app-title" content="Genre des noms">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<style>
+  /* Même thème que Wortschatz B2-C1 : « Encre et papier », accents « Forêt » */
+  :root {
+    --bg: #15181d; --text: #e6e8eb; --strong: #ffffff; --title: #d9c88f;
+    --soft: #a3abb5; --muted: #8a929c; --faint: #6b737d;
+    --accent: #d9c88f; --accent-bg: rgba(217,200,143,0.10); --accent-bd: rgba(217,200,143,0.45);
+    --line: #2e353e; --line-2: #252a31; --surface: #1f242b; --card: #1f242b;
+    --input-bg: #111418; --modal-bg: #1f242b;
+    --main: #d9c88f; --main-text: #15181d;
+    --ok-text: #8fd08f; --ko-text: #f08080; --part-text: #e0c060;
+    --der: #86b8f5; --die: #f08080; --das: #a6e3a0;
+    --der-bg: rgba(134,184,245,0.12); --die-bg: rgba(240,128,128,0.12); --das-bg: rgba(166,227,160,0.12);
+    --shadow: rgba(0,0,0,0.5); --overlay: rgba(10,12,15,0.75);
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --bg: #f4f3ef; --text: #1d2128; --strong: #11151b; --title: #2f5a45;
+      --soft: #4b5563; --muted: #6b7280; --faint: #9097a1;
+      --accent: #2f5a45; --accent-bg: rgba(47,90,69,0.08); --accent-bd: rgba(47,90,69,0.45);
+      --line: #dcd9d2; --line-2: #e8e6e0; --surface: #ffffff; --card: #ffffff;
+      --input-bg: #ffffff; --modal-bg: #ffffff;
+      --main: #2f5a45; --main-text: #ffffff;
+      --ok-text: #2f7d2f; --ko-text: #b42828; --part-text: #8f7a2e;
+      --der: #1f5fb4; --die: #b42828; --das: #2f7d2f;
+      --der-bg: rgba(31,95,180,0.08); --die-bg: rgba(180,40,40,0.08); --das-bg: rgba(47,125,47,0.08);
+      --shadow: rgba(29,33,40,0.15); --overlay: rgba(29,33,40,0.55);
+    }
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, Roboto, sans-serif;
+    background: var(--bg); color: var(--text);
+    overflow: hidden; overscroll-behavior: none;
+    -webkit-user-select: none; user-select: none;
+  }
+  input { -webkit-user-select: text; user-select: text; font-family: inherit; }
+
+  .screen {
+    display: none; position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch;
+    padding: calc(1rem + env(safe-area-inset-top, 0px)) 1rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
+  }
+  .screen.active { display: flex; flex-direction: column; align-items: center; }
+  .inner { width: 100%; max-width: 480px; display: flex; flex-direction: column; align-items: center; }
+  .card-screen .inner { margin: auto 0; }
+  #cardArea { width: 100%; display: flex; flex-direction: column; align-items: center; }
+
+  /* ── ACCUEIL ── */
+  .home h1 { font-size: 1.5rem; font-weight: 300; letter-spacing: 0.05em; color: var(--title); margin-top: 1rem; margin-bottom: 0.2rem; }
+  .home h1 .g-der, .home h1 .g-die, .home h1 .g-das { font-weight: 600; }
+  .subtitle { font-size: 0.8rem; color: var(--muted); margin-bottom: 1rem; text-align: center; line-height: 1.5; }
+  .mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: 0.6rem; width: 100%; }
+  .mode-btn {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+    color: var(--soft); font-size: 0.82rem; font-weight: 600; padding: 9px 8px;
+    cursor: pointer; touch-action: manipulation; transition: background 0.2s, color 0.2s, border-color 0.2s;
+  }
+  .mode-btn.active { background: var(--accent-bg); border-color: var(--accent-bd); color: var(--accent); }
+  .mode-desc { font-size: 0.8rem; color: var(--soft); line-height: 1.5; text-align: center; margin-bottom: 0.9rem; min-height: 2.4em; }
+  .stats-table { width: 100%; border-collapse: collapse; font-size: 0.78rem; margin-bottom: 1rem; }
+  .stats-table th { font-weight: 400; color: var(--faint); text-align: right; padding: 2px 6px; font-size: 0.68rem; }
+  .stats-table td { text-align: right; padding: 4px 6px; color: var(--soft); font-variant-numeric: tabular-nums; border-top: 1px solid var(--line-2); }
+  .stats-table td:first-child, .stats-table th:first-child { text-align: left; }
+  .stats-table tr.cur td { color: var(--text); }
+  .stats-table tr.cur td:first-child { color: var(--accent); font-weight: 600; }
+  .stats-table td.due { font-weight: 700; }
+  .stats-table tr.cur td.due { color: var(--accent); }
+  .check-row { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--soft); margin-bottom: 0.8rem; cursor: pointer; }
+  .check-row input { width: 18px; height: 18px; accent-color: var(--accent); }
+  .start-row { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 0.8rem; width: 100%; }
+  .limit-box { display: flex; align-items: center; gap: 6px; font-size: 0.78rem; color: var(--soft); }
+  .limit-box input {
+    width: 4.2rem; padding: 8px; border-radius: 8px; text-align: center;
+    background: var(--input-bg); border: 1px solid var(--line); color: var(--text); font-size: 0.9rem;
+  }
+  .start-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; margin-bottom: 0.8rem; }
+  .start-btns button { padding: 13px 10px; }
+  .section-title { width: 100%; font-size: 0.95rem; font-weight: 400; color: var(--title); margin: 0.6rem 0; padding-top: 1rem; border-top: 1px solid var(--line); }
+  .file-actions { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 0.5rem; }
+  .file-actions .wide, .wide { grid-column: 1 / -1; width: 100%; }
+  .hint { font-size: 0.72rem; color: var(--faint); text-align: center; line-height: 1.5; margin: 0.4rem 0 1rem; }
+
+  /* ── BOUTONS ── */
+  button {
+    padding: 13px 22px; border: none; border-radius: 12px; font-size: 0.95rem; font-weight: 700;
+    cursor: pointer; touch-action: manipulation; font-family: inherit; -webkit-user-select: none; user-select: none;
+  }
+  button:active:not(:disabled) { transform: scale(0.97); opacity: 0.88; }
+  button:disabled { cursor: default; }
+  button:focus-visible, .mode-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-main { background: var(--main); color: var(--main-text); }
+  .btn-sub { background: var(--surface); color: var(--soft); border: 1px solid var(--line); font-size: 0.82rem; font-weight: 600; padding: 11px 12px; }
+  .btn-danger { background: var(--ko-text) !important; color: #fff !important; }
+  .kbd { font-size: 0.68rem; font-weight: 600; opacity: 0.7; margin-left: 6px; }
+  @media (hover: none), (max-width: 420px) { .kbd { display: none; } }
+
+  /* ── CARTE ── */
+  .top-bar { display: flex; align-items: center; justify-content: space-between; width: 100%; margin-bottom: 0.6rem; gap: 8px; }
+  .back-btn { background: none; border: 1px solid var(--line); border-radius: 8px; color: var(--soft); font-size: 0.82rem; font-weight: 600; padding: 6px 14px; white-space: nowrap; }
+  .session-label { font-size: 0.8rem; color: var(--faint); text-align: right; }
+  .progress-track { width: 100%; height: 4px; background: var(--line-2); border-radius: 2px; margin-bottom: 1.1rem; overflow: hidden; }
+  .progress-fill { height: 100%; width: 0; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; }
+  .card {
+    width: 100%; min-height: 250px; background: var(--card); border: 1px solid var(--line); border-radius: 20px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 1.4rem 1.2rem; margin-bottom: 1rem;
+  }
+  .item-src { font-size: 0.72rem; color: var(--muted); letter-spacing: 0.03em; margin-bottom: 0.2rem; text-align: center; }
+  .item-box { font-size: 0.72rem; color: var(--accent); margin-bottom: 0.7rem; text-align: center; font-variant-numeric: tabular-nums; }
+  .item-prompt { font-size: 1.75rem; font-weight: 700; color: var(--strong); text-align: center; line-height: 1.25; margin-bottom: 0.3rem; word-break: break-word; }
+  .item-prompt.long { font-size: 1.25rem; }
+  .item-sub { font-size: 0.9rem; color: var(--soft); text-align: center; line-height: 1.4; min-height: 1.2em; }
+  .reveal { width: 100%; text-align: center; margin-top: 0.6rem; }
+  .reveal:empty { display: none; }
+  .reveal-main { font-size: 1.3rem; font-weight: 700; line-height: 1.35; word-break: break-word; }
+  .reveal-fr { font-size: 0.92rem; color: var(--soft); margin-top: 0.2rem; line-height: 1.4; }
+  .reveal-note { font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; font-style: italic; }
+  .verdict { font-size: 0.8rem; font-weight: 700; margin-top: 0.5rem; }
+  .v-ok { color: var(--ok-text); } .v-ko { color: var(--ko-text); } .v-part { color: var(--part-text); }
+
+  .g-der { color: var(--der); } .g-die { color: var(--die); } .g-das { color: var(--das); } .g-mix { color: var(--text); }
+
+  .rule-box { text-align: left; border-left: 3px solid var(--accent-bd); background: var(--accent-bg); border-radius: 0 10px 10px 0; padding: 8px 11px; margin-top: 0.8rem; }
+  .rule-head { font-weight: 700; color: var(--strong); font-size: 0.92rem; line-height: 1.4; }
+  .rule-desc { font-size: 0.82rem; color: var(--soft); margin-top: 4px; line-height: 1.5; }
+  .rule-src { font-size: 0.7rem; color: var(--faint); margin-top: 5px; }
+  .chip { display: inline-block; font-size: 0.72rem; font-weight: 800; padding: 1px 7px; border-radius: 6px; border: 1px solid currentColor; margin-right: 6px; vertical-align: 1px; }
+  .exc-tag { display: inline-block; font-size: 0.7rem; font-weight: 700; color: var(--part-text); border: 1px solid var(--part-text); border-radius: 6px; padding: 0 6px; margin-right: 6px; vertical-align: 1px; }
+  .wlist { text-align: left; font-size: 0.85rem; line-height: 1.65; margin-top: 0.6rem; }
+  .wlist .lbl { font-size: 0.72rem; color: var(--faint); display: block; margin-top: 4px; }
+  .wlist .fr { color: var(--muted); font-size: 0.78rem; }
+  .wlist .mark { color: var(--part-text); font-weight: 700; }
+
+  .buttons { display: flex; gap: 0.6rem; justify-content: center; flex-wrap: wrap; width: 100%; margin-bottom: 0.6rem; }
+  .gender-btn { min-width: 76px; padding: 13px 14px; background: var(--surface); border: 1.5px solid var(--line); }
+  .gender-btn[data-g="der"] { color: var(--der); background: var(--der-bg); border-color: var(--der); }
+  .gender-btn[data-g="die"] { color: var(--die); background: var(--die-bg); border-color: var(--die); }
+  .gender-btn[data-g="das"] { color: var(--das); background: var(--das-bg); border-color: var(--das); }
+  .combo .gender-btn { min-width: 64px; padding: 8px 10px; font-size: 0.8rem; color: var(--text); border-color: var(--soft); }
+  .gender-btn.right, .opt-btn.right { box-shadow: 0 0 0 3px var(--ok-text); }
+  .gender-btn.wrong, .opt-btn.wrong { box-shadow: 0 0 0 3px var(--ko-text); text-decoration: line-through; }
+  .gender-btn.dim, .opt-btn.dim { opacity: 0.4; }
+  .opt-list { display: flex; flex-direction: column; gap: 8px; width: 100%; margin-bottom: 0.6rem; }
+  .opt-btn {
+    text-align: left; background: var(--surface); border: 1.5px solid var(--line); color: var(--text);
+    font-weight: 600; font-size: 0.9rem; padding: 11px 14px; border-radius: 12px; line-height: 1.35;
+    display: flex; gap: 10px; align-items: baseline;
+  }
+  .opt-btn .num { color: var(--faint); font-size: 0.72rem; flex-shrink: 0; }
+  .opt-btn .fr { color: var(--muted); font-weight: 400; font-size: 0.8rem; }
+  .stats { font-size: 0.74rem; color: var(--faint); line-height: 1.8; text-align: center; }
+  .stats b { color: var(--soft); }
+  .done-box { text-align: center; padding: 2rem 0.5rem; width: 100%; }
+  .done-box h2 { font-size: 1.7rem; font-weight: 300; color: var(--ok-text); margin-bottom: 1rem; }
+  .done-box p { color: var(--muted); margin-bottom: 1rem; line-height: 1.6; }
+  .done-box .wlist { margin-bottom: 1.2rem; }
+  .done-box .btn-main { margin-bottom: 12px; min-width: 210px; }
+
+  /* ── MODALE ── */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: var(--overlay); z-index: 300; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.show { display: flex; }
+  .modal { background: var(--modal-bg); border: 1px solid var(--accent-bd); border-radius: 16px; width: 100%; max-width: 560px; max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
+    .modal.tall { height: 88vh; }
+  .modal-header { padding: 14px 18px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-size: 1rem; font-weight: 600; color: var(--title); }
+  .modal-close { background: transparent; color: var(--soft); font-size: 1.5rem; line-height: 1; padding: 0 8px; font-weight: 300; }
+  .modal-body { padding: 14px 18px; overflow-y: auto; flex: 1; font-size: 0.85rem; line-height: 1.55; -webkit-user-select: text; user-select: text; }
+  .modal-body p { margin-bottom: 0.6rem; }
+  .modal-footer { padding: 12px 18px 14px; border-top: 1px solid var(--line); display: flex; gap: 8px; flex-wrap: wrap; }
+  .modal-footer:empty { display: none; }
+  .modal-footer button { padding: 10px 16px; font-size: 0.85rem; border-radius: 10px; flex: 1; min-width: 100px; }
+  .ref-search { width: 100%; padding: 10px 12px; border-radius: 8px; border: 1px solid var(--accent-bd); background: var(--input-bg); color: var(--strong); font-size: 0.95rem; outline: none; margin-bottom: 10px; }
+  .ref-fam { font-size: 0.9rem; font-weight: 600; color: var(--title); margin: 14px 0 6px; }
+  .ref-fam:first-child { margin-top: 0; }
+  details.ref-rule { border-bottom: 1px solid var(--line-2); padding: 5px 0; }
+  details.ref-rule summary { cursor: pointer; list-style: none; display: flex; align-items: baseline; gap: 4px; }
+  details.ref-rule summary::-webkit-details-marker { display: none; }
+  details.ref-rule summary .cnt { margin-left: auto; color: var(--faint); font-size: 0.72rem; font-variant-numeric: tabular-nums; padding-left: 8px; }
+  details.ref-rule[open] summary { color: var(--strong); }
+  .ref-body { padding: 4px 0 8px 2px; }
+  .ref-hit { padding: 5px 0; border-bottom: 1px solid var(--line-2); }
+  .ref-hit .rl { display: block; font-size: 0.76rem; color: var(--muted); }
+
+
+  /* ── LISTES IMPORTÉES ── */
+  .imp-panel { width: 100%; margin-bottom: 0.4rem; }
+  .src-list { width: 100%; display: flex; flex-direction: column; gap: 8px; margin-bottom: 0.8rem; }
+  .src-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 9px 10px 8px 12px; cursor: pointer; touch-action: manipulation; transition: border-color 0.2s, background 0.2s, opacity 0.2s; }
+  .src-card.sel { border-color: var(--accent-bd); background: var(--accent-bg); }
+  .src-card:not(.sel) { opacity: 0.5; }
+  .src-head { display: flex; align-items: center; gap: 8px; }
+  .check { width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0; border: 1.5px solid var(--soft); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 800; color: transparent; }
+  .src-card.sel .check { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+  .src-name { font-weight: 700; color: var(--title); font-size: 0.95rem; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .src-type { font-size: 0.7rem; color: var(--soft); border: 1px solid var(--line); border-radius: 6px; padding: 2px 7px; }
+  .src-del { background: none; border: none; color: var(--faint); font-size: 1.3rem; line-height: 1; padding: 2px 6px; border-radius: 6px; }
+  .src-del:hover { color: var(--ko-text); }
+  .src-meta { font-size: 0.74rem; color: var(--muted); margin: 3px 0 0 28px; font-variant-numeric: tabular-nums; }
+  .empty { width: 100%; text-align: center; color: var(--muted); font-size: 0.82rem; line-height: 1.6; border: 1px dashed var(--line); border-radius: 12px; padding: 1.1rem 1rem; margin-bottom: 0.8rem; }
+  .empty code { color: var(--title); font-family: inherit; font-weight: 600; }
+  .drop-overlay { display: none; position: fixed; inset: 0; z-index: 500; background: var(--overlay); border: 3px dashed var(--accent); border-radius: 18px; margin: 10px; align-items: center; justify-content: center; color: #fff; font-size: 1.2rem; font-weight: 600; text-align: center; padding: 1rem; }
+  .drop-overlay.show { display: flex; }
+  .rep-file { margin-bottom: 0.7rem; }
+  .rep-file b { color: var(--title); }
+  .rep-skip { font-size: 0.75rem; color: var(--muted); }
+  .toast {
+    position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%);
+    background: var(--modal-bg); color: var(--text); border: 1px solid var(--accent-bd);
+    border-radius: 10px; padding: 10px 16px; font-size: 0.85rem; z-index: 400;
+    box-shadow: 0 6px 20px var(--shadow); max-width: 90vw; text-align: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.25s;
+  }
+  .toast.show { opacity: 1; }
+  @media (max-width: 370px) {
+    .item-prompt { font-size: 1.45rem; }
+    button { padding: 12px 16px; font-size: 0.88rem; }
+    .gender-btn { min-width: 64px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ ACCUEIL ═══════════ -->
+<div class="screen home active" id="screenHome">
+  <div class="inner">
+    <h1><span class="g-der">der</span> <span class="g-die">die</span> <span class="g-das">das</span></h1>
+    <div class="subtitle">Règles du genre des noms allemands, en répétition espacée<br>Boîtes : 0, 1, 3, 7, 14, 21, 31 j, puis entretien tous les 90 j</div>
+
+    <div class="mode-toggle" id="modeToggle">
+      <button class="mode-btn" data-mode="r">Règles</button>
+      <button class="mode-btn" data-mode="i">Intrus</button>
+      <button class="mode-btn" data-mode="mgr">MGR : mot → genre → règle</button>
+      <button class="mode-btn" data-mode="mrg">MRG : mot → règle → genre</button>
+      <button class="mode-btn wide" data-mode="imp">Listes importées : mot → genre</button>
+    </div>
+    <div class="mode-desc" id="modeDesc"></div>
+
+    <div class="imp-panel" id="impPanel" style="display:none">
+      <div class="src-list" id="srcList"></div>
+      <button class="btn-sub wide" id="importListBtn" style="margin-bottom:0.9rem">Importer des listes (.txt)</button>
+    </div>
+
+    <table class="stats-table" id="statsTable"></table>
+
+    <label class="check-row" id="gramRow"><input type="checkbox" id="gramCheck"> Inclure les mots des grammaires (en plus de la liste B1)</label>
+
+    <div class="start-row">
+      <label class="limit-box"><span id="limitLabel">Cartes par séance</span>
+        <input type="number" id="limitInput" min="1" max="500" inputmode="numeric">
+      </label>
+    </div>
+    <div class="start-btns">
+      <button class="btn-main" id="reviewBtn">Réviser</button>
+      <button class="btn-main" id="newBtn">Nouveaux</button>
+    </div>
+    <button class="btn-sub wide" id="refBtn">Consulter les règles et chercher un mot</button>
+
+    <div class="section-title">Sauvegarde</div>
+    <div class="file-actions">
+      <button class="btn-sub" id="exportBtn">Exporter la sauvegarde</button>
+      <button class="btn-sub" id="importBtn">Importer une sauvegarde</button>
+      <button class="btn-sub wide" id="resetBtn">Réinitialiser la progression</button>
+    </div>
+    <div class="hint" id="hintData"></div>
+  </div>
+</div>
+
+<!-- ═══════════ SÉANCE ═══════════ -->
+<div class="screen card-screen" id="screenCard">
+  <div class="inner">
+    <div class="top-bar">
+      <button class="back-btn" id="backBtn">← Accueil</button>
+      <span class="session-label" id="sessionLabel"></span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+
+    <div id="cardArea">
+      <div class="card">
+        <div class="item-src" id="itemSrc"></div>
+        <div class="item-box" id="itemBox"></div>
+        <div class="item-prompt" id="itemPrompt"></div>
+        <div class="item-sub" id="itemSub"></div>
+        <div class="reveal" id="reveal"></div>
+      </div>
+      <div class="buttons" id="btnsGender" style="display:none"></div>
+      <div class="buttons combo" id="btnsCombo" style="display:none"></div>
+      <div class="opt-list" id="optList" style="display:none"></div>
+      <div class="buttons" id="btnsNext" style="display:none">
+        <button class="btn-main" id="nextBtn">Continuer<span class="kbd">Entrée</span></button>
+      </div>
+      <div class="stats" id="stats"></div>
+    </div>
+
+    <div class="done-box" id="doneBox" style="display:none">
+      <h2>✓ Séance terminée</h2>
+      <p id="doneSummary"></p>
+      <div class="wlist" id="doneDetail"></div>
+      <button class="btn-main" id="againBtn">Nouvelle séance</button><br>
+      <button class="back-btn" id="backBtn2">← Accueil</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-header">
+      <h3 id="modalTitle"></h3>
+      <button class="modal-close" id="modalClose" aria-label="Fermer">×</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<input type="file" id="saveInput" accept=".json,application/json" hidden>
+<input type="file" id="fileInput" accept=".txt,text/plain" multiple hidden>
+<div class="drop-overlay" id="dropOverlay">Déposez ici vos fichiers .txt<br>ou une sauvegarde .json</div>
+
+<script>
+'use strict';
+var DATA = {"fams":[["sens","Règles de sens"],["form","Préfixe Ge- et nominalisations"],["sufde","Suffixes allemands"],["sufem","Terminaisons d’emprunt"],["comp","Composés, abréviations, anglicismes"],["homo","Homonymes et double genre"]],"rules":[{"id":"temps","g":"der","f":"sens","l":"Mois, jours, saisons, moments de la journée","d":"Masculins par analogie avec der Monat et der Tag. Exception : die Nacht.","s":"Bescherelle § 220 ; L’allemand de A à Z § 105"},{"id":"card","g":"der","f":"sens","l":"Points cardinaux","d":"der Norden, der Süden, der Osten, der Westen.","s":"L’allemand de A à Z § 105"},{"id":"meteo","g":"der","f":"sens","l":"Phénomènes météorologiques","d":"der Regen, der Schnee, der Frost. Exceptions : das Eis, das Gewitter.","s":"L’allemand de A à Z § 105"},{"id":"pierre","g":"der","f":"sens","l":"Pierres et minéraux","d":"der Stein, der Sand. Exception : die Kohle.","s":"L’allemand de A à Z § 105"},{"id":"astre","g":"der","f":"sens","l":"Astres et planètes","d":"der Stern, der Mond. Exceptions : die Erde, die Sonne.","s":"L’allemand de A à Z § 105"},{"id":"monnaie","g":"der","f":"sens","l":"Monnaies","d":"der Euro, der Dollar. Exceptions : die Mark, die Lira, das Pfund.","s":"L’allemand de A à Z § 105"},{"id":"voiture","g":"der","f":"sens","l":"Marques de voitures","d":"Genre de der Wagen : der Opel, der Mercedes.","s":"Bescherelle § 220 ; L’allemand de A à Z § 105"},{"id":"boisson","g":"der","f":"sens","l":"Boissons alcoolisées et chaudes","d":"der Wein, der Tee, der Kakao. Exception : das Bier.","s":"Classement initial"},{"id":"persm","g":"der","f":"sens","l":"Êtres de sexe masculin","d":"Le genre naturel l’emporte : der Held, der Wirt. Le suffixe -i ne change pas le genre (der Vati).","s":"Bescherelle § 220, § 224"},{"id":"persf","g":"die","f":"sens","l":"Êtres de sexe féminin","d":"Le genre naturel l’emporte : die Frau, die Schwester. Exception : das Weib (et les diminutifs : das Mädchen).","s":"Bescherelle § 220, § 221"},{"id":"arbre","g":"die","f":"sens","l":"Arbres et fleurs","d":"die Eiche, die Tanne, die Rose. Exception : der Ahorn.","s":"L’allemand de A à Z § 105"},{"id":"avion","g":"die","f":"sens","l":"Avions, bateaux, motos","d":"Genre de die Maschine : die Boeing, die Concorde, die BMW. Exception : der Airbus (genre de der Bus).","s":"Bescherelle § 220 ; L’allemand de A à Z § 105"},{"id":"chiffre","g":"die","f":"sens","l":"Chiffres","d":"die Vier, die Null, die Hundert (le chiffre 100). À distinguer de das Hundert (la centaine).","s":"Bescherelle § 220 ; L’allemand de A à Z § 105"},{"id":"metal","g":"das","f":"sens","l":"Métaux, matériaux naturels, matières","d":"das Gold, das Holz, das Blei, das Gas. Exception : der Stahl.","s":"Bescherelle § 221 ; L’allemand de A à Z § 105"},{"id":"lettre","g":"das","f":"sens","l":"Lettres, couleurs, langues","d":"das A, das Rot, das Spanisch.","s":"L’allemand de A à Z § 105"},{"id":"quantite","g":"das","f":"sens","l":"Quantités et fractions en -tel","d":"das Hundert, das Tausend, das Drittel, das Viertel.","s":"Bescherelle § 220 ; L’allemand de A à Z § 105"},{"id":"animal","g":"das","f":"sens","l":"Terme générique d’espèce animale","d":"Le mot qui désigne l’espèce sans distinction de sexe est souvent neutre : das Pferd (der Hengst / die Stute), das Rind, das Schaf.","s":"Classement initial"},{"id":"sport","g":"das","f":"sens","l":"Noms de sports (hors composés en -ball) – tendance","d":"das Tennis, das Golf ; mais der Volleyball (composé de der Ball).","s":"Classement initial"},{"id":"pays","g":"das","f":"sens","l":"Noms de pays employés sans article","d":"Ils sont neutres : (das) Frankreich, das heutige Deutschland. Exceptions avec article : der Irak, der Libanon, der Sudan ; die Schweiz, die Türkei, die Pfalz ; pluriel : die USA. Quelques neutres prennent l’article : das Elsass, das Tessin.","s":"L’allemand de A à Z § 159"},{"id":"ge","g":"das","f":"form","l":"Préfixe Ge- (collectif ou activité)","d":"das Gebirge, das Geschrei, das Gelächter. Certains ont perdu le e : das Glück, das Gleis. Exceptions : der Geschmack, der Gedanke, der Geruch, der Gesang, der Gewinn ; die Gefahr, die Geduld, die Gebühr, die Gegend, die Gewalt, die Geburt.","s":"Bescherelle § 223, § 231 ; L’allemand de A à Z § 105"},{"id":"inf","g":"das","f":"form","l":"Infinitif ou autre mot substantivé","d":"Tout infinitif, pronom ou adverbe employé comme nom est neutre : das Lachen, das Ich, das Für und Wider, das Zuhause.","s":"Bescherelle § 226 ; L’allemand de A à Z § 105"},{"id":"adjchose","g":"das","f":"form","l":"Adjectif substantivé (chose, abstraction)","d":"das Schöne, das Grün, das Bekannte. Exceptions : der Ernst, der Stolz.","s":"Bescherelle § 227 ; L’allemand de A à Z § 105"},{"id":"adjpers","g":"derdie","f":"form","l":"Adjectif ou participe substantivé (personne)","d":"Genre selon le sexe : der/die Bekannte, der/die Vorsitzende.","s":"Bescherelle § 227-228"},{"id":"dev","g":"der","f":"form","l":"Radical verbal sans suffixe","d":"Souvent avec changement de voyelle : der Schluss (schließen), der Zug (ziehen). Exceptions : das Verbot, das Spiel, das Leid, das Versteck, das Schloss ; die Rückkehr, die Wahl, die Arbeit, die Furcht, die Scham.","s":"Bescherelle § 229 ; L’allemand de A à Z § 105"},{"id":"er","g":"der","f":"sufde","l":"-er, -ler, -ner (personne, appareil)","d":"der Bäcker, der Sportler, der Rentner, der Fernseher. Ne vaut pas pour les noms en -er non dérivés (die Mauer, das Fenster).","s":"Bescherelle § 230 ; L’allemand de A à Z § 105"},{"id":"ig","g":"der","f":"sufde","l":"-ig","d":"der Käfig, der Honig, der Essig.","s":"L’allemand de A à Z § 105"},{"id":"ich","g":"der","f":"sufde","l":"-ich","d":"der Teppich.","s":"L’allemand de A à Z § 105"},{"id":"ling","g":"der","f":"sufde","l":"-ling","d":"der Frühling, der Schmetterling, der Zwilling.","s":"Bescherelle § 224, § 232 ; L’allemand de A à Z § 105"},{"id":"ps","g":"der","f":"sufde","l":"-ps","d":"der Schlips.","s":"L’allemand de A à Z § 105"},{"id":"en","g":"der","f":"sufde","l":"-en (hors infinitifs) – tendance","d":"der Regen, der Wagen, der Kuchen. Exception : das Kissen. Les infinitifs substantivés (das Essen) sont neutres.","s":"Classement initial"},{"id":"el","g":"der","f":"sufde","l":"-el – tendance","d":"der Löffel, der Schlüssel, der Vogel. Nombreuses exceptions féminines (die Gabel, die Insel) et quelques neutres (das Kabel, das Mittel).","s":"Bescherelle § 232 ; classement initial"},{"id":"e","g":"die","f":"sufde","l":"-e","d":"die Freude, die Wärme, die Blume ; systématique pour les dérivés d’adjectifs (warm → die Wärme). Exceptions : les masculins faibles (der Affe, der Name, der Gedanke), der Käse, das Auge, das Interesse ; les collectifs en Ge-…-e sont neutres (das Gebirge).","s":"Bescherelle § 231 ; L’allemand de A à Z § 105"},{"id":"ei","g":"die","f":"sufde","l":"-ei","d":"die Bücherei, die Partei, die Metzgerei.","s":"Bescherelle § 231 ; L’allemand de A à Z § 105"},{"id":"in","g":"die","f":"sufde","l":"-in (féminin de personnes et d’animaux)","d":"die Freundin, die Lehrerin, die Hündin. Pluriel : -innen.","s":"Bescherelle § 224 ; L’allemand de A à Z § 105"},{"id":"heit","g":"die","f":"sufde","l":"-heit, -keit","d":"die Freiheit, die Höflichkeit.","s":"Bescherelle § 224, § 230 ; L’allemand de A à Z § 105"},{"id":"schaft","g":"die","f":"sufde","l":"-schaft","d":"die Freundschaft, die Mannschaft.","s":"Bescherelle § 224, § 231 ; L’allemand de A à Z § 105"},{"id":"ung","g":"die","f":"sufde","l":"-ung","d":"die Werbung, die Zeitung, die Heizung.","s":"Bescherelle § 224, § 230 ; L’allemand de A à Z § 105"},{"id":"t","g":"die","f":"sufde","l":"-t (dérivé de verbe)","d":"die Fahrt, die Sicht, die Schrift, die Zukunft, die Tat, die Flucht.","s":"Bescherelle § 230"},{"id":"dim","g":"das","f":"sufde","l":"Diminutifs","d":"-chen, -lein ; variantes régionales -li (CH), -l / -erl (A, Bavière) : das Mädchen, das Büchlein, das Brötli.","s":"Bescherelle § 224 ; L’allemand de A à Z § 105"},{"id":"tum","g":"das","f":"sufde","l":"-tum","d":"das Christentum, das Eigentum. Exceptions : der Irrtum, der Reichtum.","s":"Bescherelle § 224, § 230 ; L’allemand de A à Z § 105"},{"id":"nis","g":"das","f":"sufde","l":"-nis","d":"Majoritairement neutre : das Verhältnis, das Geheimnis. Féminins : die Erlaubnis, die Kenntnis.","s":"Bescherelle § 230"},{"id":"sal","g":"das","f":"sufde","l":"-sal, -sel","d":"das Schicksal, das Rätsel.","s":"Bescherelle § 232"},{"id":"and","g":"der","f":"sufem","l":"-and, -ant","d":"der Doktorand, der Praktikant, der Fabrikant.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ar_m","g":"der","f":"sufem","l":"-ar, -är (personnes)","d":"der Kommissar, der Sekretär, der Legionär. Exception : das Militär (l’armée).","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ast","g":"der","f":"sufem","l":"-ast","d":"der Gymnasiast.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"at_m","g":"der","f":"sufem","l":"-at (personnes)","d":"der Demokrat, der Soldat.","s":"Bescherelle § 233"},{"id":"eur","g":"der","f":"sufem","l":"-eur, -ör","d":"der Ingenieur, der Frisör.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ent","g":"der","f":"sufem","l":"-ent","d":"der Student, der Konkurrent, der Kontinent. Exception : das Talent. À distinguer de -ment (neutre).","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ier_m","g":"der","f":"sufem","l":"-ier (personnes)","d":"Prononcé [je] ou [iːɐ] : der Bankier, der Offizier.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"iker","g":"der","f":"sufem","l":"-iker","d":"der Politiker, der Mechaniker.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ismus","g":"der","f":"sufem","l":"-ismus","d":"der Tourismus, der Optimismus.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ist","g":"der","f":"sufem","l":"-ist","d":"der Idealist, der Jurist.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"log","g":"der","f":"sufem","l":"-log, -loge","d":"der Dialog, der Biologe.","s":"Bescherelle § 233"},{"id":"or","g":"der","f":"sufem","l":"-or","d":"der Motor, der Doktor, der Humor.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"us","g":"der","f":"sufem","l":"-us","d":"der Rhythmus, der Zirkus, der Virus (langage scientifique : das Virus).","s":"Bescherelle § 233"},{"id":"ade","g":"die","f":"sufem","l":"-ade","d":"die Marmelade, die Schokolade.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"age","g":"die","f":"sufem","l":"-age","d":"die Etage, die Reportage.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"anz","g":"die","f":"sufem","l":"-anz, -ance, -enz","d":"die Bilanz, die Nuance, die Tendenz, die Konferenz.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"tat","g":"die","f":"sufem","l":"-tät, -ät","d":"die Universität, die Qualität, die Diät.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ie","g":"die","f":"sufem","l":"-ie","d":"Prononcé [iː] ou [jə] : die Theorie, die Familie. Exception : das Genie.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ik","g":"die","f":"sufem","l":"-ik","d":"die Musik, die Politik, die Lyrik.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ion","g":"die","f":"sufem","l":"-ion","d":"die Nation, die Station. Exception : das Stadion.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ur","g":"die","f":"sufem","l":"-ur","d":"die Natur, die Kultur. Exception apparente : das Abitur (abrégé de das Abiturium).","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ose","g":"die","f":"sufem","l":"-ose","d":"die Tuberkulose, die Neurose.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"esse","g":"die","f":"sufem","l":"-esse, -isse, -ive, -ine","d":"die Delikatesse, die Kulisse, die Perspektive, die Margarine.","s":"Bescherelle § 233"},{"id":"ette","g":"die","f":"sufem","l":"-ette","d":"die Tablette, die Kassette.","s":"Bescherelle § 233"},{"id":"is","g":"die","f":"sufem","l":"-is (grec)","d":"die Basis, die Dosis, die Praxis.","s":"Bescherelle § 233"},{"id":"thek","g":"die","f":"sufem","l":"-thek","d":"die Bibliothek, die Diskothek.","s":"Classement initial"},{"id":"iz","g":"die","f":"sufem","l":"-iz","d":"die Notiz.","s":"Classement initial"},{"id":"a","g":"die","f":"sufem","l":"-a (latin)","d":"die Kamera, die Mensa, die Lava. Exception : das Sofa.","s":"Bescherelle § 220 ; classement initial"},{"id":"ness","g":"die","f":"sufem","l":"-ness","d":"die Fitness (équivalent de -heit).","s":"Classement initial"},{"id":"at","g":"das","f":"sufem","l":"-at (choses)","d":"das Inserat, das Plakat, das Zertifikat. Exceptions : der Apparat, der Automat, der Salat.","s":"Bescherelle § 233"},{"id":"ett","g":"das","f":"sufem","l":"-ett","d":"das Ballett, das Tablett, das Billett.","s":"Bescherelle § 233"},{"id":"inchim","g":"das","f":"sufem","l":"-in (chimie)","d":"das Benzin, das Vitamin.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"um","g":"das","f":"sufem","l":"-um, -ium","d":"das Zentrum, das Studium, das Museum. Exception : der Konsum.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"ment","g":"das","f":"sufem","l":"-ment","d":"Prononcé [mɛnt] ou [mɑ̃] : das Argument, das Engagement, das Appartement.","s":"Bescherelle § 233 ; L’allemand de A à Z § 105"},{"id":"o","g":"das","f":"sufem","l":"-o, -eau","d":"das Kino, das Radio, das Büro, das Niveau. Exception : der Kakao (boisson).","s":"Bescherelle § 220 ; L’allemand de A à Z § 105"},{"id":"on","g":"das","f":"sufem","l":"-on (grec), -phon/-fon, -skop","d":"das Lexikon, das Telefon, das Mikrofon, das Stethoskop.","s":"Bescherelle § 233 ; classement initial"},{"id":"ma","g":"das","f":"sufem","l":"-ma","d":"das Klima, das Thema.","s":"Classement initial"},{"id":"ar_n","g":"das","f":"sufem","l":"-ar (choses)","d":"das Formular, das Seminar. À distinguer de -ar (personnes, masculin).","s":"Classement initial"},{"id":"al","g":"das","f":"sufem","l":"-al","d":"das Lokal, das Material, das Original. Exceptions : der Kanal, der Karneval.","s":"Classement initial"},{"id":"ier_n","g":"das","f":"sufem","l":"-ier (choses)","d":"das Papier, das Klavier, das Quartier.","s":"Classement initial"},{"id":"sufn","g":"das","f":"sufem","l":"-ell, -em, -ol, -om, -ut, -gramm","d":"das Modell, das System, das Symbol, das Diplom, das Institut, das Programm. Exception : der Alkohol.","s":"Classement initial"},{"id":"fr","g":"das","f":"sufem","l":"Emprunt français sans terminaison féminine – tendance","d":"das Hotel, das Café, das Restaurant, das Dessert. Exceptions : der Salon, der Service, der Fauteuil, der Perron.","s":"Classement initial"},{"id":"comp","g":"*","f":"comp","l":"Mot composé : genre du dernier élément","d":"das Taschentuch (das Tuch), die Musikhochschule (die Schule).","s":"Bescherelle § 234-235 ; L’allemand de A à Z § 105"},{"id":"abr","g":"*","f":"comp","l":"Abréviation : genre du mot complet","d":"der Pkw (der Personenkraftwagen), der Krimi (der Kriminalroman), der Zoo (der zoologische Garten).","s":"Classement initial"},{"id":"angl","g":"*","f":"comp","l":"Anglicisme : genre de l’équivalent allemand – tendance","d":"das Smartphone (das Telefon), die Show (die Schau).","s":"Classement initial"},{"id":"angl1","g":"der","f":"comp","l":"Anglicisme d’une syllabe – tendance masculine","d":"der Job, der Hit, der Trend.","s":"Classement initial"},{"id":"ing","g":"das","f":"comp","l":"Anglicisme en -ing","d":"das Training.","s":"Classement initial"},{"id":"homo","g":"*","f":"homo","l":"Homonyme : le genre dépend du sens","d":"der See (lac) / die See (mer) ; der Leiter (directeur) / die Leiter (échelle).","s":"L’allemand de A à Z § 113"},{"id":"double","g":"*","f":"homo","l":"Double genre admis","d":"Variantes régionales ou usage hésitant : die SMS (D) / das SMS (A, CH).","s":"Classement initial"}],"words":[["die S-Bahn","S-Bahn","die","RER, train de banlieue","comp","","die Bahn (train ; voie)","L"],["der Ratschlag","Ratschlag","der","conseil","comp","","der Schlag (coup)","L"],["das Golf","Golf","das","golf (sport)","sport","angl","","L"],["der Volleyball","Volleyball","der","volley-ball","comp","","der Ball (ballon)","L"],["die Speise","Speise","die","plat, mets","e","","","L"],["das Abonnement","Abonnement","das","abonnement","ment","","","L"],["der Akku","Akku","der","batterie (rechargeable)","abr","","der Akkumulator (accumulateur)","L"],["der/die Auszubildende","Auszubildende","derdie","apprenti(e)","adjpers","","","L"],["die DVD","DVD","die","DVD","abr","","die Disc (disque)","L"],["das Obergeschoss","Obergeschoss","das","étage supérieur","comp","","das Geschoss (étage)","L"],["das Untergeschoss","Untergeschoss","das","sous-sol","comp","","das Geschoss (étage)","L"],["der ICE","ICE","der","train à grande vitesse allemand","abr","","der Intercity-Express (der Zug, le train)","L"],["das Kfz","Kfz","das","véhicule automobile (abréviation)","abr","","das Kraftfahrzeug (véhicule automobile)","L"],["das Kraftfahrzeug","Kraftfahrzeug","das","véhicule automobile","comp","","das Fahrzeug (véhicule)","L"],["der Lkw","Lkw","der","camion, poids lourd (abréviation)","abr","","der Lastkraftwagen (camion)","L"],["der Last(kraft)wagen","Last(kraft)wagen","der","camion, poids lourd","comp","en","der Wagen (voiture)","L"],["der PC","PC","der","ordinateur, PC","abr","","der Personal Computer (ordinateur personnel)","L"],["der Pkw","Pkw","der","voiture particulière (abréviation)","abr","","der Personenkraftwagen (voiture particulière)","L"],["der Personenkraftwagen","Personenkraftwagen","der","voiture particulière","comp","en","der Wagen (voiture)","L"],["das/die SMS","SMS","dasdie","SMS, texto","double","","die SMS (D), das SMS (A, CH)","L"],["das TV","TV","das","télé","abr","","das Fernsehen (télévision)","L"],["das WC","WC","das","toilettes, W.-C.","abr","","das Wasserklosett (cabinet à chasse d’eau)","L"],["der Babysitter","Babysitter","der","baby-sitter","persm","er,angl","","L"],["die Band","Band","die","groupe (de musique)","homo","angl","der Band = le volume ; das Band = le ruban","L"],["die Bar","Bar","die","bar","angl","","die Theke (comptoir)","L"],["der Bikini","Bikini","der","bikini","angl","","der Badeanzug (maillot de bain)","L"],["der Blog","Blog","der","blog","angl1","","« das Blog » existe aussi","L"],["das Camp","Camp","das","camp","angl","","das Lager (camp)","L"],["die Castingshow","Castingshow","die","émission de casting, télécrochet","comp","","die Show (spectacle)","L"],["der Chat(room)","Chat(room)","der","salon de discussion, chat","angl1","","room → der Raum (pièce, espace)","L"],["der Chip","Chip","der","puce (électronique) ; chips","angl1","","","L"],["der Club","Club","der","club","angl","","der Verein (association)","L"],["das/die Cola","Cola","dasdie","coca","double","","die Cola (Nord), das Cola (Sud, A, CH)","L"],["der/das Comic","Comic","derdas","bande dessinée","double","","les deux sont admis","L"],["der Computer","Computer","der","ordinateur","er","angl","to compute (calculer) + -er","L"],["das E-Bike","E-Bike","das","vélo électrique","angl","","das (Fahr)rad (vélo)","L"],["das E-Book","E-Book","das","livre numérique","angl","","das Buch (livre)","L"],["das Fax","Fax","das","fax","abr","","das Telefax (télécopie) / das Faksimile (fac-similé)","L"],["das Festival","Festival","das","festival","angl","","das Fest (fête)","L"],["die Fitness","Fitness","die","forme physique, fitness","ness","angl","","L"],["der Hamburger","Hamburger","der","hamburger","angl","er","","L"],["der Hit","Hit","der","tube, succès","angl1","","der Schlager (tube, succès)","L"],["das Internet","Internet","das","Internet","angl","","das Netz (réseau)","L"],["der Jazz","Jazz","der","jazz","angl1","","","L"],["der Job","Job","der","job, boulot","angl1","","","L"],["der/das Ketchup","Ketchup","derdas","ketchup","double","","les deux sont admis","L"],["der Laptop","Laptop","der","ordinateur portable","angl","","der Computer (ordinateur)","L"],["das/die E-Mail","E-Mail","dasdie","e-mail, courriel","double","","die E-Mail (D), das E-Mail (A, CH)","L"],["das Mountainbike","Mountainbike","das","VTT","angl","","das (Fahr)rad (vélo)","L"],["das Poster","Poster","das","poster","angl","","das Plakat (affiche)","L"],["das Puzzle","Puzzle","das","puzzle","angl","","das Spiel (jeu)","L"],["der/das Sandwich","Sandwich","derdas","sandwich","double","","les deux sont admis","L"],["die Show","Show","die","spectacle, show","angl","","die Schau (exposition, spectacle)","L"],["das Smartphone","Smartphone","das","smartphone","angl","","das Telefon (téléphone)","L"],["der Snack","Snack","der","en-cas, snack","angl","","der Imbiss (en-cas)","L"],["die Software","Software","die","logiciel","angl","","die Ware (marchandise)","L"],["der Song","Song","der","chanson","angl1","","","L"],["der Spot","Spot","der","spot (publicitaire)","angl1","","","L"],["das Steak","Steak","das","steak","none","","","L"],["der Swimmingpool","Swimmingpool","der","piscine","angl1","","","L"],["das Taxi","Taxi","das","taxi","none","","","L"],["das Team","Team","das","équipe","none","","","L"],["der Terminal","Terminal","der","terminal","angl","","der Terminal (aéroport) ; das Terminal (informatique)","L"],["die Tour","Tour","die","excursion, circuit, tour","angl","","die Fahrt (trajet), die Reise (voyage)","L"],["der Trend","Trend","der","tendance","angl1","","","L"],["das T-Shirt","T-Shirt","das","tee-shirt","angl","","das Hemd (chemise)","L"],["das Hilfsmittel","Hilfsmittel","das","moyen, aide, outil","comp","el!","das Mittel (moyen, remède)","L"],["das Modul","Modul","das","module","none","","das Modul (technique) ; der Modul (mathématiques)","L"],["die Struktur","Struktur","die","structure","ur","","","L"],["das Gymnasium","Gymnasium","das","lycée","um","","","L"],["die Spielgruppe (CH)","Spielgruppe (CH)","die","groupe de jeu (préscolaire)","comp","e","die Gruppe (groupe)","L"],["der Norden","Norden","der","nord","card","en","","L"],["der Osten","Osten","der","est","card","en","","L"],["der Süden","Süden","der","sud","card","en","","L"],["der Westen","Westen","der","ouest","card","en","","L"],["das Parlament","Parlament","das","parlement","ment","","","L"],["der Ammann (CH)","Ammann (CH)","der","président de commune ou de canton","persm","comp","Amt (fonction) + Mann (homme)","L"],["der Kanton (CH)","Kanton (CH)","der","canton","none","","","L"],["der Affe","Affe","der","singe","e!","","masculin faible","L"],["die Ente","Ente","die","canard","e","","","L"],["der Hase","Hase","der","lièvre","e!","","masculin faible","L"],["das Insekt","Insekt","das","insecte","animal","","terme générique","L"],["das Krokodil","Krokodil","das","crocodile","none","","","L"],["die Maus","Maus","die","souris","none","","","L"],["das Pferd","Pferd","das","cheval","animal","","der Hengst (étalon) / die Stute (jument)","L"],["das Schaf","Schaf","das","mouton","animal","","der Bock (bélier) / das Mutterschaf (brebis)","L"],["das Schwein","Schwein","das","cochon, porc","animal","","der Eber (verrat) / die Sau (truie)","L"],["der Vogel","Vogel","der","oiseau","el","","","L"],["die Million","Million","die","million","ion","","","L"],["die Milliarde","Milliarde","die","milliard","e","","","L"],["der Frühling","Frühling","der","printemps","temps","ling","","L"],["der Sommer","Sommer","der","été","temps","","","L"],["der Herbst","Herbst","der","automne","temps","","","L"],["der Winter","Winter","der","hiver","temps","","","L"],["der Januar (D, CH)","Januar (D, CH)","der","janvier","temps","","","L"],["der Jänner (A)","Jänner (A)","der","janvier","temps","","","L"],["der Februar (D, CH)","Februar (D, CH)","der","février","temps","","","L"],["der Feber (A)","Feber (A)","der","février","temps","","","L"],["der März","März","der","mars","temps","","","L"],["der April","April","der","avril","temps","","","L"],["der Mai","Mai","der","mai","temps","","","L"],["der Juni","Juni","der","juin","temps","","","L"],["der Juli","Juli","der","juillet","temps","","","L"],["der August","August","der","août","temps","","","L"],["der September","September","der","septembre","temps","","","L"],["der Oktober","Oktober","der","octobre","temps","","","L"],["die Früh (A)","Früh (A)","die","matin","temps!","","matin","L"],["das Jahrzehnt","Jahrzehnt","das","décennie","comp","","analogie avec -hundert, -tausend","L"],["das Jahrhundert","Jahrhundert","das","siècle","comp","","das Hundert (centaine)","L"],["das Jahrtausend","Jahrtausend","das","millénaire","comp","","das Tausend (millier)","L"],["das Abenteuer","Abenteuer","das","aventure","none","","","L"],["das Abitur","Abitur","das","baccalauréat","ur!","um","abrégé de das Abiturium (-um)","L"],["der Abschluss","Abschluss","der","fin, conclusion ; diplôme","dev","","abschließen (conclure ; fermer à clé)","L"],["der Abschnitt","Abschnitt","der","passage, section","dev","","abschneiden (couper, découper)","L"],["die Absicht","Absicht","die","intention","t","","","L"],["der Abwart","Abwart","der","concierge (CH)","persm","","concierge (CH)","L"],["der Alkohol","Alkohol","der","alcool","boisson","sufn!","","L"],["das Alphabet","Alphabet","das","alphabet","none","","","L"],["das Alter","Alter","das","âge ; vieillesse","none","","","L"],["das Altenheim","Altenheim","das","maison de retraite","comp","","das Heim (foyer)","L"],["das Altersheim","Altersheim","das","maison de retraite","comp","","das Heim (foyer)","L"],["die Ampel","Ampel","die","feu (de circulation)","el!","","","L"],["das Amt","Amt","das","service administratif, office ; fonction","none","","","L"],["das Angebot","Angebot","das","offre","ge","dev!","an + das Gebot (commandement)","L"],["die Angst","Angst","die","peur","none","","","L"],["die Annonce","Annonce","die","annonce","e","","","L"],["die Anrede","Anrede","die","formule d’appel","e","","","L"],["der Anschluss","Anschluss","der","raccordement ; correspondance (train)","dev","","anschließen (raccorder, brancher)","L"],["der Anspruch","Anspruch","der","droit, prétention ; exigence","dev","","ansprechen (adresser la parole ; revendiquer)","L"],["der Anzug","Anzug","der","costume (d’homme)","dev","","anziehen (habiller, mettre)","L"],["das Apartment","Apartment","das","studio, petit appartement","ment","","","L"],["die Arbeitserlaubnis","Arbeitserlaubnis","die","permis de travail","comp","nis!","die Erlaubnis (permission)","L"],["der Arbeitsplatz","Arbeitsplatz","der","poste de travail, emploi","comp","","der Platz (place)","L"],["der Ärger","Ärger","der","contrariété, ennuis","dev","","ärgern (contrarier)","L"],["der Arm","Arm","der","bras","none","","","L"],["die Art","Art","die","sorte, espèce ; manière","none","","","L"],["das Asyl","Asyl","das","asile","none","","","L"],["der Atem","Atem","der","souffle, haleine","none","","","L"],["der Aufenthalt","Aufenthalt","der","séjour","dev","","aufhalten (sich ~ : séjourner)","L"],["der Auftritt","Auftritt","der","entrée en scène, apparition","dev","","auftreten (entrer en scène)","L"],["das Auge","Auge","das","œil","e!","","","L"],["der Ausdruck","Ausdruck","der","expression ; impression (papier)","dev","","ausdrücken (exprimer)","L"],["die Aussicht","Aussicht","die","vue ; perspective","t","","","L"],["die Auswahl","Auswahl","die","choix, sélection","dev!","","auswählen (choisir) ; cf. die Wahl (choix)","L"],["der Ausweis","Ausweis","der","pièce d’identité","dev","","ausweisen (sich ~ : justifier de son identité)","L"],["das Bad","Bad","das","bain ; salle de bains","none","","","L"],["die Bahn","Bahn","die","train ; voie","none","","","L"],["die Straßenbahn","Straßenbahn","die","tramway","comp","","die Bahn (train ; voie)","L"],["die U-Bahn","U-Bahn","die","métro","comp","","die Bahn (train ; voie)","L"],["der Bahnsteig (D, A)","Bahnsteig (D, A)","der","quai (de gare)","comp","","der Steig (sentier)","L"],["das Ballett","Ballett","das","ballet","ett","","","L"],["die Bank","Bank","die","banque ; banc","none","","","L"],["der Bancomat/Bankomat","Bancomat/Bankomat","der","distributeur de billets","comp","","der Automat (distributeur automatique)","L"],["die Bankleitzahl","Bankleitzahl","die","code banque","comp","","die Zahl (nombre)","L"],["der Bauch","Bauch","der","ventre","none","","","L"],["der Bau","Bau","der","construction ; chantier","dev","","bauen (construire)","L"],["der Baum","Baum","der","arbre","none","","","L"],["der Bedarf","Bedarf","der","besoin","dev","","bedürfen (avoir besoin de)","L"],["die Behörde","Behörde","die","administration, autorité","e","","","L"],["das Bein","Bein","das","jambe","none","","","L"],["der/die Bekannte","Bekannte","derdie","connaissance (personne)","adjpers","","","L"],["das Benzin","Benzin","das","essence","inchim","","","L"],["der Bescheid","Bescheid","der","réponse, avis (officiel)","dev","","bescheiden (informer, notifier)","L"],["der Besuch","Besuch","der","visite","dev","","besuchen (rendre visite)","L"],["der Betrieb","Betrieb","der","entreprise ; activité, animation","dev","","betreiben (exploiter, pratiquer)","L"],["der Beweis","Beweis","der","preuve","dev","","beweisen (prouver)","L"],["die Bibliothek","Bibliothek","die","bibliothèque","thek","","","L"],["das Billett","Billett","das","billet (CH)","ett","","","L"],["das Blatt","Blatt","das","feuille","none","","","L"],["der Blick","Blick","der","regard ; vue","dev","","blicken (regarder)","L"],["der Blitz","Blitz","der","éclair","meteo","","","L"],["die Blume","Blume","die","fleur","e","","","L"],["die Bluse","Bluse","die","chemisier","e","","","L"],["das Blut","Blut","das","sang","none","","","L"],["das Boot","Boot","das","bateau, barque","none","","","L"],["der Braten","Braten","der","rôti","en","","","L"],["die Bremse","Bremse","die","frein","e","","","L"],["der Brief","Brief","der","lettre","none","","","L"],["der Briefkasten","Briefkasten","der","boîte aux lettres","comp","en","der Kasten (caisse, boîte)","L"],["die Briefmarke","Briefmarke","die","timbre","comp","e","die Marke (marque ; timbre)","L"],["der Briefumschlag","Briefumschlag","der","enveloppe","comp","","der Umschlag (enveloppe)","L"],["das Brötli (CH)","Brötli (CH)","das","petit pain","dim","","","L"],["die Brust","Brust","die","poitrine","none","","","L"],["der Buchstabe","Buchstabe","der","lettre (de l’alphabet)","e!","","masculin faible","L"],["die Büchse (D, CH)","Büchse (D, CH)","die","boîte (de conserve)","e","","","L"],["das Buffet","Buffet","das","buffet","fr","","","L"],["die Burg","Burg","die","château fort","none","","","L"],["das Café","Café","das","café (établissement)","fr","","","L"],["die Couch","Couch","die","canapé","angl","","die Liege (chaise longue)","L"],["die Creme","Creme","die","crème","e","","","L"],["das Couvert (CH)","Couvert (CH)","das","enveloppe","fr","","","L"],["das Dach","Dach","das","toit","none","","","L"],["der Gedanke","Gedanke","der","pensée, idée","e!","ge!","masculin faible","L"],["das Denkmal","Denkmal","das","monument","comp","","das Mal (marque, signe)","L"],["das Dessert","Dessert","das","dessert","fr","","","L"],["das Detail","Detail","das","détail","fr","","","L"],["der Dialog","Dialog","der","dialogue","log","","","L"],["das Diplom","Diplom","das","diplôme","sufn","","","L"],["die Diskothek","Diskothek","die","discothèque","thek","","","L"],["die Distanz","Distanz","die","distance","anz","","","L"],["das Dokument","Dokument","das","document","ment","","","L"],["das Dorf","Dorf","das","village","none","","","L"],["der Dreck","Dreck","der","saleté, crasse","none","","","L"],["der Durchschnitt","Durchschnitt","der","moyenne","dev","","durchschneiden (couper en deux)","L"],["der Durst","Durst","der","soif","none","","","L"],["das Eck (A)","Eck (A)","das","coin","none","","(D : die Ecke, le coin)","L"],["die Ehe","Ehe","die","mariage (union)","e","","","L"],["das Ehepaar","Ehepaar","das","couple marié","comp","","das Paar (couple)","L"],["das Ei","Ei","das","œuf","none","","","L"],["der Eindruck","Eindruck","der","impression","dev","","eindrücken (imprimer, enfoncer)","L"],["die Einfahrt","Einfahrt","die","entrée (pour véhicules)","t","","","L"],["der Einfall","Einfall","der","idée (soudaine)","dev","","einfallen (venir à l’esprit)","L"],["der Einfluss","Einfluss","der","influence","dev","","einfließen (affluer, s’écouler dans)","L"],["der Eingang","Eingang","der","entrée","dev","","eingehen (entrer, arriver)","L"],["der Einkauf","Einkauf","der","achat, course","dev","","einkaufen (faire des achats)","L"],["das Einkommen","Einkommen","das","revenu","inf","","einkommen (rentrer [argent], sens ancien)","L"],["die Einnahme","Einnahme","die","recette ; prise (d’un médicament)","e","","","L"],["das Eis","Eis","das","glace","meteo!","","","L"],["die Eisenbahn","Eisenbahn","die","chemin de fer","comp","","die Bahn (train ; voie)","L"],["das Erdgeschoss/Erdgeschoß","Erdgeschoss/Erdgeschoß","das","rez-de-chaussée","comp","","das Geschoss (étage)","L"],["die Erlaubnis","Erlaubnis","die","permission, autorisation","nis!","","féminin malgré -nis","L"],["der Essig","Essig","der","vinaigre","ig","","","L"],["der Export","Export","der","exportation","none","","cf. der Import (importation), der Transport (transport)","L"],["die Fabrik","Fabrik","die","usine","ik","","","L"],["das Fach","Fach","das","matière (scolaire) ; compartiment","none","","","L"],["die Fähre","Fähre","die","ferry, bac","e","","","L"],["die Fahrbahn","Fahrbahn","die","chaussée","comp","","die Bahn (train ; voie)","L"],["das Fahrrad","Fahrrad","das","vélo","comp","","das Rad (roue ; vélo)","L"],["das Fahrzeug","Fahrzeug","das","véhicule","comp","","das Zeug (affaires, matériel)","L"],["der Fall","Fall","der","cas ; chute","dev","","fallen (tomber)","L"],["der Familienstand (D, A)","Familienstand (D, A)","der","situation de famille","comp","","der Stand (état, situation ; stand)","L"],["das Faschierte (A)","Faschierte (A)","das","viande hachée","adjchose","e!","participe substantivé","L"],["die Fasnacht (CH)","Fasnacht (CH)","die","carnaval","comp","","die Nacht (nuit)","L"],["der Fauteuil (A, CH)","Fauteuil (A, CH)","der","fauteuil","fr!","","","L"],["der Fehler","Fehler","der","faute, erreur","er","","fehlen (manquer) + -er","L"],["die Feier","Feier","die","fête, célébration","none","","","L"],["das Fernsehen","Fernsehen","das","télévision","inf","","fernsehen (regarder la télévision)","L"],["der Fernseher","Fernseher","der","téléviseur","er","","fernsehen (regarder la télévision) + -er","L"],["das Fest","Fest","das","fête","none","","","L"],["das Feuer","Feuer","das","feu","none","","","L"],["das Feuerzeug","Feuerzeug","das","briquet","comp","","das Zeug (affaires, matériel)","L"],["die Feuerwehr","Feuerwehr","die","pompiers","comp","","die Wehr (défense)","L"],["das Fieber","Fieber","das","fièvre","none","","","L"],["der Film","Film","der","film","angl1","","","L"],["der Fleck","Fleck","der","tache","none","","","L"],["das Fleisch","Fleisch","das","viande","none","","","L"],["die Flucht","Flucht","die","fuite","t","","fliehen (fuir)","L"],["das Flugzeug","Flugzeug","das","avion","comp","","das Zeug (affaires, matériel)","L"],["der Fluss","Fluss","der","fleuve, rivière","dev","","fließen (couler)","L"],["die Form","Form","die","forme","none","","","L"],["das Formular","Formular","das","formulaire","ar_n","","","L"],["der Fortschritt","Fortschritt","der","progrès","dev","","fortschreiten (progresser)","L"],["das Foto","Foto","das","photo","o","","","L"],["der Fotoapparat","Fotoapparat","der","appareil photo","comp","","der Apparat (appareil)","L"],["die Freude","Freude","die","joie","e","","","L"],["der Friede","Friede","der","paix","e!","","masculin faible","L"],["die Frist","Frist","die","délai","none","","","L"],["die Frucht","Frucht","die","fruit","none","","","L"],["der Führerausweis (CH)","Führerausweis (CH)","der","permis de conduire","comp","","der Ausweis (pièce d’identité)","L"],["der Führerschein (D, A)","Führerschein (D, A)","der","permis de conduire","comp","","der Schein (certificat ; billet)","L"],["die Gabel","Gabel","die","fourchette","el!","","","L"],["das Gas","Gas","das","gaz","metal","","","L"],["die Gaststätte (D)","Gaststätte (D)","die","restaurant, auberge","comp","e","die Stätte (lieu)","L"],["die Gebühr","Gebühr","die","taxe, frais","ge!","","","L"],["die Geburt","Geburt","die","naissance","t","ge!","gebären (mettre au monde)","L"],["das Gedicht","Gedicht","das","poème","ge","","","L"],["die Geduld","Geduld","die","patience","ge!","","","L"],["die Gefahr","Gefahr","die","danger","ge!","","","L"],["das Gefängnis","Gefängnis","das","prison","ge","nis","","L"],["die Gegend","Gegend","die","région, environs","ge!","","","L"],["der Gegensatz","Gegensatz","der","contraste, opposition","comp","","der Satz (phrase)","L"],["der Gegenstand","Gegenstand","der","objet","comp","","der Stand (état, situation ; stand)","L"],["das Gegenteil","Gegenteil","das","contraire","comp","","das Teil (pièce, élément)","L"],["das Geheimnis","Geheimnis","das","secret","ge","nis","","L"],["der Gehsteig (D, A)","Gehsteig (D, A)","der","trottoir","comp","","der Steig (sentier)","L"],["das Gepäck","Gepäck","das","bagages","ge","","","L"],["das Gericht","Gericht","das","tribunal ; plat (cuisine)","ge","","","L"],["das Geschenk","Geschenk","das","cadeau","ge","","","L"],["der Geschmack","Geschmack","der","goût","ge!","","","L"],["das Getränk","Getränk","das","boisson","ge","","","L"],["die Gewalt","Gewalt","die","violence ; pouvoir","ge!","","","L"],["der Gewinn","Gewinn","der","gain, bénéfice","ge!","","déverbal : gewinnen (gagner)","L"],["das Gewissen","Gewissen","das","conscience","ge","","","L"],["das Gewitter","Gewitter","das","orage","ge","meteo!","","L"],["das Gewürz","Gewürz","das","épice","ge","","","L"],["das Gift","Gift","das","poison","none","","","L"],["das/die Glace/Glacé","Glace/Glacé","dasdie","glace (CH)","double","","les deux sont usités (CH)","L"],["das Glas","Glas","das","verre","none","","","L"],["das Gleis","Gleis","das","voie (ferrée)","ge","","forme contractée de das Geleise (voie ferrée)","L"],["das Glück","Glück","das","chance ; bonheur","ge","","du moyen-haut-allemand gelücke","L"],["der Glückwunsch","Glückwunsch","der","félicitations","comp","","der Wunsch (souhait)","L"],["die Grafik","Grafik","die","graphique","ik","","","L"],["das Grundstück","Grundstück","das","terrain","comp","","das Stück (morceau)","L"],["die Gruppe","Gruppe","die","groupe","e","","","L"],["der Gruß","Gruß","der","salutation","dev","","grüßen (saluer)","L"],["die Gymnastik","Gymnastik","die","gymnastique","ik","","","L"],["das Haar","Haar","das","cheveu","none","","","L"],["das Hallenbad","Hallenbad","das","piscine couverte","comp","","das Bad (bain)","L"],["der Hals","Hals","der","cou ; gorge","none","","","L"],["der Halt","Halt","der","arrêt ; appui","dev","","halten (tenir ; s’arrêter)","L"],["der Hammer","Hammer","der","marteau","none","","","L"],["die Hand","Hand","die","main","none","","","L"],["der Handel","Handel","der","commerce","dev","el","handeln (faire du commerce ; agir)","L"],["das Handy","Handy","das","téléphone portable","angl","","das Telefon (téléphone)","L"],["der Haushalt","Haushalt","der","ménage ; budget","comp","","der Halt (arrêt ; appui)","L"],["die Haut","Haut","die","peau","none","","","L"],["das Heim","Heim","das","foyer, maison","none","","","L"],["die Heimat","Heimat","die","pays natal, patrie","none","","","L"],["das Heimweh","Heimweh","das","mal du pays","comp","","das Weh (mal, douleur)","L"],["die Heizung","Heizung","die","chauffage","ung","","","L"],["der Held","Held","der","héros","persm","","","L"],["das Hemd","Hemd","das","chemise","none","","","L"],["das Hend(e)l (A)","Hend(e)l (A)","das","poulet","dim","","","L"],["der Herd","Herd","der","cuisinière","none","","","L"],["der Hinweis","Hinweis","der","indication, remarque","dev","","hinweisen (indiquer, signaler)","L"],["das Hobby","Hobby","das","loisir, hobby","none","","","L"],["der Hof","Hof","der","cour ; ferme","none","","","L"],["der Bauernhof","Bauernhof","der","ferme","comp","","der Hof (cour ; ferme)","L"],["der Honig","Honig","der","miel","ig","","","L"],["das Hotel","Hotel","das","hôtel","fr","","","L"],["der Hügel","Hügel","der","colline","el","","","L"],["der Humor","Humor","der","humour","or","","","L"],["der Hunger","Hunger","der","faim","none","","","L"],["der Husten","Husten","der","toux","en","","","L"],["der Hut","Hut","der","chapeau","none","","","L"],["der Import","Import","der","importation","none","","cf. der Export (exportation), der Transport (transport)","L"],["der Inhalt","Inhalt","der","contenu","dev","","cf. enthalten (contenir), halten (tenir)","L"],["die Insel","Insel","die","île","el!","","","L"],["das Inserat","Inserat","das","petite annonce","at","","","L"],["das Institut","Institut","das","institut","sufn","","","L"],["das Instrument","Instrument","das","instrument","ment","","","L"],["das Interesse","Interesse","das","intérêt","e!","","","L"],["das Interview","Interview","das","interview","none","","","L"],["die Jause (A)","Jause (A)","die","collation, goûter","e","","","L"],["die Jugend","Jugend","die","jeunesse","none","","","L"],["die Jugendherberge","Jugendherberge","die","auberge de jeunesse","comp","e","die Herberge (auberge)","L"],["das Kabel","Kabel","das","câble","el!","","","L"],["der Kakao","Kakao","der","cacao, chocolat chaud","boisson","o!","","L"],["der Kalender","Kalender","der","calendrier","none","","","L"],["die Kälte","Kälte","die","froid","e","","dérivé de kalt (froid)","L"],["die Kamera","Kamera","die","caméra ; appareil photo","a","","","L"],["der Kampf","Kampf","der","combat, lutte","dev","","kämpfen (combattre)","L"],["der Kanal","Kanal","der","canal ; chaîne","al!","","","L"],["das Kapitel","Kapitel","das","chapitre","el!","","","L"],["der Karneval (D)","Karneval (D)","der","carnaval","al!","","","L"],["die Karriere","Karriere","die","carrière","e","","","L"],["die Kartoffel","Kartoffel","die","pomme de terre","el!","","","L"],["der Käse","Käse","der","fromage","e!","","","L"],["die Kassette","Kassette","die","cassette","ette","e","","L"],["der Kasten (D)","Kasten (D)","der","caisse ; casier","en","","","L"],["der Keller","Keller","der","cave","none","","","L"],["das Kino","Kino","das","cinéma","o","","","L"],["das Kissen","Kissen","das","coussin, oreiller","en!","","","L"],["die Klasse","Klasse","die","classe","e","","","L"],["die Klassenarbeit (D)","Klassenarbeit (D)","die","devoir sur table, interrogation écrite","comp","","die Arbeit (travail)","L"],["das Klavier","Klavier","das","piano","ier_n","","","L"],["das Kleid","Kleid","das","robe","none","","","L"],["die Kleidung","Kleidung","die","vêtements","ung","","","L"],["der Klick","Klick","der","clic","dev","","klicken (cliquer)","L"],["das Klima","Klima","das","climat","ma","","","L"],["die Klimaanlage","Klimaanlage","die","climatisation","comp","e","die Anlage (installation)","L"],["die Klingel","Klingel","die","sonnette","el!","","","L"],["die Klinik","Klinik","die","clinique","ik","","","L"],["der Kloß (D)","Kloß (D)","der","boulette, quenelle","none","","","L"],["die Kneipe (D)","Kneipe (D)","die","bistrot","e","","","L"],["das Knie","Knie","das","genou","none","","","L"],["der Knochen","Knochen","der","os","en","","","L"],["der Knopf","Knopf","der","bouton","none","","","L"],["der Koffer","Koffer","der","valise","none","","","L"],["die Konferenz","Konferenz","die","conférence","anz","","","L"],["der Konflikt","Konflikt","der","conflit","none","","","L"],["die Konkurrenz","Konkurrenz","die","concurrence","anz","","","L"],["das Konsulat","Konsulat","das","consulat","at","","","L"],["der Konsum","Konsum","der","consommation","um!","","","L"],["das Konzert","Konzert","das","concert","none","","","L"],["der Körper","Körper","der","corps","none","","","L"],["das Kostüm","Kostüm","das","tailleur ; déguisement","fr","","","L"],["die Kraft","Kraft","die","force","none","","","L"],["das Kraftwerk","Kraftwerk","das","centrale électrique","comp","","das Werk (œuvre ; usine)","L"],["der Krankenwagen","Krankenwagen","der","ambulance","comp","en","der Wagen (voiture)","L"],["der Kreis","Kreis","der","cercle ; arrondissement","none","","","L"],["das Kreuz","Kreuz","das","croix","none","","","L"],["der Krieg","Krieg","der","guerre","none","","","L"],["der Krimi","Krimi","der","polar","abr","","der Kriminalroman (roman policier) / -film (film policier)","L"],["die Kritik","Kritik","die","critique","ik","","","L"],["der Kuchen","Kuchen","der","gâteau","en","","","L"],["der Kühlschrank","Kühlschrank","der","réfrigérateur","comp","","der Schrank (armoire)","L"],["die Kultur","Kultur","die","culture","ur","","","L"],["die Kunst","Kunst","die","art","none","","","L"],["der Kurs","Kurs","der","cours ; cours (de change)","none","","","L"],["die Kurve","Kurve","die","virage ; courbe","e","","","L"],["das Kuvert (A)","Kuvert (A)","das","enveloppe","fr","","","L"],["das Lager","Lager","das","entrepôt ; camp","none","","","L"],["der Lärm","Lärm","der","bruit","none","","","L"],["das Laufwerk","Laufwerk","das","lecteur (informatique)","comp","","das Werk (œuvre ; usine)","L"],["die Leiter","Leiter","die","échelle","homo","","der Leiter = le directeur","L"],["das Lexikon","Lexikon","das","encyclopédie","on","","","L"],["das Licht","Licht","das","lumière","none","","","L"],["der Lift","Lift","der","ascenseur","angl","","der Aufzug (ascenseur)","L"],["die Literatur","Literatur","die","littérature","ur","","","L"],["der Löffel","Löffel","der","cuillère","el","","","L"],["der Lohn","Lohn","der","salaire","none","","","L"],["das Lokal","Lokal","das","bistrot, restaurant","al","","","L"],["die Luft","Luft","die","air","none","","","L"],["die Lust","Lust","die","envie","none","","","L"],["das Magazin","Magazin","das","magazine","none","","","L"],["der Magen","Magen","der","estomac","en","","","L"],["der Mangel","Mangel","der","manque, pénurie","el","","","L"],["die Marille (A)","Marille (A)","die","abricot","e","","","L"],["die Marmelade (D, A)","Marmelade (D, A)","die","confiture","ade","e","","L"],["das Material","Material","das","matériau, matériel","al","","","L"],["die Matura (A, CH)","Matura (A, CH)","die","baccalauréat","a","","","L"],["die Mauer","Mauer","die","mur","none","","","L"],["das Medikament","Medikament","das","médicament","ment","","","L"],["die Mehrwertsteuer","Mehrwertsteuer","die","TVA","comp","","die Steuer (impôt)","L"],["die Mensa","Mensa","die","restaurant universitaire","a","","","L"],["das Messer","Messer","das","couteau","none","","","L"],["die Milch","Milch","die","lait","none","","","L"],["das Mitglied","Mitglied","das","membre","comp","","das Glied (membre ; < mhd. gelit, forme en Ge-)","L"],["das Mittel","Mittel","das","moyen ; remède","el!","","","L"],["das Möbel","Möbel","das","meuble","el!","","","L"],["das Mobiltelefon","Mobiltelefon","das","téléphone portable","comp","","das Telefon (téléphone)","L"],["das Modell","Modell","das","modèle","sufn","","","L"],["der Monitor","Monitor","der","écran","or","","","L"],["der Motor","Motor","der","moteur","or","","","L"],["das Motorrad","Motorrad","das","moto","comp","","das Rad (roue ; vélo)","L"],["der Müll","Müll","der","ordures, déchets","none","","","L"],["die Müllabfuhr","Müllabfuhr","die","ramassage des ordures","comp","","die Abfuhr (enlèvement)","L"],["der Mund","Mund","der","bouche","none","","","L"],["die Musik","Musik","die","musique","ik","","","L"],["der Muskel","Muskel","der","muscle","el","","","L"],["das Müesli/Müsli","Müesli/Müsli","das","muesli","dim","","","L"],["der Mut","Mut","der","courage","none","","","L"],["die Nachricht","Nachricht","die","nouvelle, message","none","","","L"],["der Nachteil","Nachteil","der","inconvénient","comp","","der Teil (partie)","L"],["der Nachwuchs","Nachwuchs","der","progéniture ; relève","dev","","nachwachsen (repousser, grandir après)","L"],["die Nadel","Nadel","die","aiguille","el!","","","L"],["das Nahrungsmittel","Nahrungsmittel","das","aliment","comp","el!","das Mittel (moyen, remède)","L"],["der Name","Name","der","nom","e!","","masculin faible","L"],["der Familienname","Familienname","der","nom de famille","comp","e!","der Name (nom)","L"],["der Vorname","Vorname","der","prénom","comp","e!","der Name (nom)","L"],["der Nebel","Nebel","der","brouillard","meteo","el","","L"],["der Nerv","Nerv","der","nerf","none","","","L"],["das Netz","Netz","das","filet ; réseau","none","","","L"],["das Netzwerk","Netzwerk","das","réseau","comp","","das Werk (œuvre ; usine)","L"],["der Notausgang","Notausgang","der","sortie de secours","comp","","der Ausgang (sortie)","L"],["die Notiz","Notiz","die","note","iz","","","L"],["die Nudel","Nudel","die","pâte (alimentaire), nouille","el!","","","L"],["die Nummer","Nummer","die","numéro","none","","","L"],["der Ober (D, A)","Ober (D, A)","der","serveur","persm","","","L"],["das Obst (D, A)","Obst (D, A)","das","fruits","none","","","L"],["das Ohr","Ohr","das","oreille","none","","","L"],["die Oper","Oper","die","opéra","none","","","L"],["das Opfer","Opfer","das","victime ; sacrifice","none","","","L"],["das Orchester","Orchester","das","orchestre","none","","","L"],["das Original","Original","das","original","al","","","L"],["der Ozean","Ozean","der","océan","none","","","L"],["das Paar","Paar","das","couple, paire","none","","","L"],["das Paket","Paket","das","colis, paquet","fr","","","L"],["das Papier","Papier","das","papier","ier_n","","","L"],["der Paradeiser (A)","Paradeiser (A)","der","tomate","comp","","abrégé de der Paradeisapfel (pomme du paradis) → der Apfel (pomme)","L"],["das Parfüm","Parfüm","das","parfum","fr","","","L"],["der Park","Park","der","parc","none","","","L"],["die Party","Party","die","fête, soirée","angl","","die Feier (fête, célébration), die Fete (fête)","L"],["der Pass","Pass","der","passeport ; col (de montagne)","none","","","L"],["das Pech","Pech","das","malchance","none","","","L"],["der Perron (CH)","Perron (CH)","der","quai (de gare)","fr!","","","L"],["die Person","Person","die","personne","none","","","L"],["der Personenstand","Personenstand","der","état civil","comp","","der Stand (état, situation ; stand)","L"],["das Personal","Personal","das","personnel","al","","","L"],["der Pfeffer","Pfeffer","der","poivre","none","","","L"],["das Pflaster","Pflaster","das","pansement ; pavé","none","","","L"],["die Pflicht","Pflicht","die","devoir, obligation","t","","apparenté à pflegen (soigner, entretenir)","L"],["das Picknick","Picknick","das","pique-nique","none","","","L"],["der Pilz","Pilz","der","champignon","none","","","L"],["das Plakat","Plakat","das","affiche","at","","","L"],["das Plastik","Plastik","das","plastique","metal","","die Plastik = sculpture","L"],["der Platz","Platz","der","place","none","","","L"],["die Politik","Politik","die","politique","ik","","","L"],["das Portemonnaie/Portmonee","Portemonnaie/Portmonee","das","porte-monnaie","fr","","","L"],["die Post","Post","die","poste ; courrier","none","","","L"],["die Postleitzahl","Postleitzahl","die","code postal","comp","","die Zahl (nombre)","L"],["der Pöstler","Pöstler","der","facteur (CH)","persm","er","facteur (CH)","L"],["das Poulet (CH)","Poulet (CH)","das","poulet","fr","","","L"],["die Praxis","Praxis","die","cabinet (médical) ; pratique","is","","","L"],["der Preis","Preis","der","prix","none","","","L"],["das Produkt","Produkt","das","produit","none","","","L"],["das Programm","Programm","das","programme","sufn","","","L"],["der Prospekt","Prospekt","der","prospectus, dépliant","none","","","L"],["der Protest","Protest","der","protestation","none","","","L"],["der Prozess","Prozess","der","procès ; processus","none","","","L"],["der Pullover","Pullover","der","pull","angl","er","","L"],["das Quartier (CH)","Quartier (CH)","das","quartier","ier_n","","","L"],["das Quiz","Quiz","das","quiz","none","","","L"],["der Rabatt","Rabatt","der","remise, rabais","none","","","L"],["das Rad","Rad","das","roue ; vélo","none","","","L"],["das Radio","Radio","das","radio","o","","","L"],["der Rand","Rand","der","bord","none","","","L"],["der Rasen","Rasen","der","pelouse, gazon","en","","","L"],["der Rat","Rat","der","conseil","dev","","raten (conseiller ; deviner)","L"],["das Rätsel","Rätsel","das","énigme, devinette","sal","el!","","L"],["der Raum","Raum","der","pièce, espace","none","","","L"],["das Recht","Recht","das","droit","none","","","L"],["das Referat","Referat","das","exposé","at","","","L"],["die Reform","Reform","die","réforme","none","","cf. die Form (forme)","L"],["das Regal","Regal","das","étagère","al","","","L"],["die Regel","Regel","die","règle","el!","","","L"],["der Regen","Regen","der","pluie","meteo","en","","L"],["der Reifen","Reifen","der","pneu","en","","","L"],["die Reihenfolge","Reihenfolge","die","ordre (de succession)","comp","e","die Folge (suite, conséquence)","L"],["der Reis","Reis","der","riz","none","","","L"],["der Rekord","Rekord","der","record","none","","","L"],["die Reportage","Reportage","die","reportage","age","e","","L"],["der Respekt","Respekt","der","respect","none","","","L"],["der Rest","Rest","der","reste","none","","","L"],["das Restaurant","Restaurant","das","restaurant","fr","","","L"],["das Rezept","Rezept","das","recette ; ordonnance","none","","","L"],["das Rind","Rind","das","bœuf","animal","","der Stier (taureau) / die Kuh (vache)","L"],["der Ring","Ring","der","bague, anneau","none","","","L"],["das Risiko","Risiko","das","risque","o","","","L"],["der Rock","Rock","der","jupe ; rock","none","","","L"],["die Rolle","Rolle","die","rôle ; rouleau","e","","","L"],["der Roman","Roman","der","roman","none","","","L"],["die Rose","Rose","die","rose","arbre","e","","L"],["die Rückfahrt","Rückfahrt","die","trajet retour","comp","","die Fahrt (trajet)","L"],["die Rückkehr","Rückkehr","die","retour","dev!","","zurückkehren (revenir)","L"],["der Rücken","Rücken","der","dos","en","","","L"],["die Rücksicht","Rücksicht","die","égards","comp","","die Sicht (vue, visibilité)","L"],["das Rüebli (CH)","Rüebli (CH)","das","carotte","dim","","","L"],["die Rufnummer","Rufnummer","die","numéro de téléphone","comp","","die Nummer (numéro)","L"],["die Ruhe","Ruhe","die","calme, repos","e","","","L"],["die Runde","Runde","die","tour, tournée","e","","","L"],["die Rundfahrt","Rundfahrt","die","circuit, tour (en véhicule)","comp","","die Fahrt (trajet)","L"],["der Saal","Saal","der","salle","none","","","L"],["die Saison","Saison","die","saison","none","","","L"],["der Salon","Salon","der","salon","fr!","","","L"],["das Salz","Salz","das","sel","none","","","L"],["der Sand","Sand","der","sable","pierre","","","L"],["der Satz","Satz","der","phrase","dev","","setzen (poser, placer)","L"],["die Schachtel","Schachtel","die","boîte","el!","","","L"],["der Schaden","Schaden","der","dommage, dégât","en","","","L"],["der Schalter","Schalter","der","guichet ; interrupteur","er","","schalten (commuter, enclencher) + -er","L"],["der Schatten","Schatten","der","ombre","en","","","L"],["die Scheidung","Scheidung","die","divorce","ung","","","L"],["der Schein","Schein","der","billet (de banque) ; certificat ; apparence","dev","","scheinen (paraître ; briller)","L"],["das Schiff","Schiff","das","bateau, navire","none","","","L"],["das Schild","Schild","das","panneau, plaque","homo","","der Schild = le bouclier","L"],["der Schinken","Schinken","der","jambon","en","","","L"],["der Schirm","Schirm","der","parapluie","none","","","L"],["das Schloss","Schloss","das","château ; serrure","dev!","homo","schließen (fermer)","L"],["der Schluss","Schluss","der","fin","dev","","schließen (fermer)","L"],["der Schlüssel","Schlüssel","der","clé","el","","","L"],["der Schmerz","Schmerz","der","douleur","none","","","L"],["das Schmerzmittel","Schmerzmittel","das","analgésique","comp","el!","das Mittel (moyen, remède)","L"],["der Schmuck","Schmuck","der","bijoux","dev","","schmücken (orner, décorer)","L"],["der Schmutz","Schmutz","der","saleté","none","","","L"],["der Schnee","Schnee","der","neige","meteo","","","L"],["das Schnitzel","Schnitzel","das","escalope","dim","el!","ancien diminutif de der Schnitz (tranche, quartier)","L"],["der Schnupfen","Schnupfen","der","rhume","en","","","L"],["die Schokolade","Schokolade","die","chocolat","ade","e","","L"],["der Schrank (D, CH)","Schrank (D, CH)","der","armoire","none","","","L"],["der Schreck(en)","Schreck(en)","der","frayeur, peur","dev","","schrecken (effrayer)","L"],["das Schreiben","Schreiben","das","lettre, courrier","inf","","schreiben (écrire)","L"],["die Schrift","Schrift","die","écriture","t","","schreiben (écrire)","L"],["der Schritt","Schritt","der","pas","dev","","schreiten (marcher à grands pas)","L"],["der Schuh","Schuh","der","chaussure","none","","","L"],["die Schuld","Schuld","die","faute, culpabilité ; dette","none","","","L"],["die Schulter","Schulter","die","épaule","none","","","L"],["die Schüssel","Schüssel","die","saladier, bol","el!","","","L"],["das Schwammerl (A)","Schwammerl (A)","das","champignon","dim","","","L"],["die Schwester","Schwester","die","sœur ; infirmière","persf","","","L"],["das Schwimmbad","Schwimmbad","das","piscine","comp","","das Bad (bain)","L"],["der See (lac)","See (lac)","der","lac","homo","","die See = la mer","L"],["die See (mer)","See (mer)","die","mer","homo","","der See = le lac","L"],["die Nordsee","Nordsee","die","mer du Nord","comp","","die See (mer)","L"],["die Ostsee","Ostsee","die","mer Baltique","comp","","die See (mer)","L"],["die Seife","Seife","die","savon","e","","","L"],["das Semester","Semester","das","semestre","none","","","L"],["das Seminar","Seminar","das","séminaire","ar_n","","","L"],["die Semmel (A)","Semmel (A)","die","petit pain","el!","","","L"],["der Service","Service","der","service","fr!","","(A, CH : das Service = service de table)","L"],["der Sessel (D, CH)","Sessel (D, CH)","der","fauteuil","el","","","L"],["der Sinn","Sinn","der","sens","none","","","L"],["der Sitz","Sitz","der","siège","dev","","sitzen (être assis)","L"],["der Ski/Schi","Ski/Schi","der","ski","none","","","L"],["die Socke","Socke","die","chaussette","e","","","L"],["das Sofa","Sofa","das","canapé","a!","","","L"],["das Sonderangebot","Sonderangebot","das","offre spéciale, promotion","comp","","das Angebot (offre)","L"],["das Souvenir","Souvenir","das","souvenir (objet)","fr","","","L"],["der Spaß","Spaß","der","plaisir, amusement","none","","","L"],["der Spaziergang","Spaziergang","der","promenade","comp","","der Gang (marche ; couloir)","L"],["der Speisewagen","Speisewagen","der","wagon-restaurant","comp","en","der Wagen (voiture)","L"],["das Spiel","Spiel","das","jeu ; match","dev!","","spielen (jouer)","L"],["der Spielplatz","Spielplatz","der","aire de jeux","comp","","der Platz (place)","L"],["die Sportart","Sportart","die","discipline sportive","comp","","die Art (sorte, espèce)","L"],["die Spur","Spur","die","trace ; voie","none","","","L"],["das Stadion","Stadion","das","stade","ion!","on","","L"],["die Stadt","Stadt","die","ville","none","","","L"],["der Star","Star","der","star, vedette","angl1","","","L"],["die Station","Station","die","station ; arrêt","ion","","","L"],["die Statistik","Statistik","die","statistique","ik","","","L"],["der Stau","Stau","der","embouteillage","dev","","stauen (endiguer, accumuler)","L"],["der Staub","Staub","der","poussière","none","","","L"],["der Stein","Stein","der","pierre","pierre","","","L"],["der Stempel","Stempel","der","tampon","el","","","L"],["der Stern","Stern","der","étoile","astre","","","L"],["die Steuer","Steuer","die","impôt","homo","","das Steuer = le volant","L"],["der Stiefel","Stiefel","der","botte","el","","","L"],["die Stiege (A)","Stiege (A)","die","escalier","e","","","L"],["das Stockwerk","Stockwerk","das","étage","comp","","das Werk (œuvre ; usine)","L"],["der Strafzettel","Strafzettel","der","contravention, PV","comp","el","der Zettel (bout de papier, fiche)","L"],["der Strand","Strand","der","plage","none","","","L"],["das Streichholz","Streichholz","das","allumette","comp","","das Holz (bois)","L"],["der Streik","Streik","der","grève","angl1","","","L"],["der Streit","Streit","der","dispute","dev","","streiten (se disputer)","L"],["der Stress","Stress","der","stress","angl1","","","L"],["der Strumpf","Strumpf","der","bas, chaussette","none","","","L"],["das Stück","Stück","das","morceau ; pièce (de théâtre)","none","","","L"],["das Studio","Studio","das","studio","o","","","L"],["die Stufe","Stufe","die","marche ; niveau","e","","","L"],["das Suchtmittel","Suchtmittel","das","stupéfiant, drogue","comp","el!","das Mittel (moyen, remède)","L"],["das Symbol","Symbol","das","symbole","sufn","","","L"],["das System","System","das","système","sufn","","","L"],["die Tafel","Tafel","die","tableau ; tablette (de chocolat)","el!","","","L"],["der Tagesablauf","Tagesablauf","der","déroulement de la journée","comp","","der Ablauf (déroulement)","L"],["das Tal","Tal","das","vallée","none","","","L"],["das Talent","Talent","das","talent","ent!","","","L"],["der Tanz","Tanz","der","danse","dev","","tanzen (danser)","L"],["das Taschengeld","Taschengeld","das","argent de poche","comp","","das Geld (argent)","L"],["das Taschentuch","Taschentuch","das","mouchoir","comp","","das Tuch (tissu, linge)","L"],["die Tastatur","Tastatur","die","clavier","ur","","","L"],["die Tat","Tat","die","acte, action","t","","tun (faire)","L"],["die Technik","Technik","die","technique","ik","","","L"],["der Tee","Tee","der","thé","boisson","","","L"],["das Teil (pièce, élément)","Teil (pièce, élément)","das","pièce, élément","homo","","der Teil = la partie","L"],["der Teil (partie)","Teil (partie)","der","partie","homo","","das Teil = la pièce","L"],["das Telefon","Telefon","das","téléphone","on","","","L"],["der Teller","Teller","der","assiette","none","","","L"],["die Temperatur","Temperatur","die","température","ur","","","L"],["das Tempo","Tempo","das","vitesse, allure","o","","","L"],["das Tennis","Tennis","das","tennis","sport","","","L"],["der Teppich","Teppich","der","tapis","ich","","","L"],["der Terminkalender","Terminkalender","der","agenda","comp","","der Kalender (calendrier)","L"],["der Test","Test","der","test","angl1","","","L"],["der Text","Text","der","texte","none","","","L"],["das Theater","Theater","das","théâtre","none","","","L"],["das Ticket","Ticket","das","billet, ticket","none","","","L"],["das Tier","Tier","das","animal","animal","","terme générique","L"],["das Haustier","Haustier","das","animal domestique","comp","","das Tier (animal)","L"],["der Tierpark","Tierpark","der","parc zoologique","comp","","der Park (parc)","L"],["der Tipp","Tipp","der","conseil, tuyau","none","","","L"],["das Tor","Tor","das","portail ; but","homo","","der Tor = le fou","L"],["der/die Tote","Tote","derdie","mort(e)","adjpers","","","L"],["der Tourismus","Tourismus","der","tourisme","ismus","","","L"],["das Training","Training","das","entraînement","ing","","","L"],["das Tram","Tram","das","tramway (CH)","none","","(D : die Tram, le tramway)","L"],["die Träne","Träne","die","larme","e","","","L"],["der Transport","Transport","der","transport","none","","cf. der Export (exportation), der Import (importation)","L"],["das Trinkgeld","Trinkgeld","das","pourboire","comp","","das Geld (argent)","L"],["das Tuch","Tuch","das","tissu ; foulard","none","","","L"],["die Überschrift","Überschrift","die","titre","t","","überschreiben (intituler)","L"],["das Ufer","Ufer","das","rive","none","","","L"],["der Umtausch","Umtausch","der","échange","dev","","umtauschen (échanger)","L"],["die Umwelt","Umwelt","die","environnement","comp","","die Welt (monde)","L"],["der Umweltschutz","Umweltschutz","der","protection de l’environnement","comp","","der Schutz (protection)","L"],["der Unfall","Unfall","der","accident","comp","","Un- + der Fall (cas, chute)","L"],["das Unglück","Unglück","das","malheur ; accident","comp","","Un- + das Glück (bonheur, chance)","L"],["die Uniform","Uniform","die","uniforme","comp","","die Form (forme)","L"],["die Unterkunft","Unterkunft","die","hébergement, logement","t","","","L"],["der Unterricht","Unterricht","der","cours, enseignement","dev","","unterrichten (enseigner)","L"],["der Unterschied","Unterschied","der","différence","dev","","unterscheiden (distinguer)","L"],["die Unterschrift","Unterschrift","die","signature","t","","unterschreiben (signer)","L"],["die Urkunde","Urkunde","die","certificat, acte","e","","","L"],["der Urlaub (D, A)","Urlaub (D, A)","der","vacances, congé","none","","","L"],["das Urteil","Urteil","das","jugement","none","","","L"],["die Vase","Vase","die","vase","e","","","L"],["das Velo (CH)","Velo (CH)","das","vélo","o","","","L"],["der Abschied","Abschied","der","adieu, départ","dev","","abscheiden (partir, sens ancien)","L"],["das Verbot","Verbot","das","interdiction","dev!","","verbieten (interdire)","L"],["der Verdacht","Verdacht","der","soupçon","dev","","verdenken (soupçonner, sens ancien)","L"],["der Verein","Verein","der","association, club","dev","","vereinen (réunir)","L"],["der Vergleich","Vergleich","der","comparaison","dev","","vergleichen (comparer)","L"],["das Vergnügen","Vergnügen","das","plaisir","inf","","vergnügen (sich ~ : s’amuser)","L"],["das Verhalten","Verhalten","das","comportement","inf","","verhalten (sich ~ : se comporter)","L"],["das Verhältnis","Verhältnis","das","rapport, relation","nis","","","L"],["der Verkehr","Verkehr","der","circulation","dev","","verkehren (circuler ; fréquenter)","L"],["das Verkehrsmittel","Verkehrsmittel","das","moyen de transport","comp","el!","das Mittel (moyen, remède)","L"],["der Verlag","Verlag","der","maison d’édition","dev","","verlegen (éditer, publier)","L"],["der Verlust","Verlust","der","perte","dev","","verlieren (perdre)","L"],["das Verständnis","Verständnis","das","compréhension","nis","","","L"],["der Versuch","Versuch","der","essai, tentative","dev","","versuchen (essayer)","L"],["das Vertrauen","Vertrauen","das","confiance","inf","","vertrauen (faire confiance)","L"],["das Video","Video","das","vidéo","o","","","L"],["das Viertel (D, A)","Viertel (D, A)","das","quart ; quartier","quantite","el!","","L"],["der Virus","Virus","der","virus","us","","","L"],["das Visum","Visum","das","visa","um","","","L"],["das Vitamin","Vitamin","das","vitamine","inchim","","","L"],["die Vorfahrt","Vorfahrt","die","priorité (circulation)","t","","","L"],["der Vorschlag","Vorschlag","der","proposition","dev","","vorschlagen (proposer)","L"],["die Vorschrift","Vorschrift","die","règlement, prescription","t","","vorschreiben (prescrire)","L"],["die Vorsicht","Vorsicht","die","prudence","t","","","L"],["das Vorstellungsgespräch","Vorstellungsgespräch","das","entretien d’embauche","comp","","das Gespräch (conversation)","L"],["der Vorteil","Vorteil","der","avantage","comp","","der Teil (partie)","L"],["die Vorwahl","Vorwahl","die","indicatif (téléphonique)","dev!","","vorwählen (composer l’indicatif) ; cf. die Wahl (choix)","L"],["der Vorwurf","Vorwurf","der","reproche","dev","","vorwerfen (reprocher)","L"],["der Wagen","Wagen","der","voiture ; wagon","en","","","L"],["die Wahl","Wahl","die","choix ; élection","dev!","","wählen (choisir ; élire)","L"],["der Wald","Wald","der","forêt","none","","","L"],["die Wand","Wand","die","mur, paroi","none","","","L"],["das Waschmittel","Waschmittel","das","lessive","comp","el!","das Mittel (moyen, remède)","L"],["der Wein","Wein","der","vin","boisson","","","L"],["das Werk","Werk","das","œuvre ; usine","none","","","L"],["die Werkstatt","Werkstatt","die","atelier, garage","comp","","die Statt (lieu, sens ancien)","L"],["das Werkzeug","Werkzeug","das","outil","comp","","das Zeug (affaires, matériel)","L"],["der Wert","Wert","der","valeur","none","","","L"],["der Wettbewerb","Wettbewerb","der","concours ; concurrence","dev","","bewerben (sich ~ : concourir, postuler)","L"],["der Wirt","Wirt","der","patron de restaurant, aubergiste","persm","","","L"],["der Witz","Witz","der","blague","none","","","L"],["die Wolke","Wolke","die","nuage","e","","","L"],["die Wolle","Wolle","die","laine","e","","","L"],["das Wunder","Wunder","das","miracle","none","","","L"],["der Wunsch","Wunsch","der","souhait, vœu","dev","","wünschen (souhaiter)","L"],["die Wurst","Wurst","die","saucisse","none","","","L"],["die Zahl","Zahl","die","nombre, chiffre","none","","","L"],["die Anzahl","Anzahl","die","nombre, quantité","comp","","die Zahl (nombre)","L"],["der Zahn","Zahn","der","dent","none","","","L"],["die Zahncreme/Zahnpasta","Zahncreme/Zahnpasta","die","dentifrice","comp","e","die Creme (crème) / die Pasta (pâte)","L"],["die Zeitschrift","Zeitschrift","die","revue, magazine","comp","","die Schrift (écriture)","L"],["das Zelt","Zelt","das","tente","none","","","L"],["das Zentrum","Zentrum","das","centre","um","","","L"],["das Zertifikat","Zertifikat","das","certificat","at","","","L"],["der Zettel","Zettel","der","bout de papier, fiche","el","","","L"],["das Zeug","Zeug","das","trucs, affaires","none","","","L"],["der Zirkus","Zirkus","der","cirque","us","","","L"],["der Zivilstand (CH)","Zivilstand (CH)","der","état civil","comp","","der Stand (état, situation ; stand)","L"],["der Zoll","Zoll","der","douane","none","","","L"],["der Zoo","Zoo","der","zoo","abr","o!","der zoologische Garten (jardin zoologique)","L"],["der Zucker","Zucker","der","sucre","none","","","L"],["der Zufall","Zufall","der","hasard","dev","","zufallen (échoir)","L"],["der Zugang","Zugang","der","accès","dev","","zugehen (se diriger vers)","L"],["das Zuhause","Zuhause","das","chez-soi","inf","e!","adverbe substantivé","L"],["die Zukunft","Zukunft","die","avenir","t","","","L"],["das Zündholz","Zündholz","das","allumette","comp","","das Holz (bois)","L"],["der Zusammenhang","Zusammenhang","der","contexte, rapport","dev","","zusammenhängen (être lié)","L"],["der Zustand","Zustand","der","état","dev","","zustehen (revenir de droit)","L"],["der/das Zvieri/Znüni","Zvieri/Znüni","derdas","goûter, collation (CH)","double","","les deux sont usités (CH)","L"],["der Zweck","Zweck","der","but","none","","","L"],["der Zweifel","Zweifel","der","doute","el","","","L"],["die Zwiebel","Zwiebel","die","oignon","el!","","","L"],["das Rundfunkgerät","Rundfunkgerät","das","appareil de radio","comp","","das Gerät (appareil)","B"],["die Musikhochschule","Musikhochschule","die","école supérieure de musique","comp","e","die Schule (école)","B"],["der Biss","Biss","der","morsure","dev","","beißen (mordre)","B"],["der Gang","Gang","der","démarche ; couloir","dev","","gehen (aller)","B"],["der Schlag","Schlag","der","coup","dev","","schlagen (battre, frapper)","B"],["der Sprung","Sprung","der","saut","dev","","springen (sauter)","B"],["der Wurf","Wurf","der","jet, lancer","dev","","werfen (jeter, lancer)","B"],["der Zug","Zug","der","train","dev","","ziehen (tirer)","B"],["das Gebirge","Gebirge","das","chaîne de montagnes","ge","e!","","B"],["das Gestirn","Gestirn","das","astre, constellation","ge","","","B"],["das Geschwätz","Geschwätz","das","bavardage","ge","","schwatzen (bavarder)","B"],["das Geschrei","Geschrei","das","cris","ge","","schreien (crier)","B"],["das Gelächter","Gelächter","das","rires","ge","","lachen (rire)","B"],["der Gesang","Gesang","der","chant","ge!","dev","singen (chanter)","B"],["der Bäcker","Bäcker","der","boulanger","er","","backen (cuire au four)","B"],["der Sportler","Sportler","der","sportif","er","","","B"],["der Käfig","Käfig","der","cage","ig","","","B"],["der Schmetterling","Schmetterling","der","papillon","ling","","","B"],["der Schlips","Schlips","der","cravate","ps","","","B"],["der Doktorand","Doktorand","der","doctorant","and","","","B"],["der Fabrikant","Fabrikant","der","fabricant","and","","","B"],["der Legionär","Legionär","der","légionnaire","ar_m","","","B"],["der Gymnasiast","Gymnasiast","der","lycéen","ast","","","B"],["der Ingenieur","Ingenieur","der","ingénieur","eur","","","B"],["der Student","Student","der","étudiant","ent","","","B"],["der Bankier","Bankier","der","banquier","ier_m","","prononcé [je]","B"],["der Offizier","Offizier","der","officier","ier_m","","prononcé [iːɐ]","B"],["der Mechaniker","Mechaniker","der","mécanicien","iker","","","B"],["der Kapitalismus","Kapitalismus","der","capitalisme","ismus","","","B"],["der Jurist","Jurist","der","juriste","ist","","","B"],["der Katalysator","Katalysator","der","catalyseur","or","","","B"],["die Güte","Güte","die","bonté","e","","dérivé de gut (bon)","B"],["die Bücherei","Bücherei","die","bibliothèque de prêt","ei","","","B"],["die Freundin","Freundin","die","amie","in","","","B"],["die Freiheit","Freiheit","die","liberté","heit","","","B"],["die Höflichkeit","Höflichkeit","die","politesse","heit","","","B"],["die Freundschaft","Freundschaft","die","amitié","schaft","","","B"],["die Werbung","Werbung","die","publicité","ung","","","B"],["die Etage","Etage","die","étage","age","e","","B"],["die Bilanz","Bilanz","die","bilan","anz","","","B"],["die Kastanie","Kastanie","die","châtaigne","ie","","prononcé [jə]","B"],["die Theorie","Theorie","die","théorie","ie","","prononcé [iː]","B"],["das Genie","Genie","das","génie","ie!","","","B"],["die Nation","Nation","die","nation","ion","","","B"],["die Qualität","Qualität","die","qualité","tat","","","B"],["die Natur","Natur","die","nature","ur","","","B"],["die Tuberkulose","Tuberkulose","die","tuberculose","ose","e","","B"],["das Mädchen","Mädchen","das","jeune fille","dim","","","B"],["das Fräulein","Fräulein","das","demoiselle","dim","","","B"],["das Drittel","Drittel","das","tiers","quantite","el!","","B"],["das Christentum","Christentum","das","christianisme","tum","","","B"],["der Irrtum","Irrtum","der","erreur","tum!","","","B"],["der Reichtum","Reichtum","der","richesse","tum!","","","B"],["das Niveau","Niveau","das","niveau","o","","","B"],["das Büro","Büro","das","bureau","o","","","B"],["das Datum","Datum","das","date","um","","","B"],["das Argument","Argument","das","argument","ment","","","B"],["das Appartement","Appartement","das","appartement","ment","","prononcé à la française","B"],["das Museum","Museum","das","musée","um","","","B"],["das Studium","Studium","das","études","um","","","B"],["das Lachen","Lachen","das","rire","inf","","","B"],["das Schöne","Schöne","das","le beau","adjchose","e!","","B"],["der Sonntag","Sonntag","der","dimanche","temps","","","B"],["der Frost","Frost","der","gel","meteo","","","B"],["die Kohle","Kohle","die","charbon","pierre!","e","","B"],["der Mond","Mond","der","lune","astre","","","B"],["die Erde","Erde","die","terre","astre!","e","","B"],["die Sonne","Sonne","die","soleil","astre!","e","","B"],["der Euro","Euro","der","euro","monnaie","","","B"],["der Franc","Franc","der","franc","monnaie","","","B"],["der Dollar","Dollar","der","dollar","monnaie","","","B"],["die Mark","Mark","die","mark (monnaie)","monnaie!","homo","","B"],["die Lira","Lira","die","lire (monnaie)","monnaie!","a","","B"],["das Pfund","Pfund","das","livre (monnaie, poids)","monnaie!","","","B"],["der Opel","Opel","der","Opel (voiture)","voiture","","","B"],["der Renault","Renault","der","Renault (voiture)","voiture","","","B"],["der Mercedes","Mercedes","der","Mercedes (voiture)","voiture","","","B"],["die Eiche","Eiche","die","chêne","arbre","e","","B"],["die Tanne","Tanne","die","sapin","arbre","e","","B"],["der Ahorn","Ahorn","der","érable","arbre!","","","B"],["die Concorde","Concorde","die","Concorde (avion)","avion","","","B"],["die France","France","die","France (paquebot)","avion","","","B"],["die BMW","BMW","die","BMW (moto)","avion","","","B"],["die Vier","Vier","die","le chiffre 4","chiffre","","","B"],["die Null","Null","die","zéro","chiffre","","","B"],["das Gold","Gold","das","or (métal)","metal","","","B"],["das Holz","Holz","das","bois","metal","","","B"],["das A","A","das","la lettre A","lettre","","","B"],["das Rot","Rot","das","rouge","lettre","","","B"],["das Spanisch","Spanisch","das","espagnol (langue)","lettre","","","B"],["der Band","Band","der","volume (livre)","homo","","","B"],["das Band","Band","das","ruban","homo","","","B"],["der Erbe","Erbe","der","héritier","homo","e!","","B"],["das Erbe","Erbe","das","héritage","homo","e!","","B"],["der Gehalt","Gehalt","der","contenance, teneur","homo","","","B"],["das Gehalt","Gehalt","das","salaire, traitement","homo","","","B"],["der Junge","Junge","der","jeune garçon","homo","e!","","B"],["das Junge","Junge","das","petit (d’un animal)","homo","adjchose,e!","","B"],["der Heide","Heide","der","païen","homo","e!","","B"],["die Heide","Heide","die","lande","homo","e","","B"],["der Kaffee","Kaffee","der","café (boisson)","boisson","homo","(das Café = l’établissement)","B"],["der Kiefer","Kiefer","der","mâchoire","homo","","","B"],["die Kiefer","Kiefer","die","pin","homo","arbre","","B"],["der Leiter","Leiter","der","directeur","homo","er","leiten (diriger) + -er","B"],["das Mark","Mark","das","moelle","homo","","","B"],["der Militär","Militär","der","militaire (soldat)","homo","ar_m","","B"],["das Militär","Militär","das","armée","ar_m!","homo","","B"],["der Schild","Schild","der","bouclier","homo","","","B"],["das Steuer","Steuer","das","volant","homo","","","B"],["der Stift","Stift","der","crayon","homo","","","B"],["das Stift","Stift","das","hospice ; fondation","homo","","","B"],["der Tau","Tau","der","rosée","homo","meteo","","B"],["das Tau","Tau","das","corde (marine)","homo","","","B"],["die Taube","Taube","die","pigeon","homo","e","","B"],["der Tor","Tor","der","fou, sot","homo","","","B"],["der Verdienst","Verdienst","der","gain","homo","dev","","B"],["das Verdienst","Verdienst","das","mérite","homo","","","B"],["der Weise","Weise","der","sage (personne)","homo","e!","","B"],["die Weise","Weise","die","manière ; mélodie","homo","e","","B"],["(das) Frankreich","Frankreich","das","France","pays","","","B"],["(das) Deutschland","Deutschland","das","Allemagne","pays","","","B"],["(das) Hessen","Hessen","das","Hesse","pays","","","B"],["(das) Afrika","Afrika","das","Afrique","pays","","","B"],["der Sudan","Sudan","der","Soudan","pays!","","","B"],["der Libanon","Libanon","der","Liban","pays!","","","B"],["der Irak","Irak","der","Irak","pays!","","","B"],["das Baltikum","Baltikum","das","pays Baltes","pays","","prend l’article","B"],["das Elsass","Elsass","das","Alsace","pays","","prend l’article","B"],["das Tessin","Tessin","das","Tessin","pays","","prend l’article","B"],["die Pfalz","Pfalz","die","Palatinat","pays!","","","B"],["die Schweiz","Schweiz","die","Suisse","pays!","","","B"],["die Türkei","Türkei","die","Turquie","pays!","ei","","B"],["die Sowjetunion","Sowjetunion","die","Union soviétique (hist.)","pays!","comp","","B"],["die Europäische Union","Europäische Union","die","Union européenne","pays!","","","B"],["der Lautsprecher","Lautsprecher","der","haut-parleur","comp","er","der Sprecher (orateur, porte-parole)","A"],["das Ich","Ich","das","le moi","inf","","","A"],["das Alte","Alte","das","la vieille chose","adjchose","e!","","A"],["der/die Alte","Alte","derdie","le vieux, la vieille","adjpers","","","A"],["die Lava","Lava","die","lave","a","","","A"],["das Hundert","Hundert","das","centaine","quantite","","","A"],["das Tausend","Tausend","das","millier","quantite","","","A"],["die Hundert","Hundert","die","le chiffre 100","chiffre","","","A"],["die Tausend","Tausend","die","le chiffre 1000","chiffre","","","A"],["die Boeing","Boeing","die","Boeing (avion)","avion","","","A"],["der Airbus","Airbus","der","Airbus (avion)","avion!","comp","genre de der Bus (bus)","A"],["die Frau","Frau","die","femme","persf","","","A"],["das Weib","Weib","das","femme (péjoratif)","persf!","","","A"],["die Tür","Tür","die","porte","none","","","A"],["der Bach","Bach","der","ruisseau","none","","","A"],["das Blei","Blei","das","plomb","metal","","","A"],["der Stahl","Stahl","der","acier","metal!","","","A"],["das Haus","Haus","das","maison","none","","","A"],["das Städtchen","Städtchen","das","petite ville","dim","","","A"],["die Feindschaft","Feindschaft","die","inimitié, hostilité","schaft","","","A"],["der Stolz","Stolz","der","fierté","adjchose!","","de l’adjectif stolz (fier)","A"],["der Briefträger","Briefträger","der","facteur","comp","er","der Träger (porteur)","A"],["das Gestein","Gestein","das","roche, pierraille","ge","","","A"],["der Geruch","Geruch","der","odorat ; odeur","ge!","dev","riechen (sentir)","A"],["der Aberglaube","Aberglaube","der","superstition","comp","e!","der Glaube (foi, croyance)","A"],["der Hauptbahnhof","Hauptbahnhof","der","gare centrale","comp","","der Bahnhof (gare)","A"],["das Unbehagen","Unbehagen","das","malaise","inf","","","A"],["die Urgroßmutter","Urgroßmutter","die","arrière-grand-mère","comp","persf","die Mutter (mère)","A"],["das Büchlein","Büchlein","das","petit livre","dim","","","A"],["der Jüngling","Jüngling","der","jeune homme","ling","","","A"],["der Vati","Vati","der","petit papa","persm","","le suffixe -i ne change pas le genre","A"],["die Mutti","Mutti","die","petite maman","persf","","","A"],["die Ärztin","Ärztin","die","doctoresse","in","","","A"],["die Lehrerin","Lehrerin","die","institutrice","in","","","A"],["die Beamtin","Beamtin","die","femme fonctionnaire","in","","","A"],["die Löwin","Löwin","die","lionne","in","","","A"],["die Hündin","Hündin","die","chienne","in","","","A"],["die Bekanntschaft","Bekanntschaft","die","connaissance(s)","schaft","","","A"],["die Christenheit","Christenheit","die","chrétienté","heit","","","A"],["die Zeitung","Zeitung","die","journal","ung","","","A"],["die Sendung","Sendung","die","émission","ung","","","A"],["das Königtum","Königtum","das","royauté","tum","","","A"],["das Beamtentum","Beamtentum","das","fonctionnariat","tum","","","A"],["das Gedankengut","Gedankengut","das","pensée, idées","comp","","das Gut (bien, patrimoine)","A"],["der Familienkreis","Familienkreis","der","cercle familial","comp","","der Kreis (cercle)","A"],["das Schulwesen","Schulwesen","das","système scolaire","comp","","das Wesen (être ; nature, système)","A"],["das Für und Wider","Für und Wider","das","le pour et le contre","inf","","","A"],["das Jenseits","Jenseits","das","l’au-delà","inf","","","A"],["das Schwimmen","Schwimmen","das","natation","inf","","","A"],["das Grün","Grün","das","verdure","adjchose","","","A"],["das Dunkel","Dunkel","das","obscurité","adjchose","el!","","A"],["der Ernst","Ernst","der","sérieux","adjchose!","","","A"],["das Bekannte","Bekannte","das","la chose connue","adjchose","e!","","A"],["der/die Deutsche","Deutsche","derdie","Allemand(e)","adjpers","","","A"],["der/die Fremde","Fremde","derdie","étranger, étrangère","adjpers","","","A"],["der/die Vorsitzende","Vorsitzende","derdie","président(e) de séance","adjpers","","","A"],["der/die Gefangene","Gefangene","derdie","prisonnier, prisonnière","adjpers","","","A"],["die Länge","Länge","die","longueur","e","","dérivé de lang (long)","A"],["der Verkauf","Verkauf","der","vente","dev","","verkaufen (vendre)","A"],["die Arbeit","Arbeit","die","travail","dev!","","","A"],["das Leid","Leid","das","souffrance","dev!","","","A"],["das Versteck","Versteck","das","cachette","dev!","","verstecken (cacher)","A"],["die Scham","Scham","die","honte","dev!","","sich schämen (avoir honte)","A"],["der Druck","Druck","der","impression ; pression","dev","","drucken (imprimer) / drücken (presser)","A"],["der Tritt","Tritt","der","pas ; coup de pied","dev","","treten (marcher ; donner un coup de pied)","A"],["die Furcht","Furcht","die","peur","dev!","","fürchten (craindre)","A"],["der Fund","Fund","der","trouvaille","dev","","finden (trouver)","A"],["der Diebstahl","Diebstahl","der","vol (larcin)","dev","","stehlen (voler, dérober)","A"],["der Klang","Klang","der","son","dev","","klingen (sonner, résonner)","A"],["der Pfiff","Pfiff","der","coup de sifflet","dev","","pfeifen (siffler)","A"],["der Betrug","Betrug","der","escroquerie","dev","","betrügen (tromper, escroquer)","A"],["der Bruch","Bruch","der","rupture","dev","","brechen (casser, rompre)","A"],["der Flug","Flug","der","vol (avion)","dev","","fliegen (voler)","A"],["der Schuss","Schuss","der","coup de feu, tir","dev","","schießen (tirer)","A"],["der Spruch","Spruch","der","sentence","dev","","sprechen (parler)","A"],["der Schüler","Schüler","der","écolier","er","","","A"],["der Rentner","Rentner","der","retraité","er","","","A"],["der Wecker","Wecker","der","réveil","er","","wecken (réveiller)","A"],["der Büstenhalter","Büstenhalter","der","soutien-gorge","comp","er","der Halter (support)","A"],["der Viersitzer","Viersitzer","der","quatre-places","er","","","A"],["die Breite","Breite","die","largeur","e","","dérivé de breit (large)","A"],["die Wärme","Wärme","die","chaleur","e","","dérivé de warm (chaud)","A"],["die Decke","Decke","die","couverture","e","","decken (couvrir)","A"],["die Gabe","Gabe","die","don","e","","geben (donner)","A"],["die Partei","Partei","die","parti (politique)","ei","","","A"],["die Kartei","Kartei","die","fichier","ei","","","A"],["die Konditorei","Konditorei","die","pâtisserie","ei","","","A"],["die Metzgerei","Metzgerei","die","boucherie","ei","","","A"],["die Träumerei","Träumerei","die","rêverie","ei","","","A"],["die Mannschaft","Mannschaft","die","équipe","schaft","","","A"],["die Schwangerschaft","Schwangerschaft","die","grossesse","schaft","","","A"],["das Gerede","Gerede","das","verbiage","ge","e!","","A"],["das Schicksal","Schicksal","das","destin","sal","","","A"],["der Zwilling","Zwilling","der","jumeau","ling","","","A"],["die Kenntnis","Kenntnis","die","connaissance","nis!","","","A"],["die Übersicht","Übersicht","die","vue d’ensemble","t","","","A"],["das Bistum","Bistum","das","évêché","tum","","","A"],["das Eigentum","Eigentum","das","propriété","tum","","","A"],["der Praktikant","Praktikant","der","stagiaire","and","","","A"],["der Kommissar","Kommissar","der","commissaire","ar_m","","","A"],["der Sekretär","Sekretär","der","secrétaire","ar_m","","","A"],["der Demokrat","Demokrat","der","démocrate","at_m","","","A"],["der Soldat","Soldat","der","soldat","at_m","at!","","A"],["der Konkurrent","Konkurrent","der","concurrent","ent","","","A"],["der Kontinent","Kontinent","der","continent","ent","","","A"],["der Frisör","Frisör","der","coiffeur","eur","","","A"],["der Politiker","Politiker","der","homme politique","iker","","","A"],["der Optimismus","Optimismus","der","optimisme","ismus","","","A"],["der Idealist","Idealist","der","idéaliste","ist","","","A"],["der Biologe","Biologe","der","biologiste","log","e!","","A"],["der Ventilator","Ventilator","der","ventilateur","or","","","A"],["der Doktor","Doktor","der","docteur","or","","","A"],["der Rhythmus","Rhythmus","der","rythme","us","","","A"],["der Apparat","Apparat","der","appareil","at!","","","A"],["der Automat","Automat","der","distributeur automatique","at!","","","A"],["der Salat","Salat","der","salade","at!","","","A"],["das Tablett","Tablett","das","plateau","ett","","","A"],["das Engagement","Engagement","das","engagement","ment","","","A"],["das Mikrofon","Mikrofon","das","microphone","on","","","A"],["das Stethoskop","Stethoskop","das","stéthoscope","on","","","A"],["die Nuance","Nuance","die","nuance","anz","e","","A"],["die Diät","Diät","die","régime","tat","","","A"],["die Universität","Universität","die","université","tat","","","A"],["die Tendenz","Tendenz","die","tendance","anz","","","A"],["die Delikatesse","Delikatesse","die","spécialité culinaire","esse","e","","A"],["die Tablette","Tablette","die","comprimé","ette","e","","A"],["die Familie","Familie","die","famille","ie","","","A"],["die Demokratie","Demokratie","die","démocratie","ie","","","A"],["die Regie","Regie","die","mise en scène","ie","","","A"],["die Lyrik","Lyrik","die","poésie lyrique","ik","","","A"],["die Margarine","Margarine","die","margarine","esse","e","","A"],["die Blondine","Blondine","die","femme blonde","esse","persf,e","","A"],["die Religion","Religion","die","religion","ion","","","A"],["die Basis","Basis","die","base","is","","","A"],["die Dosis","Dosis","die","dose","is","","","A"],["die Kulisse","Kulisse","die","coulisse","esse","e","","A"],["die Perspektive","Perspektive","die","perspective","esse","e","","A"],["die Neurose","Neurose","die","névrose","ose","e","","A"],["die Mixtur","Mixtur","die","mixture","ur","","","A"]]};
+
+// ═══════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════
+var APP_VERSION = 'v001';
+var INTERVALS = [0, 1, 3, 7, 14, 21, 31, 90];   // jours, boîtes 1 à 7 puis entretien (8)
+var REQUIRED  = [1, 1, 1, 1, 1, 2, 3];           // réussites nécessaires pour quitter les boîtes 1 à 7
+var MAINT_BOX = 8;
+var STORE_KEY = 'genreRegeln_v1';
+var MODES = {
+  r:   { label: 'Règles', short: 'Règles', limitLabel: 'Règles par séance', def: 10,
+         desc: 'Une règle s’affiche : choisissez le genre qu’elle donne. Exemples et exceptions apparaissent ensuite.' },
+  i:   { label: 'Intrus', short: 'Intrus', limitLabel: 'Cartes par séance', def: 10,
+         desc: 'Une règle et quatre mots : trouvez celui qui fait exception.' },
+  mgr: { label: 'Mot → genre → règle', short: 'MGR', limitLabel: 'Mots par séance', def: 20,
+         desc: 'Un mot : choisissez d’abord son genre, puis la règle qui l’explique. Progression mot par mot.' },
+  mrg: { label: 'Mot → règle → genre', short: 'MRG', limitLabel: 'Règles par séance', def: 4,
+         desc: 'Jusqu’à cinq mots par règle, mélangés entre plusieurs règles. Une règle est validée si tous ses mots sont justes.' },
+  imp: { label: 'Listes importées', short: 'Listes', limitLabel: 'Mots par séance', def: 20,
+         desc: 'Mots de vos listes importées : choisissez le genre. Si le mot figure dans le vocabulaire intégré, sa règle s’affiche.' }
+};
+var MODE_ORDER = ['r', 'i', 'mgr', 'mrg', 'imp'];
+var SRC_NAME = { L: 'Liste B1', A: 'Bescherelle', B: 'L’allemand de A à Z' };
+var ART = { der: 'der', die: 'die', das: 'das', derdie: 'der/die', derdas: 'der/das', dasdie: 'das/die', pl: 'pluriel' };
+var MAIN_G = ['der', 'das', 'die'];
+var COMBO_G = ['derdie', 'derdas', 'dasdie'];
+
+// ═══════════════════════════════════
+// DONNÉES
+// ═══════════════════════════════════
+var FAM = {}; DATA.fams.forEach(function (f) { FAM[f[0]] = f[1]; });
+var RULES = DATA.rules;
+var R = {}; RULES.forEach(function (r) { R[r.id] = r; });
+var WORDS = DATA.words.map(function (a) {
+  return { w: a[0], n: a[1], g: a[2], fr: a[3], k: a[4], alt: a[5] ? a[5].split(',') : [], note: a[6], s: a[7] };
+});
+var W = {}; WORDS.forEach(function (x) { W[x.w] = x; });
+function rk(k) { return k.replace('!', ''); }
+function isExc(k) { return k.charAt(k.length - 1) === '!'; }
+var BYRULE = {};
+WORDS.forEach(function (x) {
+  if (x.k === 'none') return;
+  var r = rk(x.k);
+  if (!BYRULE[r]) BYRULE[r] = { reg: [], exc: [] };
+  BYRULE[r][isExc(x.k) ? 'exc' : 'reg'].push(x);
+});
+var ALLKEYS = [], FAMKEYS = {};
+(function () {
+  var seen = {};
+  WORDS.forEach(function (x) {
+    [x.k].concat(x.alt).forEach(function (k) {
+      if (k === 'none' || seen[k]) return;
+      seen[k] = true; ALLKEYS.push(k);
+      var f = R[rk(k)].f;
+      (FAMKEYS[f] = FAMKEYS[f] || []).push(k);
+    });
+  });
+})();
+function isFixed(g) { return g === 'der' || g === 'die' || g === 'das'; }
+// Index du vocabulaire intégré par genre + nom (pour afficher la règle d'un mot importé)
+var GN = {};
+WORDS.forEach(function (x) { GN[x.g + '|' + norm(x.n)] = x; });
+
+function unitsOf(mode) {
+  if (mode === 'r') return RULES.filter(function (r) { return isFixed(r.g); }).map(function (r) { return r.id; });
+  if (mode === 'mrg') return RULES.filter(function (r) { var b = BYRULE[r.id]; return b && b.reg.length + b.exc.length > 0; }).map(function (r) { return r.id; });
+  if (mode === 'i') return RULES.filter(function (r) { var b = BYRULE[r.id]; return b && b.exc.length >= 1 && b.reg.length >= 3; }).map(function (r) { return r.id; });
+  if (mode === 'imp') return Object.keys(impEntries());
+  return WORDS.filter(function (x) { return data.settings.gram || x.s === 'L'; }).map(function (x) { return x.w; });
+}
+// Mots des listes importées sélectionnées, dédoublonnés (clé : « der Hund »)
+function impEntries() {
+  var out = {};
+  sortedLists().forEach(function (L) {
+    if (data.settings.deselected[L.id]) return;
+    L.entries.forEach(function (e) {
+      var gi = genderOf(e.de);
+      if (!gi) return;
+      if (!out[e.de]) out[e.de] = { de: e.de, fr: e.fr, g: gi.g, noun: gi.noun, lists: [] };
+      out[e.de].lists.push(L.name);
+    });
+  });
+  return out;
+}
+function sortedLists() {
+  return Object.keys(data.lists).map(function (id) { return data.lists[id]; })
+    .sort(function (a, b) { return a.name.localeCompare(b.name, 'fr'); });
+}
+
+// ═══════════════════════════════════
+// SAUVEGARDE
+// ═══════════════════════════════════
+function freshData() {
+  return { version: 2, progress: {}, lists: {}, settings: { mode: 'mgr', gram: true, deselected: {}, limits: { r: 10, i: 10, mgr: 20, mrg: 4, imp: 20 } } };
+}
+var data = freshData();
+var storageOk = true;
+function load() {
+  try {
+    var raw = localStorage.getItem(STORE_KEY);
+    if (raw) adopt(JSON.parse(raw));
+  } catch (e) { storageOk = false; }
+}
+function adopt(obj) {
+  var d = freshData();
+  if (obj && typeof obj === 'object') {
+    if (obj.progress && typeof obj.progress === 'object') d.progress = obj.progress;
+    if (obj.lists && typeof obj.lists === 'object') Object.keys(obj.lists).forEach(function (id) {
+      var L = obj.lists[id];
+      if (L && typeof L.name === 'string' && Array.isArray(L.entries)) d.lists[id] = L;
+    });
+    if (obj.settings) {
+      if (MODES[obj.settings.mode]) d.settings.mode = obj.settings.mode;
+      if (typeof obj.settings.gram === 'boolean') d.settings.gram = obj.settings.gram;
+      if (obj.settings.deselected && typeof obj.settings.deselected === 'object') d.settings.deselected = obj.settings.deselected;
+      if (obj.settings.limits) MODE_ORDER.forEach(function (m) {
+        var v = parseInt(obj.settings.limits[m], 10);
+        if (v > 0) d.settings.limits[m] = Math.min(500, v);
+      });
+    }
+  }
+  data = d;
+}
+function save() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(data)); storageOk = true; }
+  catch (e) { storageOk = false; }
+}
+
+// ═══════════════════════════════════
+// OUTILS
+// ═══════════════════════════════════
+function $(id) { return document.getElementById(id); }
+function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+function pad(n) { return (n < 10 ? '0' : '') + n; }
+function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+function today() { return ymd(new Date()); }
+function addDays(n) { var d = new Date(); d.setDate(d.getDate() + n); return ymd(d); }
+function shuffle(a) { for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function gcls(g) { return isFixed(g) ? 'g-' + g : (g === 'pl' ? 'g-die' : 'g-mix'); }
+function wordHTML(x) { return '<span class="' + gcls(x.g) + '">' + esc(x.w) + '</span>'; }
+function frHTML(x) { return ' <span class="fr">' + esc(x.fr) + '</span>'; }
+function chip(g) { return isFixed(g) || ART[g] ? '<span class="chip ' + gcls(g) + '">' + ART[g] + '</span>' : ''; }
+function keyLabel(k) { return (isExc(k) ? 'Exception : ' : '') + R[rk(k)].l; }
+function pkey(mode, id) { return mode + '\t' + id; }
+function norm(s) { return String(s).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
+var toastTimer = null;
+function toast(msg) {
+  var t = $('toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(function () { t.classList.remove('show'); }, 2600);
+}
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(function (s) { s.classList.toggle('active', s.id === id); });
+}
+
+// Bloc d'explication d'une règle (clé avec « ! » = exception)
+function ruleHTML(k, withGender) {
+  var r = R[rk(k)];
+  var head = (isExc(k) ? '<span class="exc-tag">Exception</span>' : '') +
+             (withGender && isFixed(r.g) ? chip(r.g) : '') + esc(r.l);
+  return '<div class="rule-box"><div class="rule-head">' + head + '</div>' +
+         (withGender ? '<div class="rule-desc">' + esc(r.d) + '</div>' : '') +
+         '<div class="rule-src">' + esc(FAM[r.f]) + ' · ' + esc(r.s) + '</div></div>';
+}
+
+// ═══════════════════════════════════
+// LEITNER
+// ═══════════════════════════════════
+function isMastered(p) { return !!p && p.box >= MAINT_BOX; }
+function boxLabel(p) {
+  if (!p) return 'Nouveau';
+  if (p.box >= MAINT_BOX) return 'Entretien · ' + INTERVALS[MAINT_BOX - 1] + ' j';
+  return 'Boîte ' + p.box + ' · ' + INTERVALS[p.box - 1] + ' j';
+}
+// res : 'ok' | 'partial' | 'ko' ; requeue : la carte ratée revient dans la séance
+function applyResult(key, res, requeue) {
+  var p = data.progress[key] || { box: 1, ok: 0, due: today() };
+  if (res === 'ok') {
+    if (session.retry[key]) { p.box = 1; p.ok = 0; p.due = addDays(1); }
+    else {
+      if (p.box < MAINT_BOX) {
+        p.ok = (p.ok || 0) + 1;
+        if (p.ok >= REQUIRED[p.box - 1]) { p.box++; p.ok = 0; }
+      }
+      p.due = addDays(INTERVALS[Math.min(p.box, MAINT_BOX) - 1]);
+    }
+  } else if (res === 'partial') {
+    p.ok = 0; p.due = addDays(1);
+  } else {
+    p.box = 1; p.ok = 0;
+    p.due = requeue ? today() : addDays(1);
+    if (requeue) session.retry[key] = true;
+  }
+  p.last = today();
+  data.progress[key] = p;
+  save();
+}
+function statsFor(mode) {
+  var u = unitsOf(mode), t = today(), s = { total: u.length, fresh: 0, due: 0, mastered: 0 };
+  u.forEach(function (id) {
+    var p = data.progress[pkey(mode, id)];
+    if (!p) s.fresh++;
+    else { if (p.due <= t) s.due++; if (isMastered(p)) s.mastered++; }
+  });
+  return s;
+}
+
+// ═══════════════════════════════════
+// ACCUEIL
+// ═══════════════════════════════════
+function renderHome() {
+  var mode = data.settings.mode;
+  document.querySelectorAll('#modeToggle .mode-btn').forEach(function (b) {
+    b.classList.toggle('active', b.getAttribute('data-mode') === mode);
+  });
+  $('modeDesc').textContent = MODES[mode].desc;
+  var h = '<tr><th></th><th>À réviser</th><th>Nouveaux</th><th>Maîtrisés</th><th>Total</th></tr>';
+  MODE_ORDER.forEach(function (m) {
+    var s = statsFor(m);
+    h += '<tr class="' + (m === mode ? 'cur' : '') + '"><td>' + esc(MODES[m].short) + '</td><td class="due">' + s.due +
+         '</td><td>' + s.fresh + '</td><td>' + s.mastered + '</td><td>' + s.total + '</td></tr>';
+  });
+  $('statsTable').innerHTML = h;
+  $('gramRow').style.display = mode === 'mgr' ? '' : 'none';
+  $('impPanel').style.display = mode === 'imp' ? '' : 'none';
+  if (mode === 'imp') renderLists();
+  $('gramCheck').checked = data.settings.gram;
+  $('limitLabel').textContent = MODES[mode].limitLabel;
+  $('limitInput').value = data.settings.limits[mode];
+  var s = statsFor(mode);
+  $('reviewBtn').textContent = 'Réviser (' + s.due + ')';
+  $('newBtn').textContent = 'Nouveaux (' + s.fresh + ')';
+  $('reviewBtn').disabled = !s.due; $('reviewBtn').style.opacity = s.due ? '' : '0.4';
+  $('newBtn').disabled = !s.fresh; $('newBtn').style.opacity = s.fresh ? '' : '0.4';
+  var nL = WORDS.filter(function (x) { return x.s === 'L'; }).length;
+  $('hintData').innerHTML = esc(RULES.length + ' règles · ' + nL + ' mots de la liste B1 · ' + (WORDS.length - nL) +
+    ' mots tirés du Bescherelle et de L’allemand de A à Z.') +
+    '<br>Listes importées : fichiers Genre_&lt;Nom&gt;.txt ou Vocabulaire_&lt;Nom&gt;.txt (lignes « der Hund – chien »). Vous pouvez aussi les glisser-déposer sur cette page.' + '<br>La progression est enregistrée dans ce navigateur ; exportez-la régulièrement.' +
+    (storageOk ? '' : '<br><b class="v-ko">Stockage local indisponible : la progression sera perdue à la fermeture.</b>') +
+    '<br>Genre des noms ' + APP_VERSION;
+}
+function setMode(m) { data.settings.mode = m; save(); renderHome(); }
+
+// ═══════════════════════════════════
+// SÉANCE
+// ═══════════════════════════════════
+var session = null, cur = null, phase = '';
+
+function pickUnits(mode, kind, limit) {
+  var t = today(), u = unitsOf(mode), out;
+  if (kind === 'review') {
+    out = u.filter(function (id) { var p = data.progress[pkey(mode, id)]; return p && p.due <= t; });
+    out.sort(function (a, b) { return data.progress[pkey(mode, a)].due < data.progress[pkey(mode, b)].due ? -1 : 1; });
+    out = shuffle(out.slice(0, limit));
+  } else {
+    out = u.filter(function (id) { return !data.progress[pkey(mode, id)]; });
+    out = mode === 'mgr' ? shuffle(out).slice(0, limit) : out.slice(0, limit);
+  }
+  return out;
+}
+
+// Tire jusqu'à 5 mots d'une règle, dont une ou deux exceptions si elle en a
+function sampleRuleWords(id) {
+  var b = BYRULE[id], reg = shuffle(b.reg.slice()), exc = shuffle(b.exc.slice());
+  var nExc = Math.min(exc.length, Math.random() < 0.5 ? 1 : 2);
+  var pick = exc.slice(0, nExc);
+  pick = pick.concat(reg.slice(0, 5 - pick.length));
+  if (pick.length < 5) pick = pick.concat(exc.slice(nExc, nExc + 5 - pick.length));
+  return pick;
+}
+// Mélange en évitant deux mots consécutifs de la même règle
+function interleave(items) {
+  var pool = shuffle(items.slice()), out = [];
+  while (pool.length) {
+    var last = out.length ? out[out.length - 1].rule : null, idx = 0;
+    for (var i = 0; i < pool.length; i++) { if (pool[i].rule !== last) { idx = i; break; } }
+    out.push(pool.splice(idx, 1)[0]);
+  }
+  return out;
+}
+
+function startSession(kind) {
+  var mode = data.settings.mode;
+  var limit = data.settings.limits[mode];
+  var ids = pickUnits(mode, kind, limit);
+  if (!ids.length) { toast(kind === 'review' ? 'Rien à réviser aujourd’hui dans ce mode.' : 'Plus aucune carte nouvelle dans ce mode.'); return; }
+  session = { mode: mode, kind: kind, queue: [], done: 0, ok: 0, partial: 0, ko: 0, retry: {}, rules: [], ruleRes: {}, keys: [] };
+  if (mode === 'mrg') {
+    var items = [];
+    ids.forEach(function (id) {
+      session.rules.push(id);
+      session.ruleRes[id] = { n: 0, ok: 0, bad: [] };
+      sampleRuleWords(id).forEach(function (x) { items.push({ t: 'mrg', word: x, rule: id }); });
+    });
+    session.keys = ids.slice();
+    session.queue = interleave(items);
+  } else {
+    if (mode === 'imp') session.imp = impEntries();
+    session.queue = ids.map(function (id) { return { t: mode, id: id }; });
+  }
+  $('doneBox').style.display = 'none';
+  $('cardArea').style.display = '';
+  showScreen('screenCard');
+  nextItem();
+}
+
+function hideButtons() {
+  ['btnsGender', 'btnsCombo', 'optList', 'btnsNext'].forEach(function (id) { $(id).style.display = 'none'; });
+}
+function updateProgressUI() {
+  var pending = cur && !cur.counted ? 1 : 0;
+  var total = session.done + session.queue.length + pending;
+  $('progressFill').style.width = (total ? Math.round(100 * session.done / total) : 0) + '%';
+  $('sessionLabel').textContent = MODES[session.mode].label + ' · ' + (session.done + pending) + '/' + total;
+  $('stats').innerHTML = '<b class="v-ok">✓ ' + session.ok + '</b>   ' +
+    (session.mode === 'mgr' ? '<b class="v-part">½ ' + session.partial + '</b>   ' : '') +
+    '<b class="v-ko">✗ ' + session.ko + '</b>';
+}
+
+function nextItem() {
+  hideButtons();
+  cur = session.queue.shift() || null;
+  if (!cur) { finishSession(); return; }
+  $('reveal').innerHTML = '';
+  $('itemPrompt').classList.remove('long');
+  updateProgressUI();
+  if (cur.t === 'r') showRuleCard();
+  else if (cur.t === 'i') showIntrusCard();
+  else if (cur.t === 'mgr') showMgrCard();
+  else if (cur.t === 'imp') showImpCard();
+  else showMrgCard();
+}
+
+function setPrompt(src, box, prompt, sub) {
+  $('itemSrc').textContent = src;
+  $('itemBox').textContent = box;
+  $('itemPrompt').textContent = prompt;
+  $('itemPrompt').classList.toggle('long', prompt.length > 22);
+  $('itemSub').textContent = sub || '';
+}
+
+// ── Boutons de genre ──
+function showGenderButtons(withCombos, withPlural) {
+  var b = $('btnsGender'), c = $('btnsCombo');
+  b.innerHTML = MAIN_G.map(function (g, i) {
+    return '<button class="gender-btn" data-g="' + g + '">' + ART[g] + '<span class="kbd">' + (i + 1) + '</span></button>';
+  }).join('');
+  b.style.display = '';
+  if (withCombos) {
+    c.innerHTML = COMBO_G.concat(withPlural ? ['pl'] : []).map(function (g, i) {
+      return '<button class="gender-btn" data-g="' + g + '">' + ART[g] + '<span class="kbd">' + (i + 4) + '</span></button>';
+    }).join('');
+    c.style.display = '';
+  }
+  phase = 'gender';
+}
+function markGender(chosen, right) {
+  document.querySelectorAll('#btnsGender .gender-btn, #btnsCombo .gender-btn').forEach(function (btn) {
+    var g = btn.getAttribute('data-g');
+    btn.disabled = true;
+    if (g === right) btn.classList.add('right');
+    else if (g === chosen) btn.classList.add('wrong');
+    else btn.classList.add('dim');
+  });
+}
+
+// ── Options (règles ou mots) ──
+function showOptions(opts) {   // opts : [{key, html}]
+  var box = $('optList');
+  box.innerHTML = opts.map(function (o, i) {
+    return '<button class="opt-btn" data-k="' + esc(o.key) + '"><span class="num">' + (i + 1) + '</span><span>' + o.html + '</span></button>';
+  }).join('');
+  box.style.display = '';
+  phase = 'opt';
+}
+function markOptions(chosen, isRight) {
+  document.querySelectorAll('#optList .opt-btn').forEach(function (btn) {
+    var k = btn.getAttribute('data-k');
+    btn.disabled = true;
+    if (isRight(k)) btn.classList.add('right');
+    else if (k === chosen) btn.classList.add('wrong');
+    else btn.classList.add('dim');
+  });
+}
+function accepted(x) { return [x.k].concat(x.alt); }
+// Quatre règles proposées : la bonne et trois leurres plausibles
+function ruleOptions(x, sessionKeys) {
+  var acc = accepted(x), correct = x.k, picks = [];
+  function tryAdd(k) {
+    if (picks.length >= 3 || !k || k === 'none' || !R[rk(k)]) return;
+    if (acc.indexOf(k) >= 0 || picks.indexOf(k) >= 0) return;
+    picks.push(k);
+  }
+  if (isExc(correct)) tryAdd(rk(correct));
+  else if (BYRULE[correct] && BYRULE[correct].exc.length && Math.random() < 0.3) tryAdd(correct + '!');
+  var lim = picks.length + 1;            // au plus un leurre tiré de la séance…
+  shuffle((sessionKeys || []).slice()).forEach(function (k) { if (picks.length < lim) tryAdd(k); });
+  lim = picks.length + 1;                // …et un seul de la même famille de règles
+  shuffle((FAMKEYS[R[rk(correct)].f] || []).slice()).forEach(function (k) { if (picks.length < lim) tryAdd(k); });
+  shuffle(ALLKEYS.slice()).forEach(tryAdd);
+  return shuffle([correct].concat(picks)).map(function (k) { return { key: k, html: esc(keyLabel(k)) }; });
+}
+function showNext() { $('btnsNext').style.display = ''; phase = 'next'; }
+function verdict(res) {
+  var t = { ok: ['v-ok', '✓ Juste'], partial: ['v-part', '½ Genre juste, règle fausse'], ko: ['v-ko', '✗ Faux'] }[res];
+  return '<div class="verdict ' + t[0] + '">' + t[1] + '</div>';
+}
+function wordReveal(x) {
+  return '<div class="reveal-main">' + wordHTML(x) + '</div><div class="reveal-fr">' + esc(x.fr) + '</div>' +
+         (x.note ? '<div class="reveal-note">' + esc(x.note) + '</div>' : '');
+}
+function noRuleBox() {
+  return '<div class="rule-box"><div class="rule-head">Sans règle fiable</div><div class="rule-desc">Aucune règle de forme ou de sens ne permet de prévoir ce genre : à mémoriser.</div></div>';
+}
+function tally(res) { session[res]++; session.done++; if (cur) cur.counted = true; }
+
+// ── Mode Règles ──
+function showRuleCard() {
+  var r = R[cur.id], key = pkey('r', r.id);
+  setPrompt(FAM[r.f], boxLabel(data.progress[key]), r.l, 'Quel genre cette règle donne-t-elle ?');
+  showGenderButtons(false);
+  cur.answer = function (g) {
+    var ok = g === r.g;
+    markGender(g, r.g);
+    var b = BYRULE[r.id] || { reg: [], exc: [] };
+    var ex = shuffle(b.reg.slice()).slice(0, 6), exc = b.exc.slice(0, 10);
+    var h = ruleHTML(r.id, true);
+    if (ex.length) h += '<div class="wlist"><span class="lbl">Exemples</span>' + ex.map(function (x) { return wordHTML(x) + frHTML(x); }).join('<br>') + '</div>';
+    if (exc.length) h += '<div class="wlist"><span class="lbl">Exceptions</span>' + exc.map(function (x) { return wordHTML(x) + frHTML(x); }).join('<br>') + '</div>';
+    $('reveal').innerHTML = verdict(ok ? 'ok' : 'ko') + h;
+    finishItem(key, ok ? 'ok' : 'ko', true);
+  };
+}
+
+// ── Mode Intrus ──
+function showIntrusCard() {
+  var r = R[cur.id], key = pkey('i', r.id), b = BYRULE[r.id];
+  if (!cur.words) {
+    var odd = b.exc[Math.floor(Math.random() * b.exc.length)];
+    cur.odd = odd;
+    cur.words = shuffle(shuffle(b.reg.slice()).slice(0, 3).concat([odd]));
+  }
+  setPrompt(FAM[r.f], boxLabel(data.progress[key]), r.l, 'Quel mot fait exception ?');
+  showOptions(cur.words.map(function (x) { return { key: x.w, html: esc(x.n) + ' <span class="fr">' + esc(x.fr) + '</span>' }; }));
+  cur.choose = function (k) {
+    var ok = k === cur.odd.w;
+    markOptions(k, function (kk) { return kk === cur.odd.w; });
+    var h = '<div class="wlist">' + cur.words.map(function (x) {
+      return wordHTML(x) + frHTML(x) + (x === cur.odd ? ' <span class="mark">← exception</span>' : '');
+    }).join('<br>') + '</div>';
+    $('reveal').innerHTML = verdict(ok ? 'ok' : 'ko') + h + ruleHTML(r.id, true);
+    finishItem(key, ok ? 'ok' : 'ko', true);
+  };
+}
+
+// ── Mode Mot → genre → règle ──
+function showMgrCard() {
+  var x = W[cur.id], key = pkey('mgr', x.w);
+  setPrompt(SRC_NAME[x.s], boxLabel(data.progress[key]), x.n, x.fr);
+  showGenderButtons(true);
+  cur.answer = function (g) {
+    var okG = g === x.g;
+    markGender(g, x.g);
+    if (x.k === 'none') {
+      $('reveal').innerHTML = verdict(okG ? 'ok' : 'ko') + wordReveal(x) + noRuleBox();
+      finishItem(key, okG ? 'ok' : 'ko', true);
+      return;
+    }
+    cur.okG = okG;
+    $('reveal').innerHTML = '<div class="verdict ' + (okG ? 'v-ok">✓ Genre juste' : 'v-ko">✗ Genre faux : ' + esc(ART[x.g])) + '</div><div class="reveal-fr">Quelle règle l’explique ?</div>';
+    $('btnsGender').style.display = 'none'; $('btnsCombo').style.display = 'none';
+    showOptions(ruleOptions(x, null));
+    cur.choose = function (k) {
+      var acc = accepted(x), okR = acc.indexOf(k) >= 0;
+      markOptions(k, function (kk) { return acc.indexOf(kk) >= 0; });
+      var res = !cur.okG ? 'ko' : (okR ? 'ok' : 'partial');
+      $('reveal').innerHTML = verdict(res) + wordReveal(x) + ruleHTML(x.k, true);
+      finishItem(key, res, res === 'ko');
+    };
+  };
+}
+
+// ── Mode Mot → règle → genre ──
+function showMrgCard() {
+  var x = cur.word, key = pkey('mrg', cur.rule);
+  setPrompt(SRC_NAME[x.s], 'Règle : ' + boxLabel(data.progress[key]).toLowerCase(), x.n, x.fr);
+  showOptions(ruleOptions(x, session.keys));
+  cur.choose = function (k) {
+    var acc = accepted(x), okR = acc.indexOf(k) >= 0;
+    cur.okR = okR;
+    markOptions(k, function (kk) { return acc.indexOf(kk) >= 0; });
+    $('reveal').innerHTML = '<div class="verdict ' + (okR ? 'v-ok">✓ Règle juste' : 'v-ko">✗ Règle fausse') + '</div>' + ruleHTML(x.k, false);
+    setTimeout(function () {
+      $('optList').style.display = 'none';
+      showGenderButtons(true);
+    }, 350);
+    phase = 'wait';
+    cur.answer = function (g) {
+      var okG = g === x.g, ok = cur.okR && okG;
+      markGender(g, x.g);
+      var rr = session.ruleRes[cur.rule];
+      rr.n++; if (ok) rr.ok++; else rr.bad.push(x);
+      var res = ok ? 'ok' : 'ko';
+      $('reveal').innerHTML = verdict(res) + wordReveal(x) + ruleHTML(x.k, true);
+      tally(res);
+      updateProgressUI();
+      showNext();
+    };
+  };
+}
+
+// ── Listes importées : mot → genre ──
+function showImpCard() {
+  var e = session.imp[cur.id], key = pkey('imp', cur.id);
+  if (!e) { nextItem(); return; }
+  setPrompt(e.lists.join(', '), boxLabel(data.progress[key]), e.noun, e.fr);
+  showGenderButtons(true, true);
+  cur.answer = function (g) {
+    var ok = g === e.g;
+    markGender(g, e.g);
+    var x = { w: e.de, g: e.g === 'pl' ? 'die' : e.g, fr: e.fr, note: '' };
+    var h = verdict(ok ? 'ok' : 'ko') + wordReveal(x);
+    var bw = W[e.de] || GN[e.g + '|' + norm(e.noun)];
+    if (bw) h += (bw.note ? '<div class="reveal-note">' + esc(bw.note) + '</div>' : '') + (bw.k === 'none' ? noRuleBox() : ruleHTML(bw.k, true));
+    $('reveal').innerHTML = h;
+    finishItem(key, ok ? 'ok' : 'ko', true);
+  };
+}
+
+function finishItem(key, res, requeue) {
+  applyResult(key, res, requeue);
+  tally(res);
+  if (res === 'ko' && requeue) {
+    var again = { t: cur.t, id: cur.id };
+    session.queue.splice(Math.min(session.queue.length, 3), 0, again);
+  }
+  updateProgressUI();
+  showNext();
+}
+
+function finishSession() {
+  cur = null; phase = 'done';
+  $('cardArea').style.display = 'none';
+  $('doneBox').style.display = '';
+  $('progressFill').style.width = '100%';
+  var det = '';
+  if (session.mode === 'mrg') {
+    var okRules = [], badRules = [];
+    session.rules.forEach(function (id) {
+      var rr = session.ruleRes[id], ok = rr.n > 0 && rr.ok === rr.n;
+      applyResult(pkey('mrg', id), ok ? 'ok' : 'ko', false);
+      (ok ? okRules : badRules).push(id);
+    });
+    $('doneSummary').textContent = okRules.length + ' règle(s) validée(s) sur ' + session.rules.length + '.';
+    det = session.rules.map(function (id) {
+      var rr = session.ruleRes[id], ok = okRules.indexOf(id) >= 0;
+      return '<span class="' + (ok ? 'v-ok' : 'v-ko') + '">' + (ok ? '✓ ' : '✗ ') + '</span>' + esc(R[id].l) + ' <span class="fr">' + rr.ok + '/' + rr.n + '</span>' +
+        (rr.bad.length ? '<br><span class="fr">   à revoir : </span>' + rr.bad.map(wordHTML).join(', ') : '');
+    }).join('<br>');
+  } else {
+    $('doneSummary').textContent = session.ok + ' juste(s)' + (session.mode === 'mgr' ? ', ' + session.partial + ' partielle(s)' : '') + ', ' + session.ko + ' faute(s).';
+  }
+  $('doneDetail').innerHTML = det;
+}
+
+function goHome() { session = null; cur = null; phase = ''; hideButtons(); showScreen('screenHome'); renderHome(); }
+
+// ═══════════════════════════════════
+// RÉFÉRENCE DES RÈGLES
+// ═══════════════════════════════════
+var modalOnClose = null;
+function openModal(title, bodyHTML, footerHTML, tall) {
+  document.querySelector('#modal .modal').classList.toggle('tall', !!tall);
+  $('modalTitle').textContent = title;
+  $('modalBody').innerHTML = bodyHTML;
+  $('modalFooter').innerHTML = footerHTML || '';
+  $('modal').classList.add('show');
+}
+function closeModal() { $('modal').classList.remove('show'); if (modalOnClose) { var f = modalOnClose; modalOnClose = null; f(); } }
+
+function refRuleBody(r) {
+  var b = BYRULE[r.id] || { reg: [], exc: [] };
+  var h = '<div class="ref-body"><div class="rule-desc">' + esc(r.d) + '</div><div class="rule-src">' + esc(r.s) + '</div>';
+  if (b.reg.length) h += '<div class="wlist"><span class="lbl">Mots (' + b.reg.length + ')</span>' + b.reg.map(function (x) { return wordHTML(x) + frHTML(x); }).join('<br>') + '</div>';
+  if (b.exc.length) h += '<div class="wlist"><span class="lbl">Exceptions (' + b.exc.length + ')</span>' + b.exc.map(function (x) { return wordHTML(x) + frHTML(x); }).join('<br>') + '</div>';
+  return h + '</div>';
+}
+function openReference() {
+  var h = '<input class="ref-search" id="refSearch" type="search" placeholder="Chercher un mot (allemand ou français)" autocomplete="off"><div id="refList"></div>';
+  openModal('Règles du genre', h, '', true);
+  renderRefList('');
+  $('refSearch').addEventListener('input', function () { renderRefList(this.value); });
+}
+function renderRefList(q) {
+  var box = $('refList');
+  q = norm(q.trim());
+  if (q.length >= 2) {
+    var hits = WORDS.filter(function (x) { return norm(x.n).indexOf(q) >= 0 || norm(x.fr).indexOf(q) >= 0; }).slice(0, 80);
+    box.innerHTML = hits.length ? hits.map(function (x) {
+      var rl = x.k === 'none' ? 'Sans règle fiable' : keyLabel(x.k);
+      return '<div class="ref-hit">' + wordHTML(x) + frHTML(x) + '<span class="rl">' + esc(rl) + (x.note ? ' — ' + esc(x.note) : '') + '</span></div>';
+    }).join('') : '<p class="fr">Aucun mot trouvé.</p>';
+    return;
+  }
+  var h = '';
+  DATA.fams.forEach(function (f) {
+    h += '<div class="ref-fam">' + esc(f[1]) + '</div>';
+    RULES.filter(function (r) { return r.f === f[0]; }).forEach(function (r) {
+      var b = BYRULE[r.id] || { reg: [], exc: [] };
+      h += '<details class="ref-rule" data-id="' + r.id + '"><summary>' + (isFixed(r.g) || ART[r.g] ? chip(r.g) : '') + '<span>' + esc(r.l) + '</span><span class="cnt">' +
+           b.reg.length + (b.exc.length ? ' + ' + b.exc.length + ' exc.' : '') + '</span></summary></details>';
+    });
+  });
+  var none = WORDS.filter(function (x) { return x.k === 'none'; });
+  h += '<div class="ref-fam">Sans règle fiable</div><details class="ref-rule" data-id="none"><summary><span>Mots à mémoriser</span><span class="cnt">' + none.length + '</span></summary></details>';
+  box.innerHTML = h;
+  box.querySelectorAll('details.ref-rule').forEach(function (d) {
+    d.addEventListener('toggle', function () {
+      if (!d.open || d.getAttribute('data-filled')) return;
+      d.setAttribute('data-filled', '1');
+      var id = d.getAttribute('data-id'), div = document.createElement('div');
+      if (id === 'none') div.innerHTML = '<div class="ref-body"><div class="wlist">' + none.map(function (x) { return wordHTML(x) + frHTML(x); }).join('<br>') + '</div></div>';
+      else div.innerHTML = refRuleBody(R[id]);
+      d.appendChild(div.firstChild);
+    });
+  });
+}
+
+// ═══════════════════════════════════
+// EXPORT / IMPORT
+// ═══════════════════════════════════
+function exportSave() {
+  var obj = { app: 'Genre_des_noms', version: 2, exported: new Date().toISOString(), progress: data.progress, lists: data.lists, settings: data.settings };
+  var blob = new Blob([JSON.stringify(obj, null, 1)], { type: 'application/json' });
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'Sauvegarde_Genre_' + today() + '.json';
+  document.body.appendChild(a); a.click();
+  setTimeout(function () { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  toast('Sauvegarde exportée.');
+}
+function importSave(file) {
+  var rd = new FileReader();
+  rd.onload = function () {
+    try {
+      var obj = JSON.parse(rd.result);
+      if (!obj || obj.app !== 'Genre_des_noms' || typeof obj.progress !== 'object') throw new Error('format');
+      openModal('Importer une sauvegarde',
+        '<p>Cette sauvegarde du ' + esc(String(obj.exported || '').slice(0, 10)) + ' remplacera la progression actuelle.</p>',
+        '<button class="btn-sub" id="mCancel">Annuler</button><button class="btn-main" id="mOk">Remplacer</button>');
+      $('mCancel').onclick = closeModal;
+      $('mOk').onclick = function () { adopt(obj); save(); closeModal(); renderHome(); toast('Sauvegarde importée.'); };
+    } catch (e) { toast('Fichier non reconnu : choisissez une sauvegarde exportée par cette application.'); }
+  };
+  rd.readAsText(file);
+}
+function confirmReset() {
+  openModal('Réinitialiser la progression',
+    '<p>Toute la progression des cinq modes sera effacée. Les listes importées sont conservées. Exportez d’abord une sauvegarde si vous voulez pouvoir revenir en arrière.</p>',
+    '<button class="btn-sub" id="mCancel">Annuler</button><button class="btn-main btn-danger" id="mOk">Effacer</button>');
+  $('mCancel').onclick = closeModal;
+  $('mOk').onclick = function () { data.progress = {}; save(); closeModal(); renderHome(); toast('Progression effacée.'); };
+}
+
+// ═══════════════════════════════════
+// LISTES IMPORTÉES
+// ═══════════════════════════════════
+function genderOf(de) {
+  var s = String(de).trim();
+  var plural = /\((pluriel|pl\.?)\)/i.test(s);
+  var m = s.match(/^((?:der|die|das)(?:\s*\/\s*(?:der|die|das))?)\s+(.+)$/i);
+  if (!m) return null;
+  var arts = m[1].toLowerCase().replace(/\s/g, '').split('/');
+  var noun = m[2].replace(/\s*\((pluriel|pl\.?)\)\s*/ig, ' ').trim();
+  var g;
+  if (arts.length === 1) g = arts[0] === 'die' && plural ? 'pl' : arts[0];
+  else {
+    var order = { der: 0, das: 1, die: 2 };
+    arts.sort(function (a, b) { return order[a] - order[b]; });
+    g = arts[0] === arts[1] ? arts[0] : arts.join('');
+  }
+  return { g: g, noun: noun };
+}
+function splitLine(t) {
+  var seps = [/\s+–\s+/, /\s+—\s+/, /\s+-\s+/];
+  for (var i = 0; i < seps.length; i++) {
+    var m = t.match(seps[i]);
+    if (m) return [t.slice(0, m.index).trim(), t.slice(m.index + m[0].length).trim()];
+  }
+  return null;
+}
+function parseFile(fileName, text) {
+  var m = fileName.match(/^(Vocabulaire|Genre)_(.+)\.txt$/i);
+  if (!m) return { error: 'nom non reconnu (attendu : Genre_<Nom>.txt ou Vocabulaire_<Nom>.txt)' };
+  var type = m[1].toLowerCase() === 'genre' ? 'G' : 'V';
+  var name = m[2].replace(/_/g, ' ').trim();
+  var lines = String(text).replace(/^\uFEFF/, '').split(/\r?\n/);
+  var entries = [], seen = {}, skipped = [], ignored = 0, dup = 0;
+  for (var i = 0; i < lines.length; i++) {
+    var t = lines[i].trim();
+    if (!t) continue;
+    var parts = splitLine(t);
+    var gi = parts && parts[0] ? genderOf(parts[0]) : null;
+    if (!gi) {
+      if (type === 'V') ignored++;   // listes de vocabulaire : seuls les noms avec article sont retenus
+      else skipped.push((i + 1) + ' : ' + t + (parts ? ' (article der/die/das absent)' : ' (séparateur « – » absent)'));
+      continue;
+    }
+    if (!parts[1]) { skipped.push((i + 1) + ' : ' + t + ' (traduction absente)'); continue; }
+    if (seen[parts[0]]) { dup++; continue; }
+    seen[parts[0]] = true;
+    entries.push({ de: parts[0], fr: parts[1] });
+  }
+  return { type: type, name: name, entries: entries, skipped: skipped, ignored: ignored, dup: dup };
+}
+function listId(type, name) { return type + ':' + name.toLowerCase(); }
+function importFiles(files) {
+  var txt = [], json = null;
+  Array.prototype.forEach.call(files, function (f) {
+    if (/\.json$/i.test(f.name)) json = f; else txt.push(f);
+  });
+  if (json && !txt.length) { importSave(json); return; }
+  if (!txt.length) { toast('Aucun fichier .txt reconnu.'); return; }
+  var reports = [], left = txt.length;
+  txt.forEach(function (f) {
+    var rd = new FileReader();
+    rd.onload = function () { reports.push(applyFile(f.name, rd.result)); if (!--left) showImportReport(reports); };
+    rd.onerror = function () { reports.push({ file: f.name, error: 'lecture impossible' }); if (!--left) showImportReport(reports); };
+    rd.readAsText(f, 'UTF-8');
+  });
+}
+function applyFile(fileName, text) {
+  var r = parseFile(fileName, text);
+  if (r.error) return { file: fileName, error: r.error };
+  if (!r.entries.length) return { file: fileName, error: 'aucun nom avec article der/die/das trouvé' };
+  var id = listId(r.type, r.name), existed = !!data.lists[id];
+  data.lists[id] = { id: id, name: r.name, type: r.type, file: fileName, imported: today(), entries: r.entries };
+  delete data.settings.deselected[id];
+  save();
+  return { file: fileName, name: r.name, n: r.entries.length, existed: existed, skipped: r.skipped, ignored: r.ignored, dup: r.dup };
+}
+function showImportReport(reports) {
+  var h = reports.map(function (r) {
+    if (r.error) return '<div class="rep-file"><b>' + esc(r.file) + '</b><br><span class="v-ko">Non importé : ' + esc(r.error) + '</span></div>';
+    var t = '<div class="rep-file"><b>' + esc(r.name) + '</b> : ' + r.n + ' nom(s) ' + (r.existed ? '(liste mise à jour, progression conservée)' : '(nouvelle liste)');
+    if (r.ignored) t += '<br><span class="rep-skip">' + r.ignored + ' ligne(s) sans article ignorée(s) (mots autres que des noms).</span>';
+    if (r.dup) t += '<br><span class="rep-skip">' + r.dup + ' doublon(s) ignoré(s).</span>';
+    if (r.skipped.length) t += '<br><span class="rep-skip">' + r.skipped.length + ' ligne(s) rejetée(s) :<br>' + r.skipped.slice(0, 12).map(esc).join('<br>') + (r.skipped.length > 12 ? '<br>…' : '') + '</span>';
+    return t + '</div>';
+  }).join('');
+  openModal('Importation', h, '<button class="btn-main" id="mOk">OK</button>');
+  $('mOk').onclick = closeModal;
+  data.settings.mode = 'imp'; save(); renderHome();
+}
+function renderLists() {
+  var lists = sortedLists(), box = $('srcList'), t = today();
+  if (!lists.length) {
+    box.innerHTML = '<div class="empty">Aucune liste importée.<br>Importez un fichier <code>Genre_&lt;Nom&gt;.txt</code> ou <code>Vocabulaire_&lt;Nom&gt;.txt</code> : une ligne par mot, par exemple « der Hund – chien ». Dans les fichiers Vocabulaire, seules les lignes commençant par der, die ou das sont retenues.</div>';
+    return;
+  }
+  box.innerHTML = lists.map(function (L) {
+    var sel = !data.settings.deselected[L.id], due = 0, fresh = 0, mast = 0;
+    L.entries.forEach(function (e) {
+      var p = data.progress[pkey('imp', e.de)];
+      if (!p) fresh++; else { if (p.due <= t) due++; if (isMastered(p)) mast++; }
+    });
+    return '<div class="src-card' + (sel ? ' sel' : '') + '" data-id="' + esc(L.id) + '" tabindex="0" role="checkbox" aria-checked="' + sel + '">' +
+      '<div class="src-head"><span class="check">✓</span><span class="src-name">' + esc(L.name) + '</span>' +
+      '<span class="src-type">' + (L.type === 'G' ? 'Genre' : 'Vocabulaire') + '</span>' +
+      '<button class="src-del" data-del="' + esc(L.id) + '" title="Supprimer la liste" aria-label="Supprimer la liste">×</button></div>' +
+      '<div class="src-meta">' + L.entries.length + ' noms · ' + due + ' à réviser · ' + fresh + ' nouveaux · ' + mast + ' maîtrisés</div></div>';
+  }).join('');
+}
+function deleteList(id) {
+  var L = data.lists[id]; if (!L) return;
+  openModal('Supprimer la liste',
+    '<p>La liste « ' + esc(L.name) + ' » sera supprimée. La progression des mots qui ne figurent dans aucune autre liste sera effacée.</p>',
+    '<button class="btn-sub" id="mCancel">Annuler</button><button class="btn-main btn-danger" id="mOk">Supprimer</button>');
+  $('mCancel').onclick = closeModal;
+  $('mOk').onclick = function () {
+    delete data.lists[id]; delete data.settings.deselected[id];
+    var keep = {};
+    Object.keys(data.lists).forEach(function (k) { data.lists[k].entries.forEach(function (e) { keep[e.de] = true; }); });
+    L.entries.forEach(function (e) { if (!keep[e.de]) delete data.progress[pkey('imp', e.de)]; });
+    save(); closeModal(); renderHome(); toast('Liste supprimée.');
+  };
+}
+
+// ═══════════════════════════════════
+// ÉVÉNEMENTS
+// ═══════════════════════════════════
+$('modeToggle').addEventListener('click', function (e) {
+  var b = e.target.closest('.mode-btn'); if (b) setMode(b.getAttribute('data-mode'));
+});
+$('gramCheck').addEventListener('change', function () { data.settings.gram = this.checked; save(); renderHome(); });
+$('limitInput').addEventListener('change', function () {
+  var v = parseInt(this.value, 10);
+  if (!(v > 0)) v = MODES[data.settings.mode].def;
+  data.settings.limits[data.settings.mode] = Math.min(500, v); save(); renderHome();
+});
+$('reviewBtn').addEventListener('click', function () { startSession('review'); });
+$('newBtn').addEventListener('click', function () { startSession('new'); });
+$('refBtn').addEventListener('click', openReference);
+$('exportBtn').addEventListener('click', exportSave);
+$('importBtn').addEventListener('click', function () { $('saveInput').value = ''; $('saveInput').click(); });
+$('saveInput').addEventListener('change', function () { if (this.files[0]) importSave(this.files[0]); });
+$('resetBtn').addEventListener('click', confirmReset);
+$('importListBtn').addEventListener('click', function () { $('fileInput').value = ''; $('fileInput').click(); });
+$('fileInput').addEventListener('change', function () { if (this.files.length) importFiles(this.files); });
+$('srcList').addEventListener('click', function (e) {
+  var del = e.target.closest('.src-del');
+  if (del) { e.stopPropagation(); deleteList(del.getAttribute('data-del')); return; }
+  var c = e.target.closest('.src-card'); if (!c) return;
+  var id = c.getAttribute('data-id');
+  if (data.settings.deselected[id]) delete data.settings.deselected[id]; else data.settings.deselected[id] = true;
+  save(); renderHome();
+});
+$('srcList').addEventListener('keydown', function (e) {
+  if ((e.key === ' ' || e.key === 'Enter') && e.target.classList.contains('src-card')) { e.preventDefault(); e.target.click(); }
+});
+// Glisser-déposer
+var dragDepth = 0;
+function hasFiles(e) { return e.dataTransfer && Array.prototype.indexOf.call(e.dataTransfer.types || [], 'Files') >= 0; }
+document.addEventListener('dragenter', function (e) { if (!hasFiles(e)) return; e.preventDefault(); dragDepth++; $('dropOverlay').classList.add('show'); });
+document.addEventListener('dragover', function (e) { if (hasFiles(e)) e.preventDefault(); });
+document.addEventListener('dragleave', function (e) { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $('dropOverlay').classList.remove('show'); } });
+document.addEventListener('drop', function (e) {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; $('dropOverlay').classList.remove('show');
+  if ($('screenHome').classList.contains('active')) importFiles(e.dataTransfer.files);
+  else toast('Revenez à l’accueil pour importer des fichiers.');
+});
+$('backBtn').addEventListener('click', function () {
+  if (session && session.mode === 'mrg' && session.done > 0 && session.queue.length) {
+    toast('Séance interrompue : les règles non terminées ne sont pas notées.');
+  }
+  goHome();
+});
+$('backBtn2').addEventListener('click', goHome);
+$('againBtn').addEventListener('click', function () { var k = session ? session.kind : 'review'; goHome(); startSession(k); });
+$('nextBtn').addEventListener('click', function () { if (phase === 'next') nextItem(); });
+$('btnsGender').addEventListener('click', onGenderClick);
+$('btnsCombo').addEventListener('click', onGenderClick);
+function onGenderClick(e) {
+  var b = e.target.closest('.gender-btn');
+  if (!b || b.disabled || phase !== 'gender' || !cur || !cur.answer) return;
+  phase = 'busy';
+  cur.answer(b.getAttribute('data-g'));
+}
+$('optList').addEventListener('click', function (e) {
+  var b = e.target.closest('.opt-btn');
+  if (!b || b.disabled || phase !== 'opt' || !cur || !cur.choose) return;
+  phase = 'busy';
+  cur.choose(b.getAttribute('data-k'));
+});
+$('modalClose').addEventListener('click', closeModal);
+$('modal').addEventListener('click', function (e) { if (e.target === this) closeModal(); });
+
+document.addEventListener('keydown', function (e) {
+  if ($('modal').classList.contains('show')) { if (e.key === 'Escape') closeModal(); return; }
+  if (!$('screenCard').classList.contains('active') || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === 'Escape') { goHome(); return; }
+  var n = parseInt(e.key, 10);
+  if (phase === 'gender' && n >= 1 && n <= 7) {
+    var btn = document.querySelectorAll('#btnsGender .gender-btn, #btnsCombo .gender-btn')[n - 1];
+    if (btn && btn.offsetParent !== null) { e.preventDefault(); btn.click(); }
+  } else if (phase === 'opt' && n >= 1 && n <= 4) {
+    var ob = document.querySelectorAll('#optList .opt-btn')[n - 1];
+    if (ob) { e.preventDefault(); ob.click(); }
+  } else if (phase === 'next' && (e.key === 'Enter' || e.key === ' ')) {
+    e.preventDefault(); nextItem();
+  } else if (phase === 'done' && e.key === 'Enter') {
+    e.preventDefault(); $('againBtn').click();
+  }
+});
+
+// ═══════════════════════════════════
+// DÉMARRAGE
+// ═══════════════════════════════════
+load();
+renderHome();
+</script>
+</body>
+</html>
